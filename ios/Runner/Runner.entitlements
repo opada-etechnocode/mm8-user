@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>aps-environment</key>
+	<string>development</string>
+	<key>com.apple.developer.applesignin</key>
+	<array>
+		<string>Default</string>
+	</array>
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:mm8market.com</string>
+		<string>applinks:www.mm8market.com</string>
+	</array>
+	<key>keychain-access-groups</key>
+	<array>
+		<string>LV52R96Q6A.technocode.mm8.mm8</string>
+	</array>
+</dict>
+</plist>

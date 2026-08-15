@@ -1,0 +1,62 @@
+{
+  "project_info": {
+    "project_number": "177056885354",
+    "project_id": "mm8market-237e9",
+    "storage_bucket": "mm8market-237e9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:177056885354:android:28738bd40a37b9670b7813",
+        "android_client_info": {
+          "package_name": "technocode.mm8.mm8"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "177056885354-6ric247s2nshmcshc65lkl4b9kcn1q5o.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "technocode.mm8.mm8",
+            "certificate_hash": "ef2c7589711b89f200d3c14e965cc72df386210c"
+          }
+        },
+        {
+          "client_id": "177056885354-bqu42d94qg16sg33o3j2fk07d974r45s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "technocode.mm8.mm8",
+            "certificate_hash": "236d79127a96e68e65aa55a0a2c9b1ac3f149e7e"
+          }
+        },
+        {
+          "client_id": "177056885354-v3hkmmnhmqsdbusmt09rudmepa9dv36c.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBS65XXwSv9Drcjxq2z2eqLXu3oj_sJ61I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "177056885354-v3hkmmnhmqsdbusmt09rudmepa9dv36c.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "177056885354-n80ma8khhhmriff1hdocd58uaomdme76.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "technocode.mm8.mm8"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
