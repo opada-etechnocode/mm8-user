@@ -10,7 +10,7 @@ import 'package:flutter_sixvalley_ecommerce/common/enums/local_caches_type_enum.
   static const int imageQuality = 100;
   static const LocalCachesTypeEnum cachesType = LocalCachesTypeEnum.all;
 
-  static const String baseUrl = 'https://new.mm8market.com';
+  static const String baseUrl = 'https://www.mm8market.com';
 
   static const String googleServerClientId = '177056885354-f46m67r0bl3k6jk8vu75kvbbv3n9oi2h.apps.googleusercontent.com';
   static const String userId = 'userId';
