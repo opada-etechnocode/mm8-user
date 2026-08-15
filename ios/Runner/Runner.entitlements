@@ -13,9 +13,5 @@
 		<string>applinks:mm8market.com</string>
 		<string>applinks:www.mm8market.com</string>
 	</array>
-	<key>keychain-access-groups</key>
-	<array>
-		<string>LV52R96Q6A.technocode.mm8.mm8</string>
-	</array>
 </dict>
 </plist>

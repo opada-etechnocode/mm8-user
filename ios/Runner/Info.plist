@@ -59,16 +59,16 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
-<key>NSCameraUsageDescription</key>
-<string>This app need camera access for taking photo for user profile picture.</string>
-<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-<string>يحتاج هذا التطبيق للوصول إلى الموقع لإدارة عنوان التوصيل عند إضافة عنوان جديد.</string>
-<key>NSLocationAlwaysUsageDescription</key>
-<string>يحتاج هذا التطبيق للوصول إلى الموقع لإدارة عنوان التوصيل عند إضافة عنوان جديد.</string>
-<key>NSLocationWhenInUseUsageDescription</key>
-<string>يحتاج هذا التطبيق للوصول إلى الموقع لإدارة عنوان التوصيل عند إضافة عنوان جديد.</string>
-<key>NSPhotoLibraryUsageDescription</key>
-<string>This app need photo gallery access for taking photo for user profile picture.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app need camera access for taking photo for user profile picture.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>يحتاج هذا التطبيق للوصول إلى الموقع لإدارة عنوان التوصيل عند إضافة عنوان جديد.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>يحتاج هذا التطبيق للوصول إلى الموقع لإدارة عنوان التوصيل عند إضافة عنوان جديد.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>يحتاج هذا التطبيق للوصول إلى الموقع لإدارة عنوان التوصيل عند إضافة عنوان جديد.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app need photo gallery access for taking photo for user profile picture.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -107,6 +107,7 @@
 	<array>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 	</array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
