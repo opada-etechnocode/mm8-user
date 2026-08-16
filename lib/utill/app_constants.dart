@@ -210,6 +210,7 @@ import 'package:flutter_sixvalley_ecommerce/common/enums/local_caches_type_enum.
   static const double maxFilter = 1000000;
   static const String appleLoginEmail = 'apple_login_email';
   static const String guestCartId = 'guest_cart_id';
+  static const String deletedNotificationIds = 'deleted_notification_ids';
 
   // order status
   static const String pending = 'pending';

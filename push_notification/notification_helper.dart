@@ -50,7 +50,7 @@ class NotificationHelper {
           } else if(payload.type == 'wallet') {
             RouterHelper.getWalletRoute(action: RouteAction.pushReplacement, isBackButtonExist: true);
           } else if(payload.type == 'chatting') {
-            Navigator.of(Get.context!).pushReplacement(MaterialPageRoute(builder: (BuildContext context) =>  InboxScreen(isBackButtonExist: true, initIndex: payload.messageKey ==  'message_from_delivery_man' ? 0 : 1, fromNotification: true)));
+            Navigator.of(Get.context!).pushReplacement(MaterialPageRoute(builder: (BuildContext context) =>  InboxScreen(isBackButtonExist: true, initIndex: 1, fromNotification: true)));
           } else if(payload.type == 'product_restock_update') {
             RouterHelper.getProductDetailsRoute(action: RouteAction.pushReplacement, productId: int.parse(payload.productId!),  slug: payload.slug, isNotification: true);
           } else{
@@ -131,7 +131,7 @@ class NotificationHelper {
           } else if(notificationBody.type == 'notification') {
             RouterHelper.getNotificationRoute(action: RouteAction.pushReplacement, fromNotification: true);
           } else if(notificationBody.type == 'chatting') {
-            Navigator.of(Get.context!).pushReplacement(MaterialPageRoute(builder: (BuildContext context) =>  InboxScreen(isBackButtonExist: true, fromNotification: true, initIndex: notificationBody.messageKey ==  'message_from_delivery_man' ? 0 : 1)));
+            Navigator.of(Get.context!).pushReplacement(MaterialPageRoute(builder: (BuildContext context) =>  InboxScreen(isBackButtonExist: true, fromNotification: true, initIndex: 1)));
           } else if(notificationBody.type == 'product_restock_update') {
             RouterHelper.getProductDetailsRoute(action: RouteAction.pushReplacement, productId: int.parse(notificationBody.productId!), slug: notificationBody.slug, isNotification: true);
           } else {

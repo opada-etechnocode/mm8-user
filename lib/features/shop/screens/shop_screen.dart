@@ -23,6 +23,8 @@ import 'package:flutter_sixvalley_ecommerce/features/shop/widgets/shop_info_widg
 import 'package:flutter_sixvalley_ecommerce/features/shop/widgets/shop_product_view_list.dart';
 import 'package:provider/provider.dart';
 
+import '../../../common/basewidget/custom_app_bar_widget.dart';
+
 class TopSellerProductScreen extends StatefulWidget {
   final String? slug;
   final int? sellerId;
@@ -79,7 +81,8 @@ class _TopSellerProductScreenState extends State<TopSellerProductScreen> with Ti
   void initState() {
     super.initState();
     vacationIsOn = ShopHelper.isVacationActive(
-      context, startDate: widget.vacationStartDate,
+      context,
+      startDate: widget.vacationStartDate,
       endDate: widget.vacationEndDate,
       vacationDurationType: widget.vacationDurationType,
       vacationStatus: widget.vacationStatus,
@@ -126,41 +129,53 @@ class _TopSellerProductScreenState extends State<TopSellerProductScreen> with Ti
       },
       child: Scaffold(
         resizeToAvoidBottomInset: false,
+        appBar: CustomAppBar(
+          title: widget.name ?? '',
+          isBackButtonExist: true,
+          onBackPressed: () {
+            Navigator.pop(context);
+          },
+        ),
         body: Consumer<ShopController>(
           builder: (context, sellerProvider, _) {
-
             vacationIsOn = ShopHelper.isVacationActive(
-              context, startDate: sellerProvider.sellerInfoModel?.seller?.shop?.vacationStartDate,
+              context,
+              startDate: sellerProvider.sellerInfoModel?.seller?.shop?.vacationStartDate,
               endDate: sellerProvider.sellerInfoModel?.seller?.shop?.vacationEndDate,
               vacationDurationType: sellerProvider.sellerInfoModel?.seller?.shop?.vacationDurationType,
               vacationStatus: sellerProvider.sellerInfoModel?.seller?.shop?.vacationStatus,
               isInHouseSeller: widget.sellerId == 0,
             );
 
-            return CustomScrollView(controller: _scrollController, slivers: [
-              SliverToBoxAdapter(
-                child: (widget.sellerId == null  && sellerProvider.sellerInfoModel == null) ?
-                ShopInfoShimmerWidget() :
-                ShopInfoWidget(
-                  vacationIsOn: vacationIsOn,
-                  sellerName: widget.name ?? sellerProvider.sellerInfoModel?.seller?.shop?.name ?? '',
-                  sellerId: widget.sellerId ?? sellerProvider.sellerInfoModel?.seller?.shop?.sellerId ?? 0,
-                  banner: widget.banner ?? sellerProvider.sellerInfoModel?.seller?.shop?.bannerFullUrl?.path ?? '',
-                  shopImage: widget.image ?? sellerProvider.sellerInfoModel?.seller?.shop?.imageFullUrl?.path ?? '',
-                  temporaryClose: widget.temporaryClose ?? sellerProvider.sellerInfoModel?.seller?.shop?.temporaryClose ?? false,
-                  totalReview: widget.totalReview ?? sellerProvider.sellerInfoModel?.totalReview ?? 0,
-                  totalProduct: widget.totalProduct ?? sellerProvider.sellerInfoModel?.totalProduct ?? 0,
-                  rating: widget.rating ?? (sellerProvider.sellerInfoModel?.seller?.totalRating != null ?
-                  sellerProvider.sellerInfoModel?.seller?.totalRating.toString() : '0') ?? '0',
-                  fromMore: widget.fromMore,
-                  vacationDurationType: widget.vacationDurationType ?? sellerProvider.sellerInfoModel?.seller?.shop?.vacationDurationType,
-                  vacationEndDate: widget.vacationEndDate ?? sellerProvider.sellerInfoModel?.seller?.shop?.vacationEndDate,
-                  vacationStartDate: widget.vacationStartDate ?? sellerProvider.sellerInfoModel?.seller?.shop?.vacationStartDate,
+            return CustomScrollView(
+              controller: _scrollController,
+              slivers: [
+                SliverToBoxAdapter(
+                  child: (widget.sellerId == null && sellerProvider.sellerInfoModel == null)
+                      ? const ShopInfoShimmerWidget()
+                      : ShopInfoWidget(
+                          vacationIsOn: vacationIsOn,
+                          sellerName: widget.name ?? sellerProvider.sellerInfoModel?.seller?.shop?.name ?? '',
+                          sellerId: widget.sellerId ?? sellerProvider.sellerInfoModel?.seller?.shop?.sellerId ?? 0,
+                          banner: widget.banner ?? sellerProvider.sellerInfoModel?.seller?.shop?.bannerFullUrl?.path ?? '',
+                          shopImage: widget.image ?? sellerProvider.sellerInfoModel?.seller?.shop?.imageFullUrl?.path ?? '',
+                          temporaryClose: widget.temporaryClose ?? sellerProvider.sellerInfoModel?.seller?.shop?.temporaryClose ?? false,
+                          totalReview: widget.totalReview ?? sellerProvider.sellerInfoModel?.totalReview ?? 0,
+                          totalProduct: widget.totalProduct ?? sellerProvider.sellerInfoModel?.totalProduct ?? 0,
+                          rating: widget.rating ??
+                              (sellerProvider.sellerInfoModel?.seller?.totalRating != null
+                                  ? sellerProvider.sellerInfoModel?.seller?.totalRating.toString()
+                                  : '0') ??
+                              '0',
+                          fromMore: widget.fromMore,
+                          vacationDurationType: widget.vacationDurationType ?? sellerProvider.sellerInfoModel?.seller?.shop?.vacationDurationType,
+                          vacationEndDate: widget.vacationEndDate ?? sellerProvider.sellerInfoModel?.seller?.shop?.vacationEndDate,
+                          vacationStartDate: widget.vacationStartDate ?? sellerProvider.sellerInfoModel?.seller?.shop?.vacationStartDate,
+                        ),
                 ),
-              ),
-
-              SliverPersistentHeader(pinned: true,
-                delegate: SliverDelegate(
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: SliverDelegate(
                   height: sellerProvider.shopMenuIndex == 1 ? 140 : 70,
                   child: Container(color: Theme.of(context).canvasColor,
                     child: Column(mainAxisAlignment: MainAxisAlignment.end, children: [

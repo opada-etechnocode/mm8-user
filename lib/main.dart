@@ -37,6 +37,7 @@ import 'package:flutter_sixvalley_ecommerce/features/splash/controllers/splash_c
 import 'package:flutter_sixvalley_ecommerce/features/support/controllers/support_ticket_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/wallet/controllers/wallet_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/wishlist/controllers/wishlist_controller.dart';
+import 'package:flutter_sixvalley_ecommerce/helper/notification_route_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/route_healper.dart';
 import 'package:flutter_sixvalley_ecommerce/localization/controllers/localization_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/push_notification/models/notification_body.dart';
@@ -110,7 +111,8 @@ Future<void> bootstrapApp() async {
   try {
     final RemoteMessage? remoteMessage = await FirebaseMessaging.instance.getInitialMessage();
     if (remoteMessage != null) {
-      body = NotificationHelper.convertNotification(remoteMessage.data);
+      body = NotificationRouteHelper.parseNotificationData(remoteMessage.data);
+      NotificationRouteHelper.setPendingNotification(body);
     }
     await NotificationHelper.initialize(flutterLocalNotificationsPlugin);
     FirebaseMessaging.onBackgroundMessage(myBackgroundMessageHandler);

@@ -10,6 +10,7 @@ import 'package:flutter_sixvalley_ecommerce/localization/language_constrants.dar
 import 'package:flutter_sixvalley_ecommerce/theme/controllers/theme_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/custom_themes.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/dimensions.dart';
+import 'package:flutter_sixvalley_ecommerce/common/basewidget/product_category_name_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/common/basewidget/custom_image_widget.dart';
 import 'package:provider/provider.dart';
 
@@ -31,6 +32,7 @@ class LatestProductWidget extends StatelessWidget {
         child: Stack(
           children: [
             Container(
+
               decoration: BoxDecoration(
                 borderRadius:  const BorderRadius.all(Radius.circular(Dimensions.paddingSizeSmall)),
                 color: Provider.of<ThemeController>(context, listen: false).darkTheme?
@@ -43,7 +45,7 @@ class LatestProductWidget extends StatelessWidget {
                   ]
               ),
               child: SizedBox(
-                height: ResponsiveHelper.isTab(context) ? 250 : 130,
+                height: ResponsiveHelper.isTab(context) ? 250 : 110,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -60,8 +62,8 @@ class LatestProductWidget extends StatelessWidget {
                           child: Stack(
                             children: [
                               CustomImageWidget(
-                                height: ResponsiveHelper.isTab(context) ? 250 : 130,
-                                width: ResponsiveHelper.isTab(context) ? 230 : 130,
+                                height: ResponsiveHelper.isTab(context) ? 250 : 110,
+                                width: ResponsiveHelper.isTab(context) ? 230 : 110,
                                 fit: BoxFit.cover,
                                 image: '${productModel.thumbnailFullUrl?.path}',
                               ),
@@ -114,12 +116,25 @@ class LatestProductWidget extends StatelessWidget {
                               const SizedBox(height: Dimensions.paddingSizeExtraSmall),
                             ],
 
-                            SizedBox(width: MediaQuery.of(context).size.width/3.0,
-                                child: Text(productModel.name??'',maxLines: 2, overflow: TextOverflow.ellipsis,
-                                    style: textBold.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).textTheme.bodyLarge?.color )
-                                )
-                            ),
+                            Text(
+                                productModel.name ?? '',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: textBold.copyWith(
+                                  fontSize: Dimensions.fontSizeDefault,
+                                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                                ),
+                              ),
 
+                            SizedBox(height: 2,),
+                            ProductCategoryNameWidget(
+                              product: productModel,
+                              style: textRegular.copyWith(
+                                fontSize: Dimensions.fontSizeSmall,
+                                color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.6),
+                              ),
+                            ),
+                            const Spacer(),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -146,7 +161,7 @@ class LatestProductWidget extends StatelessWidget {
                                             ?  productModel.clearanceSale?.discountAmount
                                             : productModel.discount),
                                         style: textBold.copyWith(color: Theme.of(context).textTheme.bodyMedium?.color,
-                                            fontSize: Dimensions.fontSizeDefault)) : const SizedBox(),
+                                            fontSize: Dimensions.fontSizeDefault+1)) : const SizedBox(),
                                   ],
                                 ),
                               ],

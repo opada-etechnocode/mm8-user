@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_sixvalley_ecommerce/common/basewidget/product_category_name_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/common/basewidget/custom_image_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/common/basewidget/discount_tag_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product/domain/models/product_model.dart';
-import 'package:flutter_sixvalley_ecommerce/features/product_details/widgets/favourite_button_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/price_converter.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/responsive_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/route_healper.dart';
-import 'package:flutter_sixvalley_ecommerce/localization/controllers/localization_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/localization/language_constrants.dart';
 import 'package:flutter_sixvalley_ecommerce/theme/controllers/theme_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/custom_themes.dart';
@@ -23,8 +22,6 @@ class ProductCategoryWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isLtr =
-        Provider.of<LocalizationController>(context, listen: false).isLtr;
     final double itemSize =
         ResponsiveHelper.isTab(context) ? 160.0 : 90.0;
     final String rating = productModel.rating != null &&
@@ -184,6 +181,9 @@ class ProductCategoryWidget extends StatelessWidget {
                                   ?.color,
                             ),
                           ),
+                          ProductCategoryNameWidget(product: productModel,style: TextStyle(
+                            fontSize: 10,
+                          ),),
                           const Spacer(),
                           if (hasDiscount)
                             Text(

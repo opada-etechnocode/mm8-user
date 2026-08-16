@@ -64,6 +64,7 @@ class Product {
   String? _slug;
   String? _productType;
   List<CategoryIds>? _categoryIds;
+  int? _categoryId;
   String? _unit;
   List<String>? _images;
   List<ImageFullUrl>? _imagesFullUrl;
@@ -96,6 +97,7 @@ class Product {
   int? _minimumOrderQty;
   int? wishList;
   Brand? brand;
+  ProductCategory? category;
   ImageFullUrl? digitalFileReadyFullUrl;
   List<DigitalVariation>? digitalVariation;
   ImageFullUrl? previewFileFullUrl;
@@ -219,6 +221,7 @@ class Product {
   String? get slug =>_slug;
   String? get productType => _productType;
   List<CategoryIds>? get categoryIds => _categoryIds;
+  int? get categoryId => _categoryId ?? category?.id;
   String? get unit => _unit;
   int? get minQty => _minQty;
   int? get refundable => _refundable;
@@ -253,6 +256,20 @@ class Product {
   List<Reviews>? get reviews => _reviews;
   String? get reviewsAvgRating => _reviewsAvgRating;
 
+  String? get categoryDisplayName {
+    if (category?.name != null && category!.name!.trim().isNotEmpty) {
+      return category!.name;
+    }
+    if (_categoryIds != null) {
+      for (final item in _categoryIds!) {
+        if (item.name != null && item.name!.trim().isNotEmpty) {
+          return item.name;
+        }
+      }
+    }
+    return null;
+  }
+
   Product.fromJson(Map<String, dynamic> json) {
     _id = json['id'];
     _addedBy = json['added_by'];
@@ -260,6 +277,9 @@ class Product {
     _name = json['name'];
     _slug = json['slug'];
     _productType = json['product_type'];
+    _categoryId = json['category_id'] is int
+        ? json['category_id']
+        : int.tryParse(json['category_id']?.toString() ?? '');
     if (json['category_ids'] != null) {
       _categoryIds = [];
       try{
@@ -407,6 +427,9 @@ class Product {
 
     }
     brand = json['brand'] != null ? Brand.fromJson(json['brand']) : null;
+    category = json['category'] != null
+        ? ProductCategory.fromJson(json['category'])
+        : null;
     _thumbnailFullUrl = json['thumbnail_full_url'] != null
         ? ImageFullUrl.fromJson(json['thumbnail_full_url'])
         : null;
@@ -440,6 +463,7 @@ class Product {
     data['name'] = _name;
     data['slug'] = _slug;
     data['product_type'] = _productType;
+    data['category_id'] = _categoryId;
     if (_categoryIds != null) {
       data['category_ids'] = _categoryIds!.map((v) => v.toJson()).toList();
     }
@@ -477,6 +501,7 @@ class Product {
     data['minimum_order_qty'] = _minimumOrderQty;
     data['wish_list_count'] = wishList;
     if (brand != null) data['brand'] = brand!.toJson();
+    if (category != null) data['category'] = category!.toJson();
     if (digitalFileReadyFullUrl != null) data['digital_file_ready_full_url'] = digitalFileReadyFullUrl!.toJson();
     if (previewFileFullUrl != null) data['preview_file_full_url'] = previewFileFullUrl!.toJson();
     if (clearanceSale != null) data['clearance_sale'] = clearanceSale!.toJson();
@@ -489,23 +514,66 @@ class Product {
 }
 
 class CategoryIds {
+  String? _id;
   int? _position;
+  String? _name;
 
-  CategoryIds({int? position}) {
+  CategoryIds({String? id, int? position, String? name}) {
+    _id = id;
     _position = position;
+    _name = name;
   }
 
+  String? get id => _id;
   int? get position => _position;
+  String? get name => _name;
 
   CategoryIds.fromJson(Map<String, dynamic> json) {
-    _position = json['position'];
+    _id = json['id']?.toString();
+    _position = json['position'] is int
+        ? json['position']
+        : int.tryParse(json['position']?.toString() ?? '');
+    _name = json['name'];
   }
 
 
   Map<String, dynamic> toJson() {
-    return {'position': _position};
+    return {
+      'id': _id,
+      'position': _position,
+      'name': _name,
+    };
   }
 
+}
+
+class ProductCategory {
+  int? id;
+  String? name;
+  String? slug;
+  ImageFullUrl? iconFullUrl;
+
+  ProductCategory({this.id, this.name, this.slug, this.iconFullUrl});
+
+  ProductCategory.fromJson(Map<String, dynamic> json) {
+    id = json['id'] is int
+        ? json['id']
+        : int.tryParse(json['id']?.toString() ?? '');
+    name = json['name'];
+    slug = json['slug'];
+    iconFullUrl = json['icon_full_url'] != null
+        ? ImageFullUrl.fromJson(json['icon_full_url'])
+        : null;
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'slug': slug,
+      if (iconFullUrl != null) 'icon_full_url': iconFullUrl!.toJson(),
+    };
+  }
 }
 
 class ProductColors {

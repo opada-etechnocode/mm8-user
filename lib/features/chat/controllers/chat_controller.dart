@@ -47,6 +47,17 @@ class ChatController extends ChangeNotifier {
   int _userTypeIndex = 0;
   int get userTypeIndex => _userTypeIndex;
 
+  int get vendorUnreadMessageCount {
+    final chats = chatModel?.chat;
+    if (chats == null || chats.isEmpty) return 0;
+
+    var count = 0;
+    for (final chat in chats) {
+      count += chat.unseenMessageCount ?? 0;
+    }
+    return count;
+  }
+
   ChatModel? chatModel;
   ChatModel? deliverymanChatModel;
 

@@ -4,10 +4,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_sixvalley_ecommerce/data/model/api_response.dart';
+import 'package:flutter_sixvalley_ecommerce/features/cart/controllers/cart_controller.dart';
+import 'package:flutter_sixvalley_ecommerce/features/cart/domain/models/cart_model.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product/controllers/seller_product_controller.dart';
+import 'package:flutter_sixvalley_ecommerce/features/product/domain/models/product_model.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product_details/domain/models/product_details_model.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product_details/domain/services/product_details_service_interface.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product_details/enums/preview_type.dart';
+import 'package:flutter_sixvalley_ecommerce/features/auth/controllers/auth_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/splash/controllers/splash_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/api_checker.dart';
 import 'package:flutter_sixvalley_ecommerce/localization/language_constrants.dart';
@@ -144,6 +148,130 @@ class ProductDetailsController extends ChangeNotifier {
     if(isUpdate) {
       notifyListeners();
     }
+  }
+
+  int? findColorIndexForImage(ProductDetailsModel product, String? imagePath, {int? imageIndex}) {
+    if (imagePath == null || imagePath.isEmpty) return null;
+
+    if (product.colorImagesFullUrl != null &&
+        product.colorImagesFullUrl!.isNotEmpty &&
+        product.colors != null) {
+      for (final colorImage in product.colorImagesFullUrl!) {
+        if (colorImage.imageName?.path == imagePath) {
+          final colorKey = colorImage.color;
+          for (int i = 0; i < product.colors!.length; i++) {
+            final code = product.colors![i].code;
+            if (code != null && code.length >= 7 && code.substring(1, 7) == colorKey) {
+              return i;
+            }
+          }
+        }
+      }
+    }
+
+    if (imageIndex != null &&
+        product.colors != null &&
+        product.colors!.isNotEmpty &&
+        product.imagesFullUrl != null &&
+        product.colors!.length == product.imagesFullUrl!.length) {
+      return imageIndex;
+    }
+
+    return null;
+  }
+
+  Variation? _resolveVariation(ProductDetailsModel product, int colorIndex) {
+    if (product.variation == null || product.variation!.isEmpty) return null;
+
+    String? variantName = (product.colors != null && product.colors!.isNotEmpty)
+        ? product.colors![colorIndex].name
+        : null;
+
+    final variationList = <String>[];
+    final choiceCount = product.choiceOptions?.length ?? 0;
+    for (int index = 0; index < choiceCount; index++) {
+      final optionIndex = (_variationIndex != null && _variationIndex!.length > index)
+          ? _variationIndex![index]
+          : 0;
+      variationList.add(product.choiceOptions![index].options![optionIndex].trim());
+    }
+
+    String variationType = '';
+    if (variantName != null) {
+      variationType = variantName;
+      for (final variation in variationList) {
+        variationType = '$variationType-$variation';
+      }
+    } else {
+      bool isFirst = true;
+      for (final variation in variationList) {
+        if (isFirst) {
+          variationType = variation;
+          isFirst = false;
+        } else {
+          variationType = '$variationType-$variation';
+        }
+      }
+    }
+
+    variationType = variationType.replaceAll(' ', '');
+    for (final variation in product.variation!) {
+      if (variation.type == variationType) {
+        return variation;
+      }
+    }
+    return null;
+  }
+
+  int? _resolveStock(ProductDetailsModel product, int colorIndex) {
+    final variation = _resolveVariation(product, colorIndex);
+    return variation?.qty ?? product.currentStock;
+  }
+
+  Future<void> addToCartFromColorIndex(BuildContext context, ProductDetailsModel product, int colorIndex) async {
+    final splashController = Provider.of<SplashController>(context, listen: false);
+    final authController = Provider.of<AuthController>(context, listen: false);
+
+    if (splashController.configModel?.guestCheckOut == 0 && !authController.isLoggedIn()) {
+      showCustomSnackBarWidget(getTranslated('please_login', context), context, snackBarType: SnackBarType.warning);
+      return;
+    }
+
+    if (_variationIndex == null || _variantIndex == null) {
+      initData(product, product.minimumOrderQty ?? 1, context);
+    }
+
+    setCartVariantIndex(product.minimumOrderQty ?? 1, colorIndex, context);
+
+    final stock = _resolveStock(product, colorIndex);
+    final minQty = product.minimumOrderQty ?? 1;
+
+    if (product.productType == 'physical' && (stock ?? 0) < minQty) {
+      showCustomSnackBarWidget(getTranslated('out_of_stock', context), context, snackBarType: SnackBarType.warning);
+      return;
+    }
+
+    final variation = _resolveVariation(product, colorIndex);
+    final cart = CartModelBody(
+      productId: product.id,
+      variant: (product.colors != null && product.colors!.isNotEmpty)
+          ? product.colors![colorIndex].name
+          : '',
+      color: (product.colors != null && product.colors!.isNotEmpty)
+          ? product.colors![colorIndex].code
+          : '',
+      variation: variation,
+      quantity: _quantity ?? minQty,
+    );
+
+    await Provider.of<CartController>(context, listen: false).addToCartAPI(
+      cart,
+      context,
+      product.choiceOptions ?? [],
+      _variationIndex,
+      popOnSuccess: false,
+      showFloatingCartSummary: true,
+    );
   }
 
 

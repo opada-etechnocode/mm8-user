@@ -25,7 +25,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.fontSize,
     this.showResetIcon = false,
     this.reset,
-    this.showLogo = false
+    this.showLogo = false,
   });
 
   @override

@@ -7,6 +7,7 @@ import 'package:flutter_sixvalley_ecommerce/localization/language_constrants.dar
 import 'package:flutter_sixvalley_ecommerce/features/splash/controllers/splash_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/splash/domain/models/config_model.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/network_info.dart';
+import 'package:flutter_sixvalley_ecommerce/helper/notification_route_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/route_healper.dart';
 import 'package:flutter_sixvalley_ecommerce/main.dart';
 import 'package:flutter_sixvalley_ecommerce/push_notification/models/notification_body.dart';
@@ -31,6 +32,7 @@ class SplashScreenState extends State<SplashScreen> {
   final GlobalKey<ScaffoldMessengerState> _globalKey = GlobalKey();
   final Completer<void> _typingCompleter = Completer<void>();
   bool _hasNavigated = false;
+  NotificationBody? _notificationBody;
   // late StreamSubscription<ConnectivityResult> _onConnectivityChanged;
 
   @override
@@ -87,6 +89,18 @@ class SplashScreenState extends State<SplashScreen> {
     // _onConnectivityChanged.cancel();
   }
 
+  NotificationBody? _resolveNotificationBody() {
+    _notificationBody ??= widget.body ?? NotificationRouteHelper.consumePendingNotification();
+    return _notificationBody;
+  }
+
+  void _navigateFromNotification(NotificationBody body) {
+    NotificationRouteHelper.navigateImmediately(
+      body,
+      action: RouteAction.pushReplacement,
+    );
+  }
+
   void _route() {
     NetworkInfo.checkConnectivity(context);
     Provider.of<SplashController>(context, listen: false).initConfig(context, (ConfigModel? configModel) {
@@ -110,38 +124,10 @@ class SplashScreenState extends State<SplashScreen> {
               RouterHelper.getMaintenanceRoute(action: RouteAction.pushReplacement);
             } else if(Provider.of<AuthController>(Get.context!, listen: false).isLoggedIn()) {
               Provider.of<AuthController>(Get.context!, listen: false).updateToken(Get.context!);
-              if(widget.body != null){
-                if (widget.body!.type == 'order') {
-                  RouterHelper.getOrderDetailsScreenRoute(
-                    action: RouteAction.pushReplacement,
-                    orderId: widget.body!.orderId!,
-                  );
-                } else if(widget.body!.type == 'notification') {
-                  RouterHelper.getNotificationRoute(action: RouteAction.pushReplacement);
-                } else if(widget.body!.type == 'wallet') {
-                  RouterHelper.getWalletRoute(action: RouteAction.pushReplacement, isBackButtonExist: true);
-                } else  if (widget.body!.type == 'chatting') {
-                  RouterHelper.getInboxScreenRoute(
-                    action: RouteAction.pushReplacement,
-                    isBackButtonExist: true,
-                    fromNotification: true,
-                    initIndex: widget.body!.messageKey == 'message_from_delivery_man' ? 0 : 1,
-                  );
-                } else if(widget.body!.type == 'product_restock_update') {
-                  RouterHelper.getProductDetailsRoute(action: RouteAction.pushReplacement, productId: int.parse(widget.body!.productId!), slug: widget.body!.slug, isNotification: true);
-                } else {
-                  RouterHelper.getNotificationRoute(action: RouteAction.pushReplacement, fromNotification: true);
-                }
+              final notificationBody = _resolveNotificationBody();
+              if(notificationBody != null){
+                _navigateFromNotification(notificationBody);
               }else{
-                // Navigator.of(Get.context!).pushReplacement(
-                //   PageRouteBuilder(
-                //     pageBuilder: (context, animation, secondaryAnimation) => const DashBoardScreen(),
-                //     transitionDuration: Duration.zero, // Removes transition duration
-                //     reverseTransitionDuration: Duration.zero, // Removes reverse transition
-                //     transitionsBuilder: (context, animation, secondaryAnimation, child) => child,
-                //   ),
-                // );
-
                 RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
               }
             }
@@ -210,28 +196,9 @@ class SplashScreenState extends State<SplashScreen> {
             RouterHelper.getMaintenanceRoute(action: RouteAction.pushReplacement);
           } else if(Provider.of<AuthController>(Get.context!, listen: false).isLoggedIn() && !configModel!.hasLocaldb!) {
             Provider.of<AuthController>(Get.context!, listen: false).updateToken(Get.context!);
-            if(widget.body != null) {
-              if (widget.body!.type == 'order') {
-                RouterHelper.getOrderDetailsScreenRoute(
-                  action: RouteAction.pushReplacement,
-                  orderId: widget.body!.orderId!,
-                );
-              } else if(widget.body!.type == 'notification') {
-                RouterHelper.getNotificationRoute(action: RouteAction.pushReplacement);
-              } else if(widget.body!.type == 'wallet') {
-                RouterHelper.getWalletRoute(action: RouteAction.pushReplacement, isBackButtonExist: true);
-              } else  if (widget.body!.type == 'chatting') {
-                RouterHelper.getInboxScreenRoute(
-                  action: RouteAction.push,
-                  isBackButtonExist: true,
-                  fromNotification: true,
-                  initIndex: widget.body!.messageKey == 'message_from_delivery_man' ? 0 : 1,
-                );
-              } else if(widget.body!.type == 'product_restock_update') {
-                RouterHelper.getProductDetailsRoute(action: RouteAction.push, productId: int.parse(widget.body!.productId!), slug: widget.body!.slug, isNotification: true);
-              } else {
-                RouterHelper.getNotificationRoute(action: RouteAction.pushReplacement, fromNotification: true);
-              }
+            final notificationBody = _resolveNotificationBody();
+            if(notificationBody != null) {
+              _navigateFromNotification(notificationBody);
             }else{
               RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
             }

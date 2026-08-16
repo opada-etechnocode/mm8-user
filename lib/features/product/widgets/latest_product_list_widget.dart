@@ -46,7 +46,7 @@ class LatestProductListWidget extends StatelessWidget {
                     child: Center(
                         child: Image.asset(Images.backgroundBubble2,color:Theme.of(context).primaryColor,height: 500,))),
                 SizedBox(
-                  height: (latestProductModel?.products?.length ?? 0) > 5 ? size.height * 0.35 : size.height * 0.16,
+                  height: (latestProductModel?.products?.length ?? 0) > 5 ? size.height * 0.31 : size.height * 0.16,
                   child: GridView.builder(
                     clipBehavior: Clip.none,
                     itemCount: latestProductModel?.products?.length,
@@ -55,7 +55,7 @@ class LatestProductListWidget extends StatelessWidget {
                       crossAxisCount: (latestProductModel?.products?.length ?? 0) > 5 ? 2 : 1,
                       crossAxisSpacing: Dimensions.paddingSizeExtraSmall,
                       mainAxisSpacing: Dimensions.paddingSizeExtraSmall,
-                      childAspectRatio: 0.50,
+                      childAspectRatio: 0.49
                     ),
                     itemBuilder: (context, index) {
 
@@ -68,7 +68,7 @@ class LatestProductListWidget extends StatelessWidget {
                       final isLastColumn = columnIndex == lastColumnIndex;
 
                       return SizedBox(
-                        height: 100,
+
 
                         child: Padding(
                           padding: EdgeInsetsGeometry.directional(end: isLastColumn ? Dimensions.paddingSizeDefault : 0,start: index==0||index==crossAxisCount-1?10:0),

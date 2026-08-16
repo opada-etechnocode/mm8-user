@@ -16,4 +16,19 @@ class NotificationService implements NotificationServiceInterface{
     return notificationRepositoryInterface.seenNotification(id);
   }
 
+  @override
+  Set<int> getDeletedNotificationIds() {
+    return notificationRepositoryInterface.getDeletedNotificationIds();
+  }
+
+  @override
+  Future<void> cacheDeletedNotificationId(int id) {
+    return notificationRepositoryInterface.cacheDeletedNotificationId(id);
+  }
+
+  @override
+  Future<void> cacheDeletedNotificationIds(List<int> ids) {
+    return notificationRepositoryInterface.cacheDeletedNotificationIds(ids);
+  }
+
 }

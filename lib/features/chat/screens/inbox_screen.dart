@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_sixvalley_ecommerce/features/chat/domain/models/chat_model.dart';
-import 'package:flutter_sixvalley_ecommerce/features/chat/widgets/conversation_tabview.dart';
 import 'package:flutter_sixvalley_ecommerce/features/profile/controllers/profile_contrroller.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/route_healper.dart';
 import 'package:flutter_sixvalley_ecommerce/localization/language_constrants.dart';
@@ -16,48 +15,53 @@ import 'package:flutter_sixvalley_ecommerce/features/chat/widgets/inbox_shimmer_
 import 'package:flutter_sixvalley_ecommerce/features/chat/widgets/search_inbox_widget.dart';
 import 'package:provider/provider.dart';
 
-
 class InboxScreen extends StatefulWidget {
   final bool isBackButtonExist;
   final bool fromNotification;
   final bool fromDashboard;
   final int initIndex;
-  const InboxScreen({super.key, this.isBackButtonExist = true,  this.fromNotification = false, this.initIndex = 0, this.fromDashboard = false});
+  const InboxScreen({
+    super.key,
+    this.isBackButtonExist = true,
+    this.fromNotification = false,
+    this.initIndex = 1,
+    this.fromDashboard = false,
+  });
 
   @override
   State<InboxScreen> createState() => _InboxScreenState();
 }
 
-class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStateMixin{
+class _InboxScreenState extends State<InboxScreen> {
+  static const int _vendorUserType = 1;
 
   TextEditingController searchController = TextEditingController();
-  late TabController _tabController;
-
   late bool isGuestMode;
+
   @override
   void initState() {
+    super.initState();
     final ChatController chatController = Provider.of<ChatController>(context, listen: false);
 
-    chatController.setUserTypeIndex(context, 0, isUpdate: false);
+    chatController.setUserTypeIndex(context, _vendorUserType, isUpdate: false);
     chatController.resetIsSearchComplete(isUpdate: false);
 
     isGuestMode = !Provider.of<AuthController>(context, listen: false).isLoggedIn();
-    if(!isGuestMode) {
-      _tabController = TabController(vsync: this, length: 2, initialIndex: widget.initIndex);
-    }
-
-    if(widget.fromNotification) {
-      chatController.setUserTypeIndex(context, widget.initIndex, isUpdate: false);
-      chatController.getChatList(1, reload: false, userType: 0);
-      chatController.getChatList(1, reload: false, userType: 1);
+    if (!isGuestMode) {
+      chatController.getChatList(1, reload: false, userType: _vendorUserType);
     }
 
     if (!isGuestMode && !widget.fromDashboard) {
-      if(Provider.of<ProfileController>(context, listen: false).userInfoModel == null) {
+      if (Provider.of<ProfileController>(context, listen: false).userInfoModel == null) {
         Provider.of<ProfileController>(context, listen: false).getUserInfo(context);
       }
     }
-    super.initState();
+  }
+
+  ChatModel? _getVendorChatModel(ChatController chatProvider) {
+    return chatProvider.isSearchComplete
+        ? chatProvider.searchChatModel
+        : chatProvider.chatModel;
   }
 
   @override
@@ -65,104 +69,88 @@ class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStat
     final Size size = MediaQuery.of(context).size;
 
     return Scaffold(
-      appBar: CustomAppBar(title: getTranslated('inbox', context), isBackButtonExist: !widget.fromDashboard,
-      onBackPressed: (){
-        if(Navigator.of(context).canPop()){
-          Navigator.of(context).pop();
-        }else{
-          RouterHelper.getDashboardRoute(action: RouteAction.pushNamedAndRemoveUntil);
-        }
-      }),
+      appBar: CustomAppBar(
+        title: getTranslated('inbox', context),
+        isBackButtonExist: !widget.fromDashboard,
+        onBackPressed: () {
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          } else {
+            RouterHelper.getDashboardRoute(action: RouteAction.pushNamedAndRemoveUntil);
+          }
+        },
+      ),
       body: Consumer<ChatController>(
         builder: (context, chat, _) {
-          return Column(children: [
-            if(!isGuestMode)
-            Consumer<ChatController>(
-              builder: (context, chat, _) {
-                return Padding(padding: const EdgeInsets.fromLTRB( Dimensions.homePagePadding,
-                  Dimensions.paddingSizeSmall, Dimensions.homePagePadding, 0),
-                  child: SearchInboxWidget(hintText: getTranslated('search', context)));
-              }),
-
-            if(!isGuestMode)
-            Padding(padding: const EdgeInsets.fromLTRB(Dimensions.paddingSizeExtraSmall,
-              Dimensions.paddingSizeDefault, Dimensions.paddingSizeDefault, Dimensions.paddingSizeSmall),
-              child: ConversationListTabview(tabController: _tabController),
-            ),
-
-            Expanded(child: isGuestMode ? NotLoggedInWidget(message: getTranslated('to_communicate_with_vendors', context),
-              fromPage: widget.fromDashboard ? '${RouterHelper.dashboardScreen}?page=inbox' : RouterHelper.inboxScreen,
-              onLoginSuccess: !widget.fromDashboard ? () {
-                RouterHelper.getInboxScreenRoute(action: RouteAction.pushReplacement);
-              } : null,
-            ) :
-
-              RefreshIndicator(
-                onRefresh: () async {
-                  searchController.clear();
-                  await chat.getChatList(1, userType: _tabController.index);
-                },
-              child: Consumer<ChatController>(
-                builder: (context, chatProvider, child) {
-                  // ChatModel? _cahtModel = _tabController.index == 0 ?  chatProvider.isSearchComplete ?
-                  // chatProvider.searchDeliverymanChatModel : chatProvider.deliverymanChatModel :
-                  // chatProvider.isSearchComplete ? chatProvider.searchChatModel : chatProvider.chatModel;
-                  ChatModel? cahtModel;
-
-                  if(_tabController.index == 0) {
-                    if(chatProvider.isSearchComplete) {
-                      cahtModel = chatProvider.searchDeliverymanChatModel;
-                    } else {
-                      cahtModel = chatProvider.deliverymanChatModel;
-                    }
-                  } else {
-                    if(chatProvider.isSearchComplete) {
-                      cahtModel = chatProvider.searchChatModel;
-                    } else {
-                      cahtModel = chatProvider.chatModel;
-                    }
-                  }
-
-                  return cahtModel != null ? (cahtModel.chat != null && cahtModel.chat!.isNotEmpty) ?
-                    ListView.builder(
-                      itemCount: cahtModel.chat?.length,
-                      padding: const EdgeInsets.all(0),
-                      itemBuilder: (context, index) {
-                        return ChatItemWidget(
-                          chat: cahtModel?.chat![index],
-                          chatProvider: chat,
-                          callBack: (){
-                            if(_tabController.index == 0){
-                              if(chatProvider.isSearchComplete){
-                                chatProvider.searchDeliverymanChatModel!.chat![index].unseenMessageCount = 0;
-                              } else {
-                                chatProvider.deliverymanChatModel!.chat![index].unseenMessageCount = 0;
+          return Column(
+            children: [
+              if (!isGuestMode)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    Dimensions.homePagePadding,
+                    Dimensions.paddingSizeSmall,
+                    Dimensions.homePagePadding,
+                    0,
+                  ),
+                  child: SearchInboxWidget(hintText: getTranslated('search', context)),
+                ),
+              Expanded(
+                child: isGuestMode
+                    ? NotLoggedInWidget(
+                        message: getTranslated('to_communicate_with_vendors', context),
+                        fromPage: widget.fromDashboard
+                            ? '${RouterHelper.dashboardScreen}?page=inbox'
+                            : RouterHelper.inboxScreen,
+                        onLoginSuccess: !widget.fromDashboard
+                            ? () {
+                                RouterHelper.getInboxScreenRoute(action: RouteAction.pushReplacement);
                               }
-                            } else{
-                              if(chatProvider.isSearchComplete){
-                                chatProvider.searchChatModel!.chat![index].unseenMessageCount = 0;
-                              } else {
-                                chatProvider.chatModel!.chat![index].unseenMessageCount = 0;
-                              }
-                            }
+                            : null,
+                      )
+                    : RefreshIndicator(
+                        onRefresh: () async {
+                          searchController.clear();
+                          await chat.getChatList(1, userType: _vendorUserType);
+                        },
+                        child: Consumer<ChatController>(
+                          builder: (context, chatProvider, child) {
+                            final ChatModel? chatModel = _getVendorChatModel(chatProvider);
+
+                            return chatModel != null
+                                ? (chatModel.chat != null && chatModel.chat!.isNotEmpty)
+                                    ? ListView.builder(
+                                        itemCount: chatModel.chat?.length,
+                                        padding: const EdgeInsets.all(0),
+                                        itemBuilder: (context, index) {
+                                          return ChatItemWidget(
+                                            chat: chatModel?.chat![index],
+                                            chatProvider: chat,
+                                            callBack: () {
+                                              if (chatProvider.isSearchComplete) {
+                                                chatProvider.searchChatModel!.chat![index].unseenMessageCount = 0;
+                                              } else {
+                                                chatProvider.chatModel!.chat![index].unseenMessageCount = 0;
+                                              }
+                                              chatProvider.notifyListeners();
+                                            },
+                                          );
+                                        },
+                                      )
+                                    : NoInternetOrDataScreenWidget(
+                                        padding: EdgeInsets.only(top: size.height * 0.15),
+                                        isNoInternet: false,
+                                        message: 'no_vendor_found',
+                                        icon: Images.sellerPlaceholder,
+                                      )
+                                : const InboxShimmerWidget();
                           },
-                        );
-                      },
-                    ) :  NoInternetOrDataScreenWidget(
-                    padding: EdgeInsets.only(top: size.height * 0.15),
-                    isNoInternet: false,
-                    message: _tabController.index == 0 ? 'no_deliveryman_found' : 'no_vendor_found',
-                    icon: _tabController.index == 0 ?  Images.deliverymanPlaceholder : Images.sellerPlaceholder,
-                  ) : const InboxShimmerWidget();
-                })
-              )
-            ),
-          ]);
-        }
+                        ),
+                      ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 }
-
-
-

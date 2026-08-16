@@ -26,6 +26,7 @@ import 'package:flutter_sixvalley_ecommerce/features/home/widgets/featured_produ
 import 'package:flutter_sixvalley_ecommerce/features/home/widgets/just_for_you/just_for_you_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/features/home/widgets/product_list_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/features/home/widgets/product_type_popup_menu_widget.dart';
+import 'package:flutter_sixvalley_ecommerce/features/home/widgets/home_notification_icon_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/features/home/widgets/search_home_page_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/features/notification/controllers/notification_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/order/controllers/order_controller.dart';
@@ -171,9 +172,19 @@ class _AsterThemeHomeScreenState extends State<AsterThemeHomeScreen> {
 
           // Search Button
           SliverPersistentHeader(pinned: true, delegate: SliverDelegate(
-            child: InkWell(
-              onTap: ()=> RouterHelper.getSearchRoute(action: RouteAction.push),
-              child: const Hero(tag: 'search', child: Material(child: SearchHomePageWidget())),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: ()=> RouterHelper.getSearchRoute(action: RouteAction.push),
+                      child: const Hero(tag: 'search', child: Material(child: SearchHomePageWidget())),
+                    ),
+                  ),
+                  const HomeNotificationIconWidget(),
+                ],
+              ),
             ),
           )),
 

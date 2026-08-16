@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_sixvalley_ecommerce/features/notification/domain/models/notification_model.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/date_converter.dart';
+import 'package:flutter_sixvalley_ecommerce/helper/notification_route_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/features/notification/controllers/notification_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/custom_themes.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/dimensions.dart';
@@ -20,10 +21,15 @@ class NotificationItemWidget extends StatelessWidget {
         return InkWell(
             onTap:(){
               notificationController.seenNotification(notificationItem.id!);
-              showModalBottomSheet(
+              final body = NotificationRouteHelper.notificationItemToBody(notificationItem);
+              if (body.type == 'notification') {
+                showModalBottomSheet(
                   backgroundColor: Colors.transparent,
                   context: context, builder: (context) => NotificationDialogWidget(notificationModel: notificationItem),
-              );
+                );
+              } else {
+                NotificationRouteHelper.navigateImmediately(body);
+              }
             },
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
 

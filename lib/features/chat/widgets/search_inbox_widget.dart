@@ -37,7 +37,6 @@ class _SearchInboxWidgetState extends State<SearchInboxWidget> {
                    searchController.clear();
                  }else {
                    Provider.of<ChatController>(context, listen: false).searchChat(context, searchController.text.trim(), 0);
-                   Provider.of<ChatController>(context, listen: false).searchChat(context, searchController.text.trim(), 1);
                  }
                 },
 

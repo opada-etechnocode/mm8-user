@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -13,6 +12,7 @@ import 'package:flutter_sixvalley_ecommerce/features/restock/widgets/restock_bot
 import 'package:flutter_sixvalley_ecommerce/features/splash/controllers/splash_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/splash/domain/models/config_model.dart';
 import 'package:flutter_sixvalley_ecommerce/features/wallet/controllers/wallet_controller.dart';
+import 'package:flutter_sixvalley_ecommerce/helper/notification_route_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/route_healper.dart';
 import 'package:flutter_sixvalley_ecommerce/main.dart';
 import 'package:flutter_sixvalley_ecommerce/push_notification/models/notification_body.dart';
@@ -49,39 +49,17 @@ class NotificationHelper {
 
     flutterLocalNotificationsPlugin.initialize(settings: initializationsSettings, onDidReceiveNotificationResponse: (NotificationResponse load) async {
       try{
-        log("tyyuuyypee88=11=>$load");
-        log("==Payload=11=>${load.payload}");
-        NotificationBody payload;
-
-        if(load.payload!.isNotEmpty) {
-          payload = NotificationBody.fromJson(jsonDecode(load.payload!));
-          log("-----------tyyuuyypee88==>${payload.type}");
-          log("=============Payload==>${load.payload}");
-          if(payload.type == 'order') {
-            RouterHelper.getOrderDetailsScreenRoute(
-              action: RouteAction.pushReplacement,
-              orderId: payload.orderId!,
-              isNotification: true
-            );
-          } else if(payload.type == 'wallet') {
-            RouterHelper.getWalletRoute(action: RouteAction.pushReplacement, isBackButtonExist: true);
-          } else if(payload.type == 'chatting') {
-            RouterHelper.getInboxScreenRoute(
-              action: RouteAction.pushReplacement,
-              isBackButtonExist: true,
-              initIndex: payload.messageKey == 'message_from_delivery_man' ? 0 : 1,
-              fromNotification: true,
-            );
-          } else if(payload.type == 'product_restock_update') {
-            RouterHelper.getProductDetailsRoute(action: RouteAction.pushReplacement, productId: int.parse(payload.productId!), slug: payload.slug, isNotification: true);
-          } else if(payload.type == 'referral_code_used'){
-
-          } else{
-            RouterHelper.getNotificationRoute(action: RouteAction.pushReplacement, fromNotification: true);
-          }
+        if(load.payload == null || load.payload!.isEmpty) return;
+        final payload = NotificationBody.fromJson(jsonDecode(load.payload!));
+        await NotificationRouteHelper.navigateFromNotification(
+          payload,
+          action: RouteAction.pushReplacement,
+        );
+      }catch (e) {
+        if (kDebugMode) {
+          debugPrint('Notification tap error: $e');
         }
-      }catch (_) {}
-      return;
+      }
     });
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
@@ -128,7 +106,6 @@ class NotificationHelper {
 
         if (result == null) {
           Provider.of<RestockController>(Get.context!, listen: false).setBottomSheetOpen(false);
-        } else {
         }
       }
     });
@@ -144,32 +121,17 @@ class NotificationHelper {
       }
       try{
         if(message.data.isNotEmpty) {
-          NotificationBody notificationBody = convertNotification(message.data);
-          if(notificationBody.type == 'order') {
-            RouterHelper.getOrderDetailsScreenRoute(
-              action: RouteAction.pushReplacement,
-              orderId: notificationBody.orderId!,
-              isNotification: true
-            );
-
-          } else if(notificationBody.type == 'wallet') {
-            RouterHelper.getWalletRoute(action: RouteAction.pushReplacement, isBackButtonExist: true);
-          } else if(notificationBody.type == 'notification') {
-            RouterHelper.getNotificationRoute(action: RouteAction.pushReplacement, fromNotification: true);
-          } else if(notificationBody.type == 'chatting') {
-            RouterHelper.getInboxScreenRoute(
-              action: RouteAction.pushReplacement,
-              isBackButtonExist: true,
-              fromNotification: true,
-              initIndex: notificationBody.messageKey == 'message_from_delivery_man' ? 0 : 1,
-            );
-          } else if(notificationBody.type == 'product_restock_update') {
-            RouterHelper.getProductDetailsRoute(action: RouteAction.pushReplacement, productId: int.parse(notificationBody.productId!), slug: notificationBody.slug, isNotification: true);
-          } else {
-            RouterHelper.getNotificationRoute(action: RouteAction.pushReplacement, fromNotification: true);
-          }
+          final notificationBody = convertNotification(message.data);
+          await NotificationRouteHelper.navigateFromNotification(
+            notificationBody,
+            action: RouteAction.pushReplacement,
+          );
         }
-      }catch (_) {}
+      }catch (e) {
+        if (kDebugMode) {
+          debugPrint('onMessageOpenedApp navigation error: $e');
+        }
+      }
 
       if(message.data['type'] == 'maintenance_mode') {
         final SplashController splashProvider = Provider.of<SplashController>(Get.context!,listen: false);
@@ -309,21 +271,7 @@ class NotificationHelper {
   }
 
   static NotificationBody convertNotification(Map<String, dynamic> data){
-    if(data['type'] == 'notification') {
-      return NotificationBody(type: 'notification');
-    }else if(data['type'] == 'order') {
-      return NotificationBody(type: 'order', orderId: int.parse(data['order_id']));
-    }else if(data['type'] == 'wallet') {
-      return NotificationBody(type: 'wallet');
-    }else if(data['type'] == 'block') {
-      return NotificationBody(type: 'block');
-    }else if(data['type'] == 'product_restock_update') {
-      return NotificationBody(type: 'product_restock_update', title: data['title'], image: data['image'], productId: data['product_id'].toString(), slug: data['slug'], status: data['status']);
-    } else if(data['type'] == 'referral_code_used') {
-      return NotificationBody(type: 'referral_code_used', title: data['title'], messageKey: data['body'], image: data['image'], productId: data['product_id'].toString(), slug: data['slug'], status: data['status']);
-    } else {
-      return NotificationBody(type: 'chatting', messageKey: data['message_key']);
-    }
+    return NotificationRouteHelper.parseNotificationData(data);
   }
 
 }

@@ -8,6 +8,7 @@ import 'package:flutter_sixvalley_ecommerce/features/product_details/controllers
 import 'package:flutter_sixvalley_ecommerce/features/shipping/controllers/shipping_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/api_checker.dart';
 import 'package:flutter_sixvalley_ecommerce/main.dart';
+import 'package:flutter_sixvalley_ecommerce/common/basewidget/floating_cart_snackbar_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/common/basewidget/show_custom_snakbar_widget.dart';
 import 'package:provider/provider.dart';
 
@@ -95,16 +96,22 @@ class CartController extends ChangeNotifier {
 
 
 
-  Future<ApiResponseModel> addToCartAPI(CartModelBody cart, BuildContext context, List<ChoiceOptions> choices, List<int>? variationIndexes, {int buyNow = 0, int? shippingMethodExist, int? shippingMethodId}) async {
+  Future<ApiResponseModel> addToCartAPI(CartModelBody cart, BuildContext context, List<ChoiceOptions> choices, List<int>? variationIndexes, {int buyNow = 0, int? shippingMethodExist, int? shippingMethodId, bool popOnSuccess = true, bool showFloatingCartSummary = false}) async {
     _addToCartLoading = true;
     notifyListeners();
     ApiResponseModel apiResponse = await cartServiceInterface!.addToCartListData(cart, choices, variationIndexes, buyNow, shippingMethodExist, shippingMethodId);
     _addToCartLoading = false;
     if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
-      Navigator.of(Get.context!).pop();
+      if (popOnSuccess) {
+        Navigator.of(Get.context!).pop();
+      }
       _addToCartLoading = false;
-      showCustomSnackBarWidget(apiResponse.response!.data['message'], Get.context!, snackBarType: SnackBarType.success);
-      getCartData(Get.context!);
+      await getCartData(Get.context!);
+      if (showFloatingCartSummary && Get.context != null) {
+        showFloatingCartSnackBar(Get.context!);
+      } else {
+        showCustomSnackBarWidget(apiResponse.response!.data['message'], Get.context!, snackBarType: SnackBarType.success);
+      }
     } else {
       _addToCartLoading = false;
       ApiChecker.checkApi(apiResponse);
