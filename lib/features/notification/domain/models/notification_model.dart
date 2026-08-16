@@ -41,6 +41,11 @@ class NotificationItem {
   String? createdAt;
   String? updatedAt;
   NotificationSeenBy? seen;
+  String? category;
+  int? orderId;
+  String? productId;
+  String? slug;
+  String? messageKey;
 
 
   NotificationItem(
@@ -55,7 +60,12 @@ class NotificationItem {
         this.createdAt,
         this.updatedAt,
         this.seen,
-        this.imageFullUrl
+        this.imageFullUrl,
+        this.category,
+        this.orderId,
+        this.productId,
+        this.slug,
+        this.messageKey,
       });
 
   NotificationItem.fromJson(Map<String, dynamic> json) {
@@ -73,7 +83,11 @@ class NotificationItem {
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];
     seen = json['notification_seen_by'] != null ? NotificationSeenBy.fromJson(json['notification_seen_by']) : null;
-
+    category = json['category']?.toString() ?? json['type']?.toString() ?? json['notification_type']?.toString();
+    orderId = int.tryParse(json['order_id']?.toString() ?? '');
+    productId = json['product_id']?.toString();
+    slug = json['slug']?.toString();
+    messageKey = json['message_key']?.toString();
   }
 }
 

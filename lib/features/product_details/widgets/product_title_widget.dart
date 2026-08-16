@@ -4,8 +4,6 @@ import 'package:flutter_sixvalley_ecommerce/common/basewidget/custom_directional
 import 'package:flutter_sixvalley_ecommerce/features/product_details/controllers/product_details_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product_details/domain/models/product_details_model.dart';
 import 'package:flutter_sixvalley_ecommerce/features/review/controllers/review_controller.dart';
-import 'package:flutter_sixvalley_ecommerce/helper/color_helper.dart';
-import 'package:flutter_sixvalley_ecommerce/helper/price_converter.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/product_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/localization/app_localization.dart';
 import 'package:flutter_sixvalley_ecommerce/localization/language_constrants.dart';
@@ -13,6 +11,8 @@ import 'package:flutter_sixvalley_ecommerce/theme/controllers/theme_controller.d
 import 'package:flutter_sixvalley_ecommerce/utill/custom_themes.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/dimensions.dart';
 import 'package:provider/provider.dart';
+
+import '../../../helper/price_converter.dart';
 
 
 class ProductTitleWidget extends StatelessWidget {
@@ -183,39 +183,6 @@ class ProductTitleWidget extends StatelessWidget {
               const SizedBox(height: Dimensions.paddingSizeSmall),
             ],
 
-            /// Available color
-            productModel!.colors != null && productModel!.colors!.isNotEmpty ?
-            Row(children: [
-
-              Text('${getTranslated('color', context)} : ', style: titilliumRegular.copyWith(
-                fontSize: Dimensions.fontSizeLarge,
-                color: Theme.of(context).textTheme.bodyLarge?.color,
-              )),
-              const SizedBox(width: Dimensions.paddingSizeExtraSmall),
-
-              Expanded(child: SizedBox(height: Dimensions.paddingSizeLarge, child: ListView.separated(
-                itemCount: productModel!.colors!.length,
-                scrollDirection: Axis.horizontal,
-                itemBuilder: (context, index) {
-                  return Center(child: Container(
-                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall)),
-                      child: Container(
-                        width: Dimensions.marginSizeAuthSmall,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: ColorHelper.hexCodeToColor(productModel?.colors?[index].code),
-                          borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraExtraSmall)
-                        ),
-                      ),
-                  ));
-                },
-                separatorBuilder: (BuildContext context, int index) => const SizedBox(width: Dimensions.paddingSizeDefaultAddress),
-              ))),
-            ]) : const SizedBox(),
-
-            productModel!.colors != null &&  productModel!.colors!.isNotEmpty ?
-            const SizedBox(height: Dimensions.paddingSizeSmall) : const SizedBox(),
-
             productModel!.choiceOptions != null && productModel!.choiceOptions!.isNotEmpty ?
             ListView.builder(
               shrinkWrap: true,
@@ -274,7 +241,8 @@ class ProductTitleWidget extends StatelessWidget {
     ) : const SizedBox();
   }
 
-  bool _isVariationAvailable() => ((productModel!.colors != null && productModel!.colors!.isNotEmpty) && productModel!.choiceOptions != null && productModel!.choiceOptions!.isNotEmpty);
+  bool _isVariationAvailable() =>
+      productModel!.choiceOptions != null && productModel!.choiceOptions!.isNotEmpty;
 }
 
 

@@ -267,10 +267,10 @@ class _ProductDetailsState extends State<ProductDetails> {
                       ) : const SizedBox(),
 
 
-                      // (details.productDetailsModel != null) ?
-                      // ShopInfoWidget(sellerId: details.productDetailsModel!.addedBy == 'seller'? details.productDetailsModel!.seller!.shop!.slug!.toString()
-                      //   : Provider.of<SplashController>(context, listen: false).configModel!.inHouseShop!.slug!
-                      // ) : const SizedBox.shrink(),
+                      (details.productDetailsModel != null) ?
+                      ShopInfoWidget(sellerId: details.productDetailsModel!.addedBy == 'seller'? details.productDetailsModel!.seller!.shop!.slug!.toString()
+                        : Provider.of<SplashController>(context, listen: false).configModel!.inHouseShop!.slug!
+                      ) : const SizedBox.shrink(),
                       const SizedBox(height: Dimensions.paddingSizeSmall),
 
                       Container(

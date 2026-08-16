@@ -9,6 +9,7 @@ import 'package:flutter_sixvalley_ecommerce/localization/language_constrants.dar
 import 'package:flutter_sixvalley_ecommerce/theme/controllers/theme_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/custom_themes.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/dimensions.dart';
+import 'package:flutter_sixvalley_ecommerce/common/basewidget/product_category_name_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/common/basewidget/custom_image_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product_details/widgets/favourite_button_widget.dart';
 import 'package:provider/provider.dart';
@@ -114,6 +115,8 @@ class ClearanceSaleWidget extends StatelessWidget {
                                   ),
                                 )),
                               ]),
+
+                              ProductCategoryNameWidget(product: product),
 
                               FittedBox(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                                 Text(

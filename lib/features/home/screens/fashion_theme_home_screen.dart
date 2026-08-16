@@ -22,6 +22,7 @@ import 'package:flutter_sixvalley_ecommerce/features/home/widgets/fashion_theme/
 import 'package:flutter_sixvalley_ecommerce/features/home/widgets/featured_product_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/features/home/widgets/just_for_you/just_for_you_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/features/home/widgets/product_list_widget.dart';
+import 'package:flutter_sixvalley_ecommerce/features/home/widgets/home_notification_icon_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/features/home/widgets/search_home_page_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/features/home/widgets/shop_again_from_recent_store_list_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/features/notification/controllers/notification_controller.dart';
@@ -167,9 +168,19 @@ class _FashionThemeHomePageState extends State<FashionThemeHomePage> {
 
 
             SliverPersistentHeader(pinned: true, delegate: SliverDelegate(
-              child: InkWell(
-                onTap: ()=> RouterHelper.getSearchRoute(action: RouteAction.push),
-                child: const Hero(tag: 'search', child: Material(child: SearchHomePageWidget())),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: ()=> RouterHelper.getSearchRoute(action: RouteAction.push),
+                        child: const Hero(tag: 'search', child: Material(child: SearchHomePageWidget())),
+                      ),
+                    ),
+                    const HomeNotificationIconWidget(),
+                  ],
+                ),
               ),
             )),
 

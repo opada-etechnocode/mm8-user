@@ -23,14 +23,17 @@ class NotificationBody {
   });
 
   NotificationBody.fromJson(Map<String, dynamic> json) {
-    orderId = json['order_id'];
-    type = json['type'];
-    messageKey = json['message_key'];
-    title = json['title'];
-    productId = json['product_id'];
-    slug = json['slug'];
-    image = json['image'];
-    status = json['status'];
+    final dynamic rawOrderId = json['order_id'];
+    if (rawOrderId != null) {
+      orderId = int.tryParse(rawOrderId.toString());
+    }
+    type = json['type']?.toString();
+    messageKey = json['message_key']?.toString() ?? json['body']?.toString();
+    title = json['title']?.toString();
+    productId = json['product_id']?.toString();
+    slug = json['slug']?.toString();
+    image = json['image']?.toString();
+    status = json['status']?.toString();
   }
 
   Map<String, dynamic> toJson() {

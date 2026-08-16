@@ -1192,7 +1192,7 @@ class RouterHelper {
           return InboxScreen(
             isBackButtonExist: qp['isBackButtonExist'] == 'true',
             fromNotification: qp['fromNotification'] == 'true',
-            initIndex: int.tryParse(qp['initIndex'] ?? '0') ?? 0,
+            initIndex: int.tryParse(qp['initIndex'] ?? '1') ?? 1,
           );
         },
       ),

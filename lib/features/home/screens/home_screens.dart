@@ -23,9 +23,9 @@ import 'package:flutter_sixvalley_ecommerce/features/home/shimmers/flash_deal_sh
 import 'package:flutter_sixvalley_ecommerce/features/home/widgets/announcement_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/features/home/widgets/aster_theme/find_what_you_need_shimmer.dart';
 import 'package:flutter_sixvalley_ecommerce/features/home/widgets/featured_product_widget.dart';
+import 'package:flutter_sixvalley_ecommerce/features/home/widgets/home_notification_icon_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/features/home/widgets/product_list_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/features/home/widgets/product_type_popup_menu_widget.dart';
-import 'package:flutter_sixvalley_ecommerce/features/home/widgets/search_home_page_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/features/notification/controllers/notification_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product/controllers/product_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product/widgets/home_category_product_widget.dart';
@@ -49,6 +49,7 @@ import 'package:provider/provider.dart';
 
 import '../../../localization/controllers/localization_controller.dart';
 import '../widgets/AnimatedCategorySearchText.dart';
+import '../widgets/home_inbox_icon.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -218,9 +219,12 @@ class _HomePageState extends State<HomePage> {
                       fit: StackFit.expand,
                       children: [
                         /// Background
+                        ///
+                        ///
+
                         !collapsed
                             ? PositionedDirectional(
-                                top: -170,
+                                top: -190,
                                 end: -70,
                                 child: Transform.flip(
                                   flipX: isArabic,
@@ -305,7 +309,7 @@ class _HomePageState extends State<HomePage> {
                                               getTranslated(key, context)!
                                                   .replaceFirst("{name}", name),
                                               style: TextStyle(
-                                                fontSize: 16,
+                                                fontSize: 17,
                                                 color: Theme.of(context)
                                                     .textTheme
                                                     .bodyLarge!
@@ -332,39 +336,47 @@ class _HomePageState extends State<HomePage> {
                               right: 10,
                               bottom: 17,
                             ),
-                            child: InkWell(
-                              onTap: () {
-                                RouterHelper.getSearchRoute(
-                                  action: RouteAction.push,
-                                );
-                              },
-                              child: Container(
-                                width: MediaQuery.of(context).size.width *
-                                    (!collapsed ? 0.65 : 1),
-                                height: 43,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(22),
-                                  color: Theme.of(context)
-                                      .primaryColor
-                                      .withAlpha(20),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const SizedBox(width: 12),
-                                    Icon(
-                                      CupertinoIcons.search,
-                                      color: Colors.grey.withAlpha(170),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: InkWell(
+                                    onTap: () {
+                                      RouterHelper.getSearchRoute(
+                                        action: RouteAction.push,
+                                      );
+                                    },
+                                    child: Container(
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(22),
+                                        color: Theme.of(context)
+                                            .primaryColor
+                                            .withAlpha(25),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          const SizedBox(width: 12),
+                                          Icon(
+                                            CupertinoIcons.search,
+                                            color: Colors.grey.withAlpha(170),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          const Expanded(
+                                            child: AnimatedCategorySearchText(),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                    const SizedBox(width: 8),
-                                    const Expanded(
-                                      child: AnimatedCategorySearchText(),
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                              ),
+                                 SizedBox(width: !collapsed ?20:8),
+                                const HomeNotificationIconWidget(),
+                                SizedBox(width: 10,),
+                                const HomeInboxIconWidget(),
+                              ],
                             ),
                           ),
-                        ),
+                          ),
 
                         /// Search
                       ],

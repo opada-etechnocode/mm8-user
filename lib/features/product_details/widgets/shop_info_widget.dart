@@ -129,15 +129,20 @@ class _ShopInfoWidgetState extends State<ShopInfoWidget> {
                             Text(seller.sellerInfoModelProductDetails != null ? seller.sellerInfoModelProductDetails?.seller?.shop?.name ?? '${Provider.of<SplashController>(context, listen: false).configModel?.inHouseShop?.name}'  : '${Provider.of<SplashController>(context, listen: false).configModel?.inHouseShop?.name}',
                               maxLines: 1, overflow: TextOverflow.ellipsis,
                               style: titilliumSemiBold.copyWith(fontSize: Dimensions.fontSizeLarge)),
-
-                            if((int.tryParse(seller.sellerInfoModelProductDetails?.avgRating ?? '0') ?? 0) > 0)
-                            Row(children: [
-                              RatingBar(rating: seller.sellerInfoModelProductDetails != null ? double.parse(seller.sellerInfoModelProductDetails!.avgRating.toString()) : 0),
-                              const SizedBox(width: Dimensions.paddingSizeExtraSmall),
-                              Text(seller.sellerInfoModelProductDetails != null ?
-                              '(${seller.sellerInfoModelProductDetails?.totalReview})' : '',
-                              style: titleRegular.copyWith(fontSize: Dimensions.fontSizeDefault,color: Theme.of(context).hintColor)
-                            )])
+                              Row(children: [
+                                Text(NumberFormat.compact().format(seller.sellerInfoModelProductDetails!.totalProduct),
+                                  style: titilliumSemiBold.copyWith(fontSize: Dimensions.fontSizeExtraLarge, color: Theme.of(context).textTheme.bodyLarge?.color),),
+                                const SizedBox(width: Dimensions.paddingSizeSmall,),
+                                Text(getTranslated('products', context)!,
+                                    style: titleRegular.copyWith(color: Theme.of(context).hintColor))])
+                            // if((int.tryParse(seller.sellerInfoModelProductDetails?.avgRating ?? '0') ?? 0) > 0)
+                            // Row(children: [
+                            //   RatingBar(rating: seller.sellerInfoModelProductDetails != null ? double.parse(seller.sellerInfoModelProductDetails!.avgRating.toString()) : 0),
+                            //   const SizedBox(width: Dimensions.paddingSizeExtraSmall),
+                            //   Text(seller.sellerInfoModelProductDetails != null ?
+                            //   '(${seller.sellerInfoModelProductDetails?.totalReview})' : '',
+                            //   style: titleRegular.copyWith(fontSize: Dimensions.fontSizeDefault,color: Theme.of(context).hintColor)
+                            // )])
                           ]
                         )
                       )),
@@ -180,10 +185,9 @@ class _ShopInfoWidgetState extends State<ShopInfoWidget> {
                           padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
                           decoration: BoxDecoration(
                             color: Theme.of(context).cardColor,
-                            border: Border.all(color: Theme.of(context).hintColor.withValues(alpha: 0.30) ),
                             borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall)
                           ),
-                          child: const CustomAssetImageWidget(Images.storeChatIcon, height: 20, width: 20)
+                          child:  CustomAssetImageWidget(Images.storeChatIcon, height: 20, width: 20,color: Theme.of(context).primaryColor,)
                         ),
                       ),
                     ]),
@@ -200,37 +204,9 @@ class _ShopInfoWidgetState extends State<ShopInfoWidget> {
               child: IntrinsicHeight(
                 child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
 
-                  if((seller.sellerInfoModelProductDetails!.totalReview ?? 0) > 0)
-                  Row(children: [
-                    Text(seller.sellerInfoModelProductDetails!.totalReview.toString(),
-                      style: titilliumSemiBold.copyWith(fontSize: Dimensions.fontSizeExtraLarge, color: Theme.of(context).textTheme.bodyLarge?.color)),
-                    const SizedBox(width: Dimensions.paddingSizeSmall,),
-                    Text(getTranslated('reviews', context)!,
-                      style: titleRegular.copyWith(color: Theme.of(context).hintColor))
-                    ]
-                  ),
 
-                  if((seller.sellerInfoModelProductDetails!.totalReview ?? 0) > 0)
-                  Padding(padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
-                    child: Container(width: 1, height: 10, color: Provider.of<ThemeController>(context).darkTheme ?
-                    Theme.of(context).highlightColor.withValues(alpha: 0.70) :
-                    Theme.of(context).highlightColor)),
 
-                  if((seller.sellerInfoModelProductDetails!.totalReview ?? 0) > 0)
-                  VerticalDivider(
-                    width: 30.0,
-                    thickness: 1.0,
-                    color: Theme.of(context).primaryColor.withValues(alpha: 0.30),
-                    indent: 0.0,
-                    endIndent: 0.0,
-                  ),
 
-                  Row(children: [
-                    Text(NumberFormat.compact().format(seller.sellerInfoModelProductDetails!.totalProduct),
-                      style: titilliumSemiBold.copyWith(fontSize: Dimensions.fontSizeExtraLarge, color: Theme.of(context).textTheme.bodyLarge?.color),),
-                    const SizedBox(width: Dimensions.paddingSizeSmall,),
-                    Text(getTranslated('products', context)!,
-                      style: titleRegular.copyWith(color: Theme.of(context).hintColor))])
                 ]),
               ),
             ):const SizedBox(),

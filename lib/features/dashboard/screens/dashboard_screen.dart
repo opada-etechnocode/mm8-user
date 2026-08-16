@@ -101,7 +101,6 @@ class DashBoardScreenState extends State<DashBoardScreen> {
 
     Provider.of<CartController>(context, listen: false).mergeGuestCart();
     Provider.of<WishListController>(context, listen: false).getWishList('');
-    Provider.of<ChatController>(context, listen: false).getChatList(1, reload: false, userType: 0);
     Provider.of<ChatController>(context, listen: false).getChatList(1, reload: false, userType: 1);
     Provider.of<RestockController>(context, listen: false).getRestockProductList(1, getAll: true);
   }

@@ -220,7 +220,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => ShopRepository(dioClient: sl(), dataSyncRepoInterface: sl()));
   sl.registerLazySingleton(() => CouponRepository(dioClient: sl()));
   sl.registerLazySingleton(() => ChatRepository(dioClient: sl()));
-  sl.registerLazySingleton(() => NotificationRepository(dioClient: sl()));
+  sl.registerLazySingleton(() => NotificationRepository(dioClient: sl(), sharedPreferences: sl()));
   sl.registerLazySingleton(() => ProfileRepository(dioClient: sl(), sharedPreferences: sl()));
   sl.registerLazySingleton(() => WishListRepository(dioClient: sl()));
   sl.registerLazySingleton(() => CartRepository(dioClient: sl(), dataSyncRepoInterface: sl()));
@@ -367,7 +367,7 @@ Future<void> init() async {
   LoyaltyPointServiceInterface loyaltyPointServiceInterface = LoyaltyPointService(loyaltyPointRepositoryInterface: sl());
   sl.registerLazySingleton(() => loyaltyPointServiceInterface);
 
-  NotificationRepositoryInterface notificationRepositoryInterface = NotificationRepository(dioClient: sl());
+  NotificationRepositoryInterface notificationRepositoryInterface = NotificationRepository(dioClient: sl(), sharedPreferences: sl());
   sl.registerLazySingleton(() => notificationRepositoryInterface);
   NotificationServiceInterface notificationServiceInterface = NotificationService(notificationRepositoryInterface: sl());
   sl.registerLazySingleton(() => notificationServiceInterface);

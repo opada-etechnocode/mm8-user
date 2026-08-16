@@ -7,7 +7,6 @@ import 'package:flutter_sixvalley_ecommerce/data/model/api_response.dart';
 import 'package:flutter_sixvalley_ecommerce/features/auth/controllers/auth_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/cart/domain/models/cart_model.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product/domain/models/product_model.dart';
-import 'package:flutter_sixvalley_ecommerce/features/product_details/widgets/color_selection_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product_details/controllers/product_details_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product_details/domain/models/product_details_model.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product_details/widgets/min_order_quanty_widget.dart';
@@ -407,10 +406,9 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
                 ),
                 SizedBox(height: Dimensions.paddingSizeSmall),
       
-                if((widget.product!.colors != null && widget.product!.colors!.isNotEmpty) || (widget.product!.choiceOptions != null && widget.product!.choiceOptions!.isNotEmpty) || (variationFileType.isNotEmpty))
+                if((widget.product!.choiceOptions != null && widget.product!.choiceOptions!.isNotEmpty) || (variationFileType.isNotEmpty))
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: Dimensions.homePagePadding),
-                  //padding: EdgeInsets.all(Dimensions.paddingSizeSmall),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
                     border: Border.all(color: Theme.of(context).hintColor.withValues(alpha: 0.25))
@@ -420,13 +418,8 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
                     mainAxisSize: MainAxisSize.max,
                     children: [
                       const SizedBox(height: Dimensions.paddingSizeDefault),
-                      (widget.product!.colors != null && widget.product!.colors!.isNotEmpty) ?
-                      ColorSelectionWidget(product: widget.product!, detailsController: productDetailsController) : const SizedBox(),
-      
-                      (widget.product!.colors != null && widget.product!.colors!.isNotEmpty) ?
-                      const SizedBox(height: Dimensions.paddingSizeSmall) : const SizedBox(),
-      
-                      // Variation
+
+                      if (widget.product!.choiceOptions != null && widget.product!.choiceOptions!.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: Dimensions.homePagePadding),
                         child: ListView.builder(
@@ -450,8 +443,8 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
                                     /// Grid of options
                                     Expanded(
                                       child:  Wrap(
-                                        spacing: 8, // horizontal spacing between options
-                                        runSpacing: 8, // vertical spacing between rows
+                                        spacing: 8,
+                                        runSpacing: 8,
                                         children: List.generate(choice.options!.length, (i) {
                                           final option = choice.options![i].trim();
                                           final isSelected = productDetailsController.variationIndex![index] == i;
@@ -495,6 +488,7 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
                           },
                         ),
                       ),
+                      if (widget.product!.choiceOptions != null && widget.product!.choiceOptions!.isNotEmpty)
                       const SizedBox(height: Dimensions.paddingSizeSmall),
 
 

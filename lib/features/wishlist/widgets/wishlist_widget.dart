@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_sixvalley_ecommerce/common/basewidget/custom_asset_image_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/common/basewidget/custom_directionality_widget.dart';
+import 'package:flutter_sixvalley_ecommerce/common/basewidget/product_category_name_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/common/basewidget/custom_image_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/common/basewidget/discount_tag_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/features/wishlist/domain/models/wishlist_model.dart';
@@ -147,6 +148,11 @@ class WishListWidget extends StatelessWidget {
                           ),
                         ]),
                         const SizedBox(height: Dimensions.paddingSizeExtraSmall),
+
+                        if (wishlistModel?.productFullInfo != null)
+                          ProductCategoryNameWidget(
+                            product: wishlistModel!.productFullInfo!,
+                          ),
 
                         Row(children: [
                           (hasDiscount()) ?
