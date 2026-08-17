@@ -538,65 +538,65 @@ class _HomePageState extends State<HomePage> {
                 child: const FeaturedProductWidget(),
               ),
 
-              if (!singleVendor)
-                SliverToBoxAdapter(
-                  child: Container(
-                    padding: EdgeInsets.only(top: Dimensions.paddingSizeSmall),
-                    color: Theme.of(context).cardColor,
-                    child: Column(
-                      children: [
-                        Consumer<ShopController>(
-                            builder: (context, topSellerProvider, child) {
-                          return (topSellerProvider.topSellerModel != null &&
-                                  (topSellerProvider.topSellerModel!.sellers !=
-                                          null &&
-                                      topSellerProvider
-                                          .topSellerModel!.sellers!.isNotEmpty))
-                              ? TitleRowWidget(
-                                  title: getTranslated('top_seller', context),
-                                  onTap: () =>
-                                      RouterHelper.getAllTopSellerRoute(
-                                          action: RouteAction.push,
-                                          title: 'top_seller'))
-                              : const SizedBox();
-                        }),
-                        singleVendor
-                            ? const SizedBox(height: 0)
-                            : const SizedBox(
-                                height: Dimensions.paddingSizeSmall),
-                        singleVendor
-                            ? const SizedBox()
-                            : Consumer<ShopController>(
-                                builder: (context, topSellerProvider, child) {
-                                return (topSellerProvider.topSellerModel !=
-                                            null &&
-                                        (topSellerProvider
-                                                    .topSellerModel!.sellers !=
-                                                null &&
-                                            topSellerProvider.topSellerModel!
-                                                .sellers!.isNotEmpty))
-                                    ? Padding(
-                                        padding:
-                                            const EdgeInsets.only(
-                                                bottom:
-                                                    Dimensions
-                                                        .paddingSizeDefault),
-                                        child:
-                                            SizedBox(
-                                                height: ResponsiveHelper.isTab(
-                                                        context)
-                                                    ? 170
-                                                    : 150,
-                                                child: const TopSellerWidget()))
-                                    : const SizedBox();
-                              })
-                      ],
-                    ),
-                  ),
-                ),
-              if (!singleVendor)
-                SliverToBoxAdapter(
-                    child: SizedBox(height: Dimensions.paddingSizeDefault)),
+              // if (!singleVendor)
+              //   SliverToBoxAdapter(
+              //     child: Container(
+              //       padding: EdgeInsets.only(top: Dimensions.paddingSizeSmall),
+              //       color: Theme.of(context).cardColor,
+              //       child: Column(
+              //         children: [
+              //           Consumer<ShopController>(
+              //               builder: (context, topSellerProvider, child) {
+              //             return (topSellerProvider.topSellerModel != null &&
+              //                     (topSellerProvider.topSellerModel!.sellers !=
+              //                             null &&
+              //                         topSellerProvider
+              //                             .topSellerModel!.sellers!.isNotEmpty))
+              //                 ? TitleRowWidget(
+              //                     title: getTranslated('top_seller', context),
+              //                     onTap: () =>
+              //                         RouterHelper.getAllTopSellerRoute(
+              //                             action: RouteAction.push,
+              //                             title: 'top_seller'))
+              //                 : const SizedBox();
+              //           }),
+              //           singleVendor
+              //               ? const SizedBox(height: 0)
+              //               : const SizedBox(
+              //                   height: Dimensions.paddingSizeSmall),
+              //           singleVendor
+              //               ? const SizedBox()
+              //               : Consumer<ShopController>(
+              //                   builder: (context, topSellerProvider, child) {
+              //                   return (topSellerProvider.topSellerModel !=
+              //                               null &&
+              //                           (topSellerProvider
+              //                                       .topSellerModel!.sellers !=
+              //                                   null &&
+              //                               topSellerProvider.topSellerModel!
+              //                                   .sellers!.isNotEmpty))
+              //                       ? Padding(
+              //                           padding:
+              //                               const EdgeInsets.only(
+              //                                   bottom:
+              //                                       Dimensions
+              //                                           .paddingSizeDefault),
+              //                           child:
+              //                               SizedBox(
+              //                                   height: ResponsiveHelper.isTab(
+              //                                           context)
+              //                                       ? 170
+              //                                       : 150,
+              //                                   child: const TopSellerWidget()))
+              //                       : const SizedBox();
+              //                 })
+              //         ],
+              //       ),
+              //     ),
+              //   ),
+              // if (!singleVendor)
+              //   SliverToBoxAdapter(
+              //       child: SizedBox(height: Dimensions.paddingSizeDefault)),
               SliverToBoxAdapter(
                 child: Padding(
                     padding:

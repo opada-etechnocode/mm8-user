@@ -8,7 +8,10 @@
 .buildlog/
 .history
 .svn/
-
+ios/Flutter/ephemeral/
+ios/Pods/
+ios/Podfile.lock
+ios/.symlinks/
 # IntelliJ related
 *.iml
 *.ipr
