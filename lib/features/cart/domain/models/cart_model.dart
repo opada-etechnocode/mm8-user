@@ -1,5 +1,6 @@
 import 'package:flutter_sixvalley_ecommerce/data/model/image_full_url.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product/domain/models/product_model.dart';
+import 'package:flutter_sixvalley_ecommerce/features/product_details/domain/models/product_details_model.dart';
 import 'package:flutter_sixvalley_ecommerce/features/shop/domain/models/seller_model.dart';
 class CartModel {
   int? id;
@@ -225,8 +226,9 @@ class ProductInfo {
   int? minimumOrderQty;
   int? totalCurrentStock;
   ImageFullUrl? thumbnailFullUrl;
+  List<ColorImagesFullUrl>? colorImagesFullUrl;
 
-  ProductInfo({ this.minimumOrderQty, this.totalCurrentStock});
+  ProductInfo({this.minimumOrderQty, this.totalCurrentStock, this.colorImagesFullUrl});
 
   ProductInfo.fromJson(Map<String, dynamic> json) {
     if(json['minimum_order_qty'] != null) {
@@ -240,6 +242,12 @@ class ProductInfo {
     thumbnailFullUrl = json['thumbnail_full_url'] != null
         ? ImageFullUrl.fromJson(json['thumbnail_full_url'])
         : null;
+    if (json['color_images_full_url'] != null) {
+      colorImagesFullUrl = <ColorImagesFullUrl>[];
+      json['color_images_full_url'].forEach((v) {
+        colorImagesFullUrl!.add(ColorImagesFullUrl.fromJson(v));
+      });
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -247,6 +255,9 @@ class ProductInfo {
     data['minimum_order_qty'] = minimumOrderQty;
     data['total_current_stock'] = totalCurrentStock;
     if (thumbnailFullUrl != null) data['thumbnail_full_url'] = thumbnailFullUrl!.toJson();
+    if (colorImagesFullUrl != null) {
+      data['color_images_full_url'] = colorImagesFullUrl!.map((v) => v.toJson()).toList();
+    }
     return data;
   }
 }

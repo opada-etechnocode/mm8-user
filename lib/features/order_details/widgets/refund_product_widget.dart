@@ -13,6 +13,7 @@ import 'package:flutter_sixvalley_ecommerce/features/review/controllers/review_c
 import 'package:flutter_sixvalley_ecommerce/features/splash/controllers/splash_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/splash/domain/models/config_model.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/price_converter.dart';
+import 'package:flutter_sixvalley_ecommerce/helper/cart_image_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/route_healper.dart';
 import 'package:flutter_sixvalley_ecommerce/localization/controllers/localization_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/localization/language_constrants.dart';
@@ -92,7 +93,7 @@ class _RefundProductWidgetState extends State<RefundProductWidget> {
                       borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall),
                       child: CustomImageWidget(
                         width: 50, height: 50,
-                        image: '${widget.orderDetailsModel.productDetails?.thumbnailFullUrl?.path}',
+                        image: CartImageHelper.getOrderDisplayImagePath(widget.orderDetailsModel) ?? '',
                       ),
                     ),
                   ),

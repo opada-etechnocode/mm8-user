@@ -70,6 +70,7 @@ class Product {
   List<ImageFullUrl>? _imagesFullUrl;
   String? _thumbnail;
   ImageFullUrl? _thumbnailFullUrl;
+  List<ColorImagesFullUrl>? _colorImagesFullUrl;
   List<ProductColors>? _colors;
   List<String>? _attributes;
   List<ChoiceOptions>? _choiceOptions;
@@ -231,6 +232,7 @@ class Product {
   List<ImageFullUrl>? get imagesFullUrl => _imagesFullUrl;
   String? get thumbnail => _thumbnail;
   ImageFullUrl? get thumbnailFullUrl => _thumbnailFullUrl;
+  List<ColorImagesFullUrl>? get colorImagesFullUrl => _colorImagesFullUrl;
   List<ProductColors>? get colors => _colors;
   List<String>? get attributes => _attributes;
   List<ChoiceOptions>? get choiceOptions => _choiceOptions;
@@ -433,6 +435,13 @@ class Product {
     _thumbnailFullUrl = json['thumbnail_full_url'] != null
         ? ImageFullUrl.fromJson(json['thumbnail_full_url'])
         : null;
+
+    if (json['color_images_full_url'] != null) {
+      _colorImagesFullUrl = <ColorImagesFullUrl>[];
+      json['color_images_full_url'].forEach((v) {
+        _colorImagesFullUrl!.add(ColorImagesFullUrl.fromJson(v));
+      });
+    }
 
     digitalFileReadyFullUrl = json['digital_file_ready_full_url'] != null
         ? ImageFullUrl.fromJson(json['digital_file_ready_full_url']) : null;

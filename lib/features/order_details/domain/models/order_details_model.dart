@@ -22,6 +22,7 @@ class OrderDetailsModel {
   String? _updatedAt;
   int? _shippingMethodId;
   String? _variant;
+  String? _color;
   int? _refundReq;
   Seller? _seller;
   List<VerificationImages>? verificationImages;
@@ -117,6 +118,7 @@ class OrderDetailsModel {
   String? get updatedAt => _updatedAt;
   int? get shippingMethodId => _shippingMethodId;
   String? get variant => _variant;
+  String? get color => _color;
   int? get refundReq => _refundReq;
   Seller? get seller => _seller;
   Review? get reviewModel => _reviewData;
@@ -147,6 +149,7 @@ class OrderDetailsModel {
     _updatedAt = json['updated_at'];
     _shippingMethodId = json['shipping_method_id'];
     _variant = json['variant'];
+    _color = json['color'];
     _refundReq = json['refund_request'];
     _seller = json['seller'] != null ? Seller.fromJson(json['seller']) : null;
     if (json['verification_images'] != null) {

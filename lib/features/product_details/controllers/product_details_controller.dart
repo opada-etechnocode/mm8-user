@@ -37,6 +37,10 @@ class ProductDetailsController extends ChangeNotifier {
   int? _digitalVariationIndex = 0;
   int? _digitalVariationSubindex = 0;
   bool _isDownloadLoading = false;
+  int? _addingToCartColorIndex;
+
+  bool get isAddingToCartColor => _addingToCartColorIndex != null;
+  bool isAddingToCartForColor(int colorIndex) => _addingToCartColorIndex == colorIndex;
 
   bool _isDetails = false;
   bool get isDetails =>_isDetails;
@@ -264,14 +268,21 @@ class ProductDetailsController extends ChangeNotifier {
       quantity: _quantity ?? minQty,
     );
 
-    await Provider.of<CartController>(context, listen: false).addToCartAPI(
-      cart,
-      context,
-      product.choiceOptions ?? [],
-      _variationIndex,
-      popOnSuccess: false,
-      showFloatingCartSummary: true,
-    );
+    _addingToCartColorIndex = colorIndex;
+    notifyListeners();
+    try {
+      await Provider.of<CartController>(context, listen: false).addToCartAPI(
+        cart,
+        context,
+        product.choiceOptions ?? [],
+        _variationIndex,
+        popOnSuccess: false,
+        showFloatingCartSummary: true,
+      );
+    } finally {
+      _addingToCartColorIndex = null;
+      notifyListeners();
+    }
   }
 
 

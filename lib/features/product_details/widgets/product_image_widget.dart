@@ -144,27 +144,42 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
   }
 
   Widget _buildCartOverlay(BuildContext context, int colorIndex) {
-    return Positioned(
-      top: 2,
-      right: 2,
-      child: Material(
-        color: Theme.of(context).cardColor,
-        shape: const CircleBorder(),
-        elevation: 2,
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: () => _addToCartFromColor(context, colorIndex),
-          child: Padding(
-            padding: const EdgeInsets.all(4),
-            child: Image.asset(
-              Images.cartArrowDownImage,
-              height: 12,
-              width: 12,
-              color: Theme.of(context).primaryColor,
+    return Consumer<ProductDetailsController>(
+      builder: (context, productController, _) {
+        final isLoading = productController.isAddingToCartForColor(colorIndex);
+
+        return Positioned(
+          top: 2,
+          right: 2,
+          child: Material(
+            color: Theme.of(context).cardColor,
+            shape: const CircleBorder(),
+            elevation: 2,
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: isLoading ? null : () => _addToCartFromColor(context, colorIndex),
+              child: Padding(
+                padding: const EdgeInsets.all(4),
+                child: isLoading
+                    ? SizedBox(
+                        height: 12,
+                        width: 12,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      )
+                    : Image.asset(
+                        Images.cartArrowDownImage,
+                        height: 12,
+                        width: 12,
+                        color: Theme.of(context).primaryColor,
+                      ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -399,27 +414,44 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
                                     : const SizedBox.shrink(),
                               ),
                               if (heroColorIndex != null)
-                                Positioned(
-                                  top: 16,
-                                  left: widget.fromFlashDeals ? 56 : 16,
-                                  child: Material(
-                                    color: Theme.of(context).cardColor,
-                                    shape: const CircleBorder(),
-                                    elevation: 2,
-                                    child: InkWell(
-                                      customBorder: const CircleBorder(),
-                                      onTap: () => _addToCartFromColor(context, heroColorIndex),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(7),
-                                        child: Image.asset(
-                                          Images.cartArrowDownImage,
-                                          height: 16,
-                                          width: 16,
-                                          color: Theme.of(context).primaryColor,
+                                Consumer<ProductDetailsController>(
+                                  builder: (context, productController, _) {
+                                    final isLoading = productController.isAddingToCartForColor(heroColorIndex);
+
+                                    return Positioned(
+                                      top: 16,
+                                      left: widget.fromFlashDeals ? 56 : 16,
+                                      child: Material(
+                                        color: Theme.of(context).cardColor,
+                                        shape: const CircleBorder(),
+                                        elevation: 2,
+                                        child: InkWell(
+                                          customBorder: const CircleBorder(),
+                                          onTap: isLoading
+                                              ? null
+                                              : () => _addToCartFromColor(context, heroColorIndex),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(7),
+                                            child: isLoading
+                                                ? SizedBox(
+                                                    height: 16,
+                                                    width: 16,
+                                                    child: CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                      color: Theme.of(context).primaryColor,
+                                                    ),
+                                                  )
+                                                : Image.asset(
+                                                    Images.cartArrowDownImage,
+                                                    height: 16,
+                                                    width: 16,
+                                                    color: Theme.of(context).primaryColor,
+                                                  ),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ),
+                                    );
+                                  },
                                 ),
                               Positioned(
                                 left: 0,

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sixvalley_ecommerce/common/basewidget/custom_loader_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/features/cart/domain/models/cart_model.dart';
+import 'package:flutter_sixvalley_ecommerce/helper/cart_image_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/features/cart/widgets/cart_quantity_button_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/features/cart/widgets/custom_checkbox_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product_details/widgets/min_order_quanty_widget.dart';
@@ -442,7 +443,7 @@ class _CartProductImageWidget extends StatelessWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall),
               child: CustomImageWidget(
-                image: '${cartModel?.productInfo?.thumbnailFullUrl?.path}',
+                image: CartImageHelper.getDisplayImagePath(cartModel!) ?? '',
                 height: 60,
                 width: 60,
               ),

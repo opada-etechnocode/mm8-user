@@ -12,6 +12,7 @@ import 'package:flutter_sixvalley_ecommerce/features/product_details/domain/mode
 import 'package:flutter_sixvalley_ecommerce/features/refund/controllers/refund_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/splash/domain/models/config_model.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/price_converter.dart';
+import 'package:flutter_sixvalley_ecommerce/helper/cart_image_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/route_healper.dart';
 import 'package:flutter_sixvalley_ecommerce/localization/controllers/localization_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/localization/language_constrants.dart';
@@ -96,7 +97,11 @@ class _OrderDetailsWidgetState extends State<OrderDetailsWidget> {
               child: ClipRRect(borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall),
                 child: Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall),
                 ),
-                child: CustomImageWidget(image: '${widget.orderDetailsModel.productDetails?.thumbnailFullUrl?.path}', width: 50, height: 50),
+                child: CustomImageWidget(
+                  image: CartImageHelper.getOrderDisplayImagePath(widget.orderDetailsModel) ?? '',
+                  width: 50,
+                  height: 50,
+                ),
                 ),
               ),
             ),

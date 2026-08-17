@@ -8,6 +8,7 @@ import 'package:flutter_sixvalley_ecommerce/features/order_details/domain/models
 import 'package:flutter_sixvalley_ecommerce/features/review/controllers/review_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/review/domain/models/review_body.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/price_converter.dart';
+import 'package:flutter_sixvalley_ecommerce/helper/cart_image_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/localization/language_constrants.dart';
 import 'package:flutter_sixvalley_ecommerce/main.dart';
 import 'package:flutter_sixvalley_ecommerce/theme/controllers/theme_controller.dart';
@@ -284,7 +285,7 @@ class _OrderDetailsState extends State<OrderDetails> {
                     borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall),
                     child: FadeInImage.assetNetwork(
                         placeholder: Images.placeholder, fit: BoxFit.scaleDown, width: 70, height: 70,
-                        image: '${widget.orderDetailsModel.productDetails?.thumbnailFullUrl?.path}',
+                        image: CartImageHelper.getOrderDisplayImagePath(widget.orderDetailsModel) ?? '',
                         imageErrorBuilder: (c, o, s) => Image.asset(Images.placeholder,
                             fit: BoxFit.scaleDown, width: 70, height: 70)))),
             const SizedBox(width: Dimensions.marginSizeDefault),
