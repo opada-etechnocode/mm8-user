@@ -6,7 +6,13 @@ import 'package:video_player/video_player.dart';
 class VideoPreview extends StatefulWidget {
   final String url;
   final String fileName;
-  const VideoPreview({super.key, required this.url, required this.fileName});
+  final bool minimal;
+  const VideoPreview({
+    super.key,
+    required this.url,
+    required this.fileName,
+    this.minimal = false,
+  });
 
   @override
   State<VideoPreview> createState() => _VideoPreviewState();
@@ -48,6 +54,10 @@ class _VideoPreviewState extends State<VideoPreview> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.minimal) {
+      return _buildMinimalPlayer(context);
+    }
+
     return Container(
       height: MediaQuery.of(context).size.height * 0.3,
       width: MediaQuery.of(context).size.height * 0.9,
@@ -78,60 +88,82 @@ class _VideoPreviewState extends State<VideoPreview> {
           ),
           const SizedBox(height: Dimensions.paddingSizeDefault),
 
-          Expanded(
-            child: Stack(
-              children: [
-                if (_controller.value.isInitialized)
-                  Center(
-                    child: AspectRatio(
-                      aspectRatio: _controller.value.aspectRatio,
-                      child: VideoPlayer(_controller),
-                    ),
-                  )
-                else
-                  const Center(child: CircularProgressIndicator()),
-                Positioned(top: 0, bottom: 0, left: 0, right: 0,
-                    child: IconButton(
-                      onPressed: () {
-                        setState(() {
-                          _controller.value.isPlaying ? _controller.pause() : _controller.play();
-                        });
-                      },
-                      icon: Icon( _controller.value.isPlaying ? Icons.pause_sharp : Icons.play_arrow, color: Theme.of(context).primaryColor),
-                    )
-                ),
-
-                Positioned(
-                    bottom: 5, right: 5,
-                    child: IconButton(
-                      onPressed: () => _toggleFullScreen(context),
-                      icon: Icon( Icons.fullscreen, color: Theme.of(context).primaryColor),
-                    )
-                ),
-
-                Positioned(
-                  bottom: 10,
-                  child:SizedBox(
-                    width: MediaQuery.of(context).size.height * 0.7,
-                    child: VideoProgressIndicator(
-                      _controller,
-                      allowScrubbing: true,
-                      colors: VideoProgressColors(
-                        backgroundColor: Colors.grey,
-                        playedColor: Theme.of(context).primaryColor,
-                        bufferedColor: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-
-              ],
-            ),
-          )
-
-
+          Expanded(child: _buildPlayerStack(context)),
         ],
       ),
+    );
+  }
+
+  Widget _buildMinimalPlayer(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final height = width * 9 / 16;
+
+    return ColoredBox(
+      color: Colors.black,
+      child: SizedBox(
+        width: width,
+        height: height,
+        child: _buildPlayerStack(context, lightControls: true),
+      ),
+    );
+  }
+
+  Widget _buildPlayerStack(BuildContext context, {bool lightControls = false}) {
+    final controlColor = lightControls ? Colors.white : Theme.of(context).primaryColor;
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        if (_controller.value.isInitialized)
+          Center(
+            child: AspectRatio(
+              aspectRatio: _controller.value.aspectRatio == 0
+                  ? 16 / 9
+                  : _controller.value.aspectRatio,
+              child: VideoPlayer(_controller),
+            ),
+          )
+        else
+          const Center(child: CircularProgressIndicator(color: Colors.white)),
+        Center(
+          child: IconButton(
+            onPressed: () {
+              setState(() {
+                _controller.value.isPlaying ? _controller.pause() : _controller.play();
+              });
+            },
+            icon: Icon(
+              _controller.value.isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
+              color: controlColor,
+              size: 56,
+            ),
+          ),
+        ),
+        if (!widget.minimal)
+          Positioned(
+            bottom: 5,
+            right: 5,
+            child: IconButton(
+              onPressed: () => _toggleFullScreen(context),
+              icon: Icon(Icons.fullscreen, color: controlColor),
+            ),
+          ),
+        if (_controller.value.isInitialized)
+          Positioned(
+            left: 12,
+            right: 12,
+            bottom: 10,
+            child: VideoProgressIndicator(
+              _controller,
+              allowScrubbing: true,
+              colors: VideoProgressColors(
+                backgroundColor: Colors.white24,
+                playedColor: lightControls ? Colors.white : Theme.of(context).primaryColor,
+                bufferedColor: Colors.white38,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

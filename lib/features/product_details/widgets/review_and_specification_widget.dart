@@ -9,63 +9,75 @@ import 'package:provider/provider.dart';
 
 class ReviewAndSpecificationSectionWidget extends StatelessWidget {
   final double? averageReview;
+  final int? reviewsCount;
+
   const ReviewAndSpecificationSectionWidget({
     super.key,
-    this.averageReview
+    this.averageReview,
+    this.reviewsCount,
   });
+
+  bool _hasReviews(ReviewController reviewController) {
+    final listCount = reviewController.reviewList?.length ?? 0;
+    final productCount = reviewsCount ?? 0;
+    final rating = averageReview ?? 0;
+    return listCount > 0 || productCount > 0 || rating > 0;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ProductDetailsController>(
-      builder: (context, productDetailsController, _) {
+    return Consumer2<ProductDetailsController, ReviewController>(
+      builder: (context, productDetailsController, reviewController, _) {
+        if (!_hasReviews(reviewController)) {
+          if (productDetailsController.isReviewSelected) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              productDetailsController.selectReviewSection(false);
+            });
+          }
+          return const SizedBox.shrink();
+        }
+
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-
-
-
-            InkWell(
-              onTap: ()=> productDetailsController.selectReviewSection(false),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: Dimensions.paddingSizeDefault,
-                      vertical: Dimensions.paddingSizeSmall,
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall),
-                      color: !productDetailsController.isReviewSelected
-                          ? (Provider.of<ThemeController>(context, listen: false).darkTheme
-                              ? Theme.of(context).hintColor.withValues(alpha:.25)
-                              : Theme.of(context).primaryColor.withValues(alpha:.05))
-                          : Colors.transparent,
-                    ),
-                    child: Text(
-                      '${getTranslated('specification', context)}',
-                      style: textMedium.copyWith(
-                        color: Provider.of<ThemeController>(context, listen: false).darkTheme
-                            ? Theme.of(context).hintColor
-                            : (!productDetailsController.isReviewSelected
-                                ? Theme.of(context).primaryColor
-                                : Theme.of(context).hintColor),
+              InkWell(
+                onTap: () => productDetailsController.selectReviewSection(false),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: Dimensions.paddingSizeDefault,
+                        vertical: Dimensions.paddingSizeSmall,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall),
+                        color: !productDetailsController.isReviewSelected
+                            ? (Provider.of<ThemeController>(context, listen: false).darkTheme
+                                ? Theme.of(context).hintColor.withValues(alpha: .25)
+                                : Theme.of(context).primaryColor.withValues(alpha: .05))
+                            : Colors.transparent,
+                      ),
+                      child: Text(
+                        '${getTranslated('specification', context)}',
+                        style: textMedium.copyWith(
+                          color: Provider.of<ThemeController>(context, listen: false).darkTheme
+                              ? Theme.of(context).hintColor
+                              : (!productDetailsController.isReviewSelected
+                                  ? Theme.of(context).primaryColor
+                                  : Theme.of(context).hintColor),
+                        ),
                       ),
                     ),
-                  ),
-                  if (!productDetailsController.isReviewSelected)
-                    Container(width: 40, height: 2, color: Theme.of(context).primaryColor),
-                ],
+                    if (!productDetailsController.isReviewSelected)
+                      Container(width: 40, height: 2, color: Theme.of(context).primaryColor),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: Dimensions.paddingSizeDefault),
-
-
-
-            if ((averageReview ?? 0) > 0)
+              const SizedBox(width: Dimensions.paddingSizeDefault),
               InkWell(
-                onTap: ()=> productDetailsController.selectReviewSection(true),
+                onTap: () => productDetailsController.selectReviewSection(true),
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
@@ -80,8 +92,8 @@ class ReviewAndSpecificationSectionWidget extends StatelessWidget {
                             borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall),
                             color: productDetailsController.isReviewSelected
                                 ? (Provider.of<ThemeController>(context, listen: false).darkTheme
-                                    ? Theme.of(context).hintColor.withValues(alpha:.25)
-                                    : Theme.of(context).primaryColor.withValues(alpha:.05))
+                                    ? Theme.of(context).hintColor.withValues(alpha: .25)
+                                    : Theme.of(context).primaryColor.withValues(alpha: .05))
                                 : Colors.transparent,
                           ),
                           child: Text(
@@ -104,40 +116,36 @@ class ReviewAndSpecificationSectionWidget extends StatelessWidget {
                       right: -10,
                       child: Align(
                         alignment: Alignment.topRight,
-                        child: Consumer<ReviewController>(
-                          builder: (context, reviewController, _) {
-                            return Center(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(Dimensions.paddingSizeDefault),
-                                  color: Theme.of(context).primaryColor,
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: Dimensions.paddingSizeExtraSmall,
-                                    horizontal: Dimensions.paddingSizeSmall,
-                                  ),
-                                  child: Text(
-                                    '${reviewController.reviewList != null ? reviewController.reviewList!.length : 0}',
-                                    style: textBold.copyWith(
-                                      fontSize: Dimensions.fontSizeSmall,
-                                      color: Colors.white,
-                                    ),
-                                  ),
+                        child: Center(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(Dimensions.paddingSizeDefault),
+                              color: Theme.of(context).primaryColor,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: Dimensions.paddingSizeExtraSmall,
+                                horizontal: Dimensions.paddingSizeSmall,
+                              ),
+                              child: Text(
+                                '${reviewController.reviewList != null ? reviewController.reviewList!.length : (reviewsCount ?? 0)}',
+                                style: textBold.copyWith(
+                                  fontSize: Dimensions.fontSizeSmall,
+                                  color: Colors.white,
                                 ),
                               ),
-                            );
-                          },
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ],
                 ),
-              )
-
-          ]),
+              ),
+            ],
+          ),
         );
-      }
+      },
     );
   }
 }

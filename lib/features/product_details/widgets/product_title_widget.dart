@@ -24,7 +24,15 @@ class ProductTitleWidget extends StatelessWidget {
   Widget build(BuildContext context) {
 
     return productModel != null? Container(
-      padding: const EdgeInsets.symmetric(horizontal : Dimensions.homePagePadding),
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: Dimensions.paddingSizeSmall),
+      padding: const EdgeInsets.symmetric(
+        vertical: Dimensions.paddingSizeSmall,
+        horizontal: Dimensions.paddingSizeDefault,
+      ),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+      ),
       child: Consumer<ProductDetailsController>(
         builder: (context, details, child) {
           final discount = (productModel?.clearanceSale?.discountAmount ?? 0) > 0
@@ -46,7 +54,14 @@ class ProductTitleWidget extends StatelessWidget {
 
             Text(
                 productModel!.name ?? '',
-                style: titleRegular.copyWith(fontSize: Dimensions.fontSizeLarge, color: Theme.of(context).textTheme.bodyLarge?.color), maxLines: 2,
+                style: textBold.copyWith(
+                  fontSize: Dimensions.fontSizeExtraLarge-1,
+                  fontWeight: FontWeight.w700,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                  height: 1.3,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: Dimensions.paddingSizeDefault),
 
@@ -71,7 +86,8 @@ class ProductTitleWidget extends StatelessWidget {
                       : ''}',
                   style: titilliumBold.copyWith(
                     color: Theme.of(context).primaryColor,
-                    fontSize: Dimensions.fontSizeLarge,
+                    fontSize: Dimensions.fontSizeDefault+2,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -85,8 +101,11 @@ class ProductTitleWidget extends StatelessWidget {
                         ? PriceConverter.convertPrice(context, selectedPrice ?? startingPrice)
                         : '${PriceConverter.convertPrice(context, priceRange.start)}'
                             '${priceRange.end != null ? ' - ${PriceConverter.convertPrice(context, priceRange.end)}' : ''}',
-                    style: titilliumRegular.copyWith(color: Theme.of(context).hintColor,
-                        decoration: TextDecoration.lineThrough),
+                    style: titilliumRegular.copyWith(
+                      color: Theme.of(context).hintColor,
+                      decoration: TextDecoration.lineThrough,
+                      fontSize: Dimensions.fontSizeDefault-1,
+                    ),
                   ),
                 ),
               ],

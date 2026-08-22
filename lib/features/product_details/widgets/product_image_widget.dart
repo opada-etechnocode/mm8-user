@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_sixvalley_ecommerce/common/basewidget/discount_tag_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/data/model/image_full_url.dart';
@@ -10,7 +12,9 @@ import 'package:flutter_sixvalley_ecommerce/features/product_details/domain/mode
 import 'package:flutter_sixvalley_ecommerce/features/product_details/enums/preview_type.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product_details/widgets/audio_preview.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product_details/widgets/download_preview_file.dart';
+import 'package:flutter_sixvalley_ecommerce/features/product_details/widgets/color_media_video_dialog.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product_details/widgets/favourite_button_widget.dart';
+import 'package:flutter_sixvalley_ecommerce/helper/color_media_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product_details/widgets/image_preview.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product_details/widgets/pdf_preview_flutter.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product_details/screens/product_image_screen.dart';
@@ -43,10 +47,16 @@ class ProductImageWidget extends StatefulWidget {
 }
 
 class _ProductImageWidgetState extends State<ProductImageWidget> {
-  static const double _galleryMainSize = 80;
-  static const double _galleryScrollItemSize = 72;
-
   late final PageController _controller;
+  static const double _galleryCardRadius = Dimensions.radiusLarge-3;
+
+  /// Roughly three square cards across the screen (minus side padding + gaps).
+  double _galleryItemSize(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    const sidePads = Dimensions.homePagePadding * 2;
+    const gaps = Dimensions.paddingSizeSmall * 2;
+    return (width - sidePads - gaps) / 3;
+  }
   bool _vacationIsOn = false;
   bool _temporaryClose = false;
 
@@ -203,6 +213,138 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
     );
   }
 
+  void _openColorMediaVideo(
+    BuildContext context,
+    String videoUrl, {
+    String? thumbnailPath,
+  }) {
+    ColorMediaVideoDialog.show(
+      context,
+      videoUrl: videoUrl,
+      title: productModel?.name,
+      thumbnailPath: thumbnailPath ?? productModel?.thumbnailFullUrl?.path,
+    );
+  }
+
+  Widget _buildVideoCell({
+    required BuildContext context,
+    required String videoUrl,
+    required double size,
+    String? thumbnailPath,
+  }) {
+    final isInstagram = ColorMediaHelper.isInstagramUrl(videoUrl);
+    final radius = BorderRadius.circular(_galleryCardRadius);
+
+    return GestureDetector(
+      onTap: () => _openColorMediaVideo(
+        context,
+        videoUrl,
+        thumbnailPath: thumbnailPath,
+      ),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          borderRadius: radius,
+          border: Border.all(
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.35),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.12),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: radius,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (thumbnailPath != null && thumbnailPath.isNotEmpty)
+                CustomImageWidget(
+                  height: size,
+                  width: size,
+                  maxCacheSize: 256,
+                  image: thumbnailPath,
+                )
+              else
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Theme.of(context).primaryColor.withValues(alpha: 0.85),
+                        Theme.of(context).primaryColor.withValues(alpha: 0.45),
+                      ],
+                    ),
+                  ),
+                ),
+              BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.25),
+                        Colors.black.withValues(alpha: 0.45),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Center(
+                child: Container(
+                  width: size * 0.42,
+                  height: size * 0.42,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.92),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.25),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    isInstagram ? Icons.play_circle_fill_rounded : Icons.play_arrow_rounded,
+                    color: Theme.of(context).primaryColor,
+                    size: size * 0.28,
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 6,
+                right: 6,
+                bottom: 6,
+                child: Text(
+                  isInstagram ? 'Instagram' : 'Video',
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: textMedium.copyWith(
+                    color: Colors.white,
+                    fontSize: Dimensions.fontSizeExtraSmall,
+                    shadows: const [
+                      Shadow(color: Colors.black54, blurRadius: 4),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildImageCell({
     required BuildContext context,
     required ProductDetailsController productController,
@@ -236,19 +378,28 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
                 : Theme.of(context).hintColor.withValues(alpha: 0.2),
           ),
           color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall),
+          borderRadius: BorderRadius.circular(_galleryCardRadius),
         ),
         child: Stack(
           fit: StackFit.expand,
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall),
-              child: CustomImageWidget(
-                height: size,
-                width: size,
-                maxCacheSize: 256,
-                image: imagePath,
-              ),
+              borderRadius: BorderRadius.circular(_galleryCardRadius),
+              child: imagePath.isNotEmpty
+                  ? CustomImageWidget(
+                      height: size,
+                      width: size,
+                      maxCacheSize: 256,
+                      image: imagePath,
+                    )
+                  : Container(
+                      color: Theme.of(context).hintColor.withValues(alpha: 0.12),
+                      child: Icon(
+                        Icons.image_outlined,
+                        color: Theme.of(context).hintColor,
+                        size: size * 0.35,
+                      ),
+                    ),
             ),
             if (colorIndex != null) _buildCartOverlay(context, colorIndex),
           ],
@@ -264,118 +415,124 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
   }
 
   Widget _buildColorGallery(BuildContext context, ProductDetailsController productController) {
-    final galleryGroups = ProductImageHelper.getColorGalleryItems(productModel!);
-    if (galleryGroups.isEmpty) return const SizedBox.shrink();
+    final colorGroups = ProductImageHelper.getColorGalleryItems(productModel!);
+    final additionalItems = ProductImageHelper.getAdditionalImageItems(productModel!);
+    if (colorGroups.isEmpty && additionalItems.isEmpty) return const SizedBox.shrink();
+
+    final itemSize = _galleryItemSize(context);
+    final additionalCells = <Widget>[];
+    for (final group in additionalItems) {
+      for (final image in group.images) {
+        if ((image.path ?? '').isEmpty) continue;
+        additionalCells.add(
+          _buildImageCell(
+            context: context,
+            productController: productController,
+            group: group,
+            image: image,
+            size: itemSize,
+            isSelected: _isImageSelected(productController, image.path),
+          ),
+        );
+      }
+      if (group.videoUrl != null && group.videoUrl!.isNotEmpty) {
+        additionalCells.add(
+          _buildVideoCell(
+            context: context,
+            videoUrl: group.videoUrl!,
+            size: itemSize,
+            thumbnailPath: group.thumbnail.path,
+          ),
+        );
+      }
+    }
 
     return Padding(
-      padding: EdgeInsets.only(
-        left: Provider.of<LocalizationController>(context, listen: false).isLtr
-            ? Dimensions.homePagePadding
-            : 0,
-        right: Provider.of<LocalizationController>(context, listen: false).isLtr
-            ? 0
-            : Dimensions.homePagePadding,
+      padding: const EdgeInsets.only(
+        left: Dimensions.homePagePadding,
+        right: Dimensions.homePagePadding,
         bottom: Dimensions.paddingSizeLarge,
       ),
       child: Column(
         children: [
-          for (final group in galleryGroups) ...[
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                _buildImageCell(
-                  context: context,
-                  productController: productController,
-                  group: group,
-                  image: group.thumbnail,
-                  size: _galleryMainSize,
-                  isSelected: _isImageSelected(productController, group.thumbnail.path),
-                  colorIndex: group.colorIndex,
-                ),
-                if (group.images.length > 1) ...[
-                  const SizedBox(width: Dimensions.paddingSizeSmall),
-                  Expanded(
-                    child: SizedBox(
-                      height: _galleryScrollItemSize,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: group.images.length - 1,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(width: Dimensions.paddingSizeSmall),
-                        itemBuilder: (context, index) {
-                          final image = group.images[index + 1];
-                          return _buildImageCell(
-                            context: context,
-                            productController: productController,
-                            group: group,
-                            image: image,
-                            size: _galleryScrollItemSize,
-                            isSelected: _isImageSelected(productController, image.path),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ],
+          for (final group in colorGroups) ...[
+            _buildColorGroupRow(
+              context: context,
+              productController: productController,
+              group: group,
+              itemSize: itemSize,
             ),
             const SizedBox(height: Dimensions.paddingSizeSmall),
           ],
+          if (additionalCells.isNotEmpty)
+            SizedBox(
+              height: itemSize,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: additionalCells.length,
+                separatorBuilder: (_, __) =>
+                    const SizedBox(width: Dimensions.paddingSizeSmall),
+                itemBuilder: (context, index) => additionalCells[index],
+              ),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildMoreImagesSection(
-    BuildContext context,
-    ProductDetailsController productController,
-  ) {
-    final extraImages = ProductImageHelper.getAdditionalImageItems(productModel!);
-    if (extraImages.isEmpty) return const SizedBox.shrink();
-
-    return Padding(
-      padding: EdgeInsets.only(
-        left: Provider.of<LocalizationController>(context, listen: false).isLtr
-            ? Dimensions.homePagePadding
-            : 0,
-        right: Provider.of<LocalizationController>(context, listen: false).isLtr
-            ? 0
-            : Dimensions.homePagePadding,
-        bottom: Dimensions.paddingSizeLarge,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            getTranslated('more_images', context) ?? 'More images',
-            style: titilliumSemiBold.copyWith(
-              fontSize: Dimensions.fontSizeLarge,
-              color: Theme.of(context).textTheme.bodyLarge?.color,
-            ),
-          ),
-          const SizedBox(height: Dimensions.paddingSizeSmall),
-          SizedBox(
-            height: _galleryScrollItemSize,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: extraImages.length,
-              separatorBuilder: (_, __) =>
-                  const SizedBox(width: Dimensions.paddingSizeSmall),
-              itemBuilder: (context, index) {
-                final group = extraImages[index];
-                return _buildImageCell(
-                  context: context,
-                  productController: productController,
-                  group: group,
-                  image: group.thumbnail,
-                  size: _galleryScrollItemSize,
-                  isSelected: _isImageSelected(productController, group.thumbnail.path),
-                );
-              },
+  Widget _buildColorGroupRow({
+    required BuildContext context,
+    required ProductDetailsController productController,
+    required ProductImageGroupItem group,
+    required double itemSize,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        _buildImageCell(
+          context: context,
+          productController: productController,
+          group: group,
+          image: group.thumbnail,
+          size: itemSize,
+          isSelected: _isImageSelected(productController, group.thumbnail.path),
+          colorIndex: group.colorIndex,
+        ),
+        if (group.images.length > 1) ...[
+          const SizedBox(width: Dimensions.paddingSizeSmall),
+          Expanded(
+            child: SizedBox(
+              height: itemSize,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: group.images.length - 1,
+                separatorBuilder: (_, __) =>
+                    const SizedBox(width: Dimensions.paddingSizeSmall),
+                itemBuilder: (context, index) {
+                  final image = group.images[index + 1];
+                  return _buildImageCell(
+                    context: context,
+                    productController: productController,
+                    group: group,
+                    image: image,
+                    size: itemSize,
+                    isSelected: _isImageSelected(productController, image.path),
+                  );
+                },
+              ),
             ),
           ),
         ],
-      ),
+        if (group.videoUrl != null && group.videoUrl!.isNotEmpty) ...[
+          const SizedBox(width: Dimensions.paddingSizeSmall),
+          _buildVideoCell(
+            context: context,
+            videoUrl: group.videoUrl!,
+            size: itemSize,
+            thumbnailPath: group.thumbnail.path,
+          ),
+        ],
+      ],
     );
   }
 
@@ -653,10 +810,9 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
                         ),
                       ),
             ),
-            if (ProductImageHelper.getColorGalleryItems(productModel!).isNotEmpty)
+            if (ProductImageHelper.getColorGalleryItems(productModel!).isNotEmpty ||
+                ProductImageHelper.getAdditionalImageItems(productModel!).isNotEmpty)
               _buildColorGallery(context, productController),
-            if (ProductImageHelper.getAdditionalImageItems(productModel!).isNotEmpty)
-              _buildMoreImagesSection(context, productController),
           ],
         );
       },

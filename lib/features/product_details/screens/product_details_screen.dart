@@ -68,15 +68,15 @@ class _ProductDetailsState extends State<ProductDetails> {
     Provider.of<ReviewController>(context, listen: false).removePrevReview();
     Provider.of<ProductDetailsController>(context, listen: false).removePrevLink();
     Provider.of<ReviewController>(context, listen: false).getReviewList(widget.slug, context);
-    Provider.of<ProductController>(context, listen: false).removePrevRelatedProduct();
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (!context.mounted) return;
-      Provider.of<ProductController>(context, listen: false).initRelatedProductList(widget.slug.toString(), context);
-    });
+    // Provider.of<ProductController>(context, listen: false).removePrevRelatedProduct();
+    // Future.delayed(const Duration(milliseconds: 500), () {
+    //   if (!context.mounted) return;
+    //   Provider.of<ProductController>(context, listen: false).initRelatedProductList(widget.slug.toString(), context);
+    // });
     Provider.of<ProductDetailsController>(context, listen: false).getCount(widget.slug.toString(), context);
     Provider.of<ProductDetailsController>(context, listen: false).getSharableLink(widget.slug.toString(), context);
     Provider.of<ProductDetailsController>(context, listen: false).setImageSliderSelectedIndex(0, isUpdate: false);
-    Provider.of<ShopController>(context, listen: false).emptyProductDetailsSeller();
+   // Provider.of<ShopController>(context, listen: false).emptyProductDetailsSeller();
   }
 
   @override
@@ -239,6 +239,7 @@ class _ProductDetailsState extends State<ProductDetails> {
 
                     ReviewAndSpecificationSectionWidget(
                       averageReview: double.tryParse(details.productDetailsModel?.averageReview ?? '0'),
+                      reviewsCount: details.productDetailsModel?.reviewsCount,
                     ),
 
                     details.isReviewSelected?
@@ -273,14 +274,14 @@ class _ProductDetailsState extends State<ProductDetails> {
                       ) : const SizedBox.shrink(),
                       const SizedBox(height: Dimensions.paddingSizeSmall),
 
-                      Container(
-                        padding: const EdgeInsets.only(top: Dimensions.paddingSizeLarge, bottom: Dimensions.paddingSizeDefault),
-                        decoration: BoxDecoration(color: Theme.of(context).cardColor),
-                        child: const PromiseWidget()
-                      ),
-
-                      _ProductDetailsProductListWidget(scrollController: _scrollController),
-
+                      // Container(
+                      //   padding: const EdgeInsets.only(top: Dimensions.paddingSizeLarge, bottom: Dimensions.paddingSizeDefault),
+                      //   decoration: BoxDecoration(color: Theme.of(context).cardColor),
+                      //   child: const PromiseWidget()
+                      // ),
+                      //
+                      // _ProductDetailsProductListWidget(scrollController: _scrollController),
+                      //
 
                     ]),
                   ]),

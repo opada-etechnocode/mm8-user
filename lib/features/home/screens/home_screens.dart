@@ -597,52 +597,55 @@ class _HomePageState extends State<HomePage> {
               // if (!singleVendor)
               //   SliverToBoxAdapter(
               //       child: SizedBox(height: Dimensions.paddingSizeDefault)),
-              SliverToBoxAdapter(
-                child: Padding(
-                    padding:
-                        EdgeInsets.only(bottom: Dimensions.paddingSizeDefault),
-                    child: RecommendedProductWidget()),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                    padding:
-                        EdgeInsets.only(bottom: Dimensions.paddingSizeDefault),
-                    child: LatestProductListWidget()),
-              ),
-              if (configModel!.brandSetting == "1")
-                SliverToBoxAdapter(
-                    child: Column(
-                  children: [
-                    const BrandListWidget(isHomePage: true),
-                    const SizedBox(height: Dimensions.paddingSizeDefault),
-                  ],
-                )),
-              const HomeCategoryProductWidget(isHomePage: true),
-              SliverToBoxAdapter(
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if ((Provider.of<BannerController>(context, listen: false)
-                                  .footerBannerList
-                                  ?.length ??
-                              0) >
-                          1)
-                        const SizedBox(height: Dimensions.paddingSizeDefault),
-                      const FooterBannerSliderWidget(),
-                    ]),
-              ),
-              SliverPersistentHeader(
-                  pinned: true,
-                  delegate: SliverDelegate(
-                    height: 50,
-                    child: Align(
-                      alignment: Alignment.topLeft,
-                      child: Container(
-                          color: Theme.of(context).scaffoldBackgroundColor,
-                          child: const ProductPopupFilterWidget()),
-                    ),
-                  )),
-              HomeProductListWidget(scrollController: _scrollController),
+
+         //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+              // SliverToBoxAdapter(
+
+              //   child: Padding(
+              //       padding:
+              //           EdgeInsets.only(bottom: Dimensions.paddingSizeDefault),
+              //       child: RecommendedProductWidget()),
+              // ),
+              // SliverToBoxAdapter(
+              //   child: Padding(
+              //       padding:
+              //           EdgeInsets.only(bottom: Dimensions.paddingSizeDefault),
+              //       child: LatestProductListWidget()),
+              // ),
+              // if (configModel!.brandSetting == "1")
+              //   SliverToBoxAdapter(
+              //       child: Column(
+              //     children: [
+              //       const BrandListWidget(isHomePage: true),
+              //       const SizedBox(height: Dimensions.paddingSizeDefault),
+              //     ],
+              //   )),
+              // const HomeCategoryProductWidget(isHomePage: true),
+              // SliverToBoxAdapter(
+              //   child: Column(
+              //       crossAxisAlignment: CrossAxisAlignment.start,
+              //       children: [
+              //         if ((Provider.of<BannerController>(context, listen: false)
+              //                     .footerBannerList
+              //                     ?.length ??
+              //                 0) >
+              //             1)
+              //           const SizedBox(height: Dimensions.paddingSizeDefault),
+              //         const FooterBannerSliderWidget(),
+              //       ]),
+              // ),
+              // SliverPersistentHeader(
+              //     pinned: true,
+              //     delegate: SliverDelegate(
+              //       height: 50,
+              //       child: Align(
+              //         alignment: Alignment.topLeft,
+              //         child: Container(
+              //             color: Theme.of(context).scaffoldBackgroundColor,
+              //             child: const ProductPopupFilterWidget()),
+              //       ),
+              //     )),
+              // HomeProductListWidget(scrollController: _scrollController),
             ],
           ),
         ),

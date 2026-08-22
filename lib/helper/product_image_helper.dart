@@ -7,6 +7,7 @@ class ProductImageGroupItem {
   final ImageFullUrl thumbnail;
   final List<ImageFullUrl> images;
   final int heroImageIndex;
+  final String? videoUrl;
 
   const ProductImageGroupItem({
     required this.colorIndex,
@@ -14,6 +15,7 @@ class ProductImageGroupItem {
     required this.thumbnail,
     required this.images,
     required this.heroImageIndex,
+    this.videoUrl,
   });
 }
 
@@ -53,60 +55,66 @@ class ProductImageHelper {
     return result;
   }
 
-  static List<ProductImageGroupItem> getColorImageGroups(ProductDetailsModel product) {
+  static bool _hasColorKey(ColorImagesFullUrl entry) {
+    return entry.color != null && entry.color!.trim().isNotEmpty;
+  }
+
+  static Set<String> _getAllColorMediaPaths(ProductDetailsModel product) {
+    final paths = <String>{};
+    for (final entry in product.colorImagesFullUrl ?? []) {
+      for (final image in entry.images ?? <ImageFullUrl>[]) {
+        final path = image.path ?? '';
+        if (path.isNotEmpty) paths.add(path);
+      }
+      final imagePath = entry.imageName?.path ?? '';
+      if (imagePath.isNotEmpty) paths.add(imagePath);
+    }
+    return paths;
+  }
+
+  static ProductImageGroupItem? _groupFromColorEntry(
+    ProductDetailsModel product,
+    ColorImagesFullUrl entry, {
+    required bool includeColor,
+  }) {
+    if (includeColor && !_hasColorKey(entry)) return null;
+    if (!includeColor && _hasColorKey(entry)) return null;
+
+    final colorKey = entry.color?.toUpperCase();
+    List<ImageFullUrl> groupImages = _uniqueImages(entry.images ?? <ImageFullUrl>[]);
+
+    if (groupImages.isEmpty && (entry.imageName?.path ?? '').isNotEmpty) {
+      groupImages = [entry.imageName!];
+    }
+
+    final hasVideo = entry.videoUrl != null && entry.videoUrl!.trim().isNotEmpty;
+    if (groupImages.isEmpty && !hasVideo) return null;
+
+    final thumbnail = groupImages.isNotEmpty
+        ? groupImages.first
+        : ImageFullUrl(path: entry.imageName?.path ?? '');
+
     final allImages = product.imagesFullUrl ?? [];
+    final heroIndex = _indexInAllImages(allImages, thumbnail);
+
+    return ProductImageGroupItem(
+      colorIndex: includeColor ? _findColorIndex(product, colorKey) : null,
+      colorKey: includeColor ? colorKey : null,
+      thumbnail: thumbnail,
+      images: groupImages.isNotEmpty ? groupImages : [thumbnail],
+      heroImageIndex: heroIndex >= 0 ? heroIndex : 0,
+      videoUrl: entry.videoUrl,
+    );
+  }
+
+  static List<ProductImageGroupItem> getColorImageGroups(ProductDetailsModel product) {
     final colorEntries = product.colorImagesFullUrl ?? [];
     if (colorEntries.isEmpty) return [];
 
-    final anchors = <MapEntry<int, ColorImagesFullUrl>>[];
-    for (final entry in colorEntries) {
-      final index = _indexInAllImages(allImages, entry.imageName);
-      anchors.add(MapEntry(index >= 0 ? index : 999999, entry));
-    }
-
-    anchors.sort((a, b) => a.key.compareTo(b.key));
-
     final groups = <ProductImageGroupItem>[];
-    for (int i = 0; i < anchors.length; i++) {
-      final entry = anchors[i].value;
-      final colorKey = entry.color?.toUpperCase();
-
-      List<ImageFullUrl> groupImages;
-      int heroIndex;
-
-      if (entry.images != null && entry.images!.isNotEmpty) {
-        groupImages = _uniqueImages(entry.images!);
-        if (groupImages.isEmpty) continue;
-        heroIndex = _indexInAllImages(allImages, groupImages.first);
-      } else {
-        final startIndex = anchors[i].key;
-        final endIndex = i < anchors.length - 1 ? anchors[i + 1].key : allImages.length;
-
-        if (startIndex >= 0 && startIndex < allImages.length && endIndex > startIndex) {
-          groupImages = allImages.sublist(startIndex, endIndex);
-        } else if (entry.imageName != null && (entry.imageName!.path ?? '').isNotEmpty) {
-          groupImages = [entry.imageName!];
-        } else {
-          continue;
-        }
-
-        groupImages = _uniqueImages(groupImages);
-        if (groupImages.isEmpty) continue;
-
-        heroIndex = startIndex >= 0 && startIndex < allImages.length
-            ? startIndex
-            : _indexInAllImages(allImages, groupImages.first);
-      }
-
-      groups.add(
-        ProductImageGroupItem(
-          colorIndex: _findColorIndex(product, colorKey),
-          colorKey: colorKey,
-          thumbnail: groupImages.first,
-          images: groupImages,
-          heroImageIndex: heroIndex >= 0 ? heroIndex : 0,
-        ),
-      );
+    for (final entry in colorEntries) {
+      final group = _groupFromColorEntry(product, entry, includeColor: true);
+      if (group != null) groups.add(group);
     }
 
     return groups;
@@ -114,19 +122,6 @@ class ProductImageHelper {
 
   static bool hasColorGroups(ProductDetailsModel product) {
     return getColorImageGroups(product).isNotEmpty;
-  }
-
-  static Set<String> _getAttributeLinkedPaths(List<ProductImageGroupItem> colorGroups) {
-    final paths = <String>{};
-    for (final group in colorGroups) {
-      for (final image in group.images) {
-        final path = image.path ?? '';
-        if (path.isNotEmpty) {
-          paths.add(path);
-        }
-      }
-    }
-    return paths;
   }
 
   static List<ProductImageGroupItem> getColorGalleryItems(ProductDetailsModel product) {
@@ -148,27 +143,20 @@ class ProductImageHelper {
   }
 
   static List<ProductImageGroupItem> getAdditionalImageItems(ProductDetailsModel product) {
-    final allImages = product.imagesFullUrl ?? [];
-    if (allImages.isEmpty) return [];
+    final additionalItems = <ProductImageGroupItem>[];
 
-    final colorGroups = getColorImageGroups(product);
-    if (colorGroups.isEmpty) {
-      return List.generate(allImages.length, (index) {
-        return ProductImageGroupItem(
-          colorIndex: null,
-          colorKey: null,
-          thumbnail: allImages[index],
-          images: [allImages[index]],
-          heroImageIndex: index,
-        );
-      });
+    for (final entry in product.colorImagesFullUrl ?? []) {
+      final group = _groupFromColorEntry(product, entry, includeColor: false);
+      if (group != null) additionalItems.add(group);
     }
 
-    final attributePaths = _getAttributeLinkedPaths(colorGroups);
-    final additionalItems = <ProductImageGroupItem>[];
+    final allImages = product.imagesFullUrl ?? [];
+    if (allImages.isEmpty) return additionalItems;
+
+    final linkedPaths = _getAllColorMediaPaths(product);
     for (int index = 0; index < allImages.length; index++) {
       final path = allImages[index].path ?? '';
-      if (path.isEmpty || attributePaths.contains(path)) continue;
+      if (path.isEmpty || linkedPaths.contains(path)) continue;
 
       additionalItems.add(
         ProductImageGroupItem(

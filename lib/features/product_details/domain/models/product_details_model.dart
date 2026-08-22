@@ -841,40 +841,60 @@ class ColorImagesFullUrl {
   String? color;
   ImageFullUrl? imageName;
   List<ImageFullUrl>? images;
+  String? videoUrl;
 
-  ColorImagesFullUrl({this.color, this.imageName, this.images});
+  ColorImagesFullUrl({this.color, this.imageName, this.images, this.videoUrl});
+
+  static ImageFullUrl? parseMediaImage(dynamic value) {
+    if (value is! Map) return null;
+    final map = Map<String, dynamic>.from(value);
+    if (map['image_name'] is Map) {
+      return ImageFullUrl.fromJson(Map<String, dynamic>.from(map['image_name']));
+    }
+    if (map['path'] != null) {
+      return ImageFullUrl.fromJson(map);
+    }
+    return null;
+  }
 
   ColorImagesFullUrl.fromJson(Map<String, dynamic> json) {
     color = json['color'];
+    videoUrl = json['video_url']?.toString();
+    images = <ImageFullUrl>[];
+
+    void addImage(dynamic value) {
+      final image = parseMediaImage(value);
+      if (image == null || (image.path ?? '').isEmpty) return;
+      if (!images!.any((item) => item.path == image.path)) {
+        images!.add(image);
+      }
+    }
+
     if (json['images'] != null) {
-      images = <ImageFullUrl>[];
-      json['images'].forEach((v) {
-        images!.add(ImageFullUrl.fromJson(v));
-      });
-      if (images!.isNotEmpty) {
-        imageName = images!.first;
+      json['images'].forEach(addImage);
+    }
+
+    if (json['image_name'] is Map) {
+      imageName = ImageFullUrl.fromJson(Map<String, dynamic>.from(json['image_name']));
+      if ((imageName?.path ?? '').isNotEmpty &&
+          !images!.any((item) => item.path == imageName!.path)) {
+        images!.insert(0, imageName!);
       }
     } else if (json['image_name'] is List) {
-      images = <ImageFullUrl>[];
-      json['image_name'].forEach((v) {
-        images!.add(ImageFullUrl.fromJson(v));
-      });
-      if (images!.isNotEmpty) {
-        imageName = images!.first;
-      }
-    } else {
-      imageName = json['image_name'] != null
-          ? ImageFullUrl.fromJson(json['image_name'])
-          : null;
-      if (imageName != null) {
-        images = [imageName!];
-      }
+      json['image_name'].forEach(addImage);
+    }
+
+    if (images!.isEmpty && imageName != null) {
+      images = [imageName!];
+    } else if (images!.isNotEmpty) {
+      imageName ??= images!.first;
     }
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['color'] = color;
+    data['video_url'] = videoUrl;
     if (images != null && images!.length > 1) {
       data['images'] = images!.map((v) => v.toJson()).toList();
     } else if (imageName != null) {
