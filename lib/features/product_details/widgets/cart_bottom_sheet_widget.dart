@@ -15,6 +15,7 @@ import 'package:flutter_sixvalley_ecommerce/features/shipping/domain/models/ship
 import 'package:flutter_sixvalley_ecommerce/features/splash/controllers/splash_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/price_converter.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/product_helper.dart';
+import 'package:flutter_sixvalley_ecommerce/helper/product_image_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/route_healper.dart';
 import 'package:flutter_sixvalley_ecommerce/localization/app_localization.dart';
 import 'package:flutter_sixvalley_ecommerce/localization/language_constrants.dart';
@@ -32,7 +33,16 @@ import 'package:provider/provider.dart';
 class CartBottomSheetWidget extends StatefulWidget {
   final ProductDetailsModel? product;
   final Function? callback;
-  const CartBottomSheetWidget({super.key, required this.product, this.callback});
+  final int? initialColorIndex;
+  final String? initialColorImagePath;
+
+  const CartBottomSheetWidget({
+    super.key,
+    required this.product,
+    this.callback,
+    this.initialColorIndex,
+    this.initialColorImagePath,
+  });
 
   @override
   CartBottomSheetWidgetState createState() => CartBottomSheetWidgetState();
@@ -42,9 +52,37 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
 
   @override
   void initState() {
-    Provider.of<ProductDetailsController>(context, listen: false).initData(widget.product!, 1, context);
-    Provider.of<ProductDetailsController>(context, listen: false).initDigitalVariationIndex();
     super.initState();
+    final productDetailsController = Provider.of<ProductDetailsController>(context, listen: false);
+    productDetailsController.initData(widget.product!, widget.product!.minimumOrderQty ?? 1, context);
+    if (widget.initialColorIndex != null) {
+      productDetailsController.setCartVariantIndex(
+        widget.product!.minimumOrderQty ?? 1,
+        widget.initialColorIndex!,
+        context,
+      );
+    }
+    productDetailsController.initDigitalVariationIndex();
+  }
+
+  String? _resolveSheetImagePath(ProductDetailsController productDetailsController) {
+    if (widget.initialColorImagePath != null && widget.initialColorImagePath!.isNotEmpty) {
+      return widget.initialColorImagePath;
+    }
+
+    final colorIndex = productDetailsController.variantIndex ?? widget.initialColorIndex;
+    if (colorIndex != null && widget.product != null) {
+      final path = ProductImageHelper.getColorImagePath(widget.product!, colorIndex);
+      if (path != null && path.isNotEmpty) {
+        return path;
+      }
+    }
+
+    if (widget.initialColorImagePath != null && widget.initialColorImagePath!.isNotEmpty) {
+      return widget.initialColorImagePath;
+    }
+
+    return null;
   }
 
   @override
@@ -65,21 +103,8 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
               List<List<String>> extensions = [];
               String? variantKey;
               double? digitalVariantPrice;
-              String? colorWiseSelectedImage = '';
+              String? colorWiseSelectedImage = _resolveSheetImagePath(productDetailsController);
               bool variationRestockRequested = false;
-      
-      
-              if(widget.product != null && widget.product!.colorImagesFullUrl != null && widget.product!.colorImagesFullUrl!.isNotEmpty){
-                for(int i=0; i< widget.product!.colorImagesFullUrl!.length; i++){
-                  if(widget.product!.colorImagesFullUrl![i].color == '${widget.product!.colors?[productDetailsController.variantIndex??0].code?.substring(1, 7)}'){
-                    colorWiseSelectedImage = widget.product!.colorImagesFullUrl![i].imageName?.path;
-                  }
-                }
-              }
-      
-      
-      
-              Variation? variation;
               String? variantName = (widget.product!.colors != null && widget.product!.colors!.isNotEmpty) ?
               widget.product!.colors![productDetailsController.variantIndex!].name : null;
               List<String> variationList = [];
@@ -115,12 +140,13 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
       
               double? price = widget.product!.unitPrice;
               int? stock = widget.product!.currentStock;
+              Variation? variation;
               variationType = variationType.replaceAll(' ', '');
-              for(Variation variation in widget.product!.variation!) {
-                if(variation.type == variationType) {
-                  price = variation.price;
-                  variation = variation;
-                  stock = variation.qty;
+              for (final matchedVariation in widget.product!.variation!) {
+                if (matchedVariation.type == variationType) {
+                  price = matchedVariation.price;
+                  variation = matchedVariation;
+                  stock = matchedVariation.qty;
                   break;
                 }
               }
@@ -318,10 +344,9 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
                                 decoration: BoxDecoration(borderRadius: BorderRadius.circular(5),
                                   border: Border.all(width: .5,color: Theme.of(context).primaryColor.withValues(alpha:.20))),
                                 child: ClipRRect(borderRadius: BorderRadius.circular(5),
-                                  child: CustomImageWidget(image: (widget.product!.colors != null && widget.product!.colors!.isNotEmpty &&
-                                      widget.product!.imagesFullUrl != null && widget.product!.imagesFullUrl!.isNotEmpty) ?
-                                  '$colorWiseSelectedImage':
-                                  '${widget.product!.thumbnailFullUrl?.path}'))
+                                  child: CustomImageWidget(image: (colorWiseSelectedImage != null && colorWiseSelectedImage.isNotEmpty)
+                                      ? colorWiseSelectedImage
+                                      : '${widget.product!.thumbnailFullUrl?.path}'))
                               ),
                             ]),
                           ]),

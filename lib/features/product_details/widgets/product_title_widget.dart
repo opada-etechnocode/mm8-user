@@ -23,14 +23,25 @@ class ProductTitleWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
-    ({double? end, double? start})? priceRange = ProductHelper.getProductPriceRange(productModel);
-    double? startingPrice = priceRange.start;
-    double? endingPrice = priceRange.end;
-
     return productModel != null? Container(
       padding: const EdgeInsets.symmetric(horizontal : Dimensions.homePagePadding),
       child: Consumer<ProductDetailsController>(
         builder: (context, details, child) {
+          final discount = (productModel?.clearanceSale?.discountAmount ?? 0) > 0
+              ? productModel?.clearanceSale?.discountAmount
+              : productModel?.discount;
+          final discountType = (productModel?.clearanceSale?.discountAmount ?? 0) > 0
+              ? productModel?.clearanceSale?.discountType
+              : productModel?.discountType;
+          final hasSelectedVariant = details.isValidColorIndex(productModel!, details.variantIndex);
+          final selectedPrice = hasSelectedVariant
+              ? details.getSelectedUnitPrice(productModel!)
+              : null;
+
+          ({double? end, double? start})? priceRange = ProductHelper.getProductPriceRange(productModel);
+          double? startingPrice = selectedPrice ?? priceRange.start;
+          double? endingPrice = hasSelectedVariant ? null : priceRange.end;
+
           return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
 
             Text(
@@ -46,24 +57,16 @@ class ProductTitleWidget extends StatelessWidget {
                       PriceConverter.convertPrice(
                         context,
                         startingPrice,
-                        discount: (productModel?.clearanceSale?.discountAmount ?? 0) > 0
-                            ? productModel?.clearanceSale?.discountAmount
-                            : productModel?.discount,
-                        discountType: (productModel?.clearanceSale?.discountAmount ?? 0) > 0
-                            ? productModel?.clearanceSale?.discountType
-                            : productModel?.discountType,
+                        discount: discount,
+                        discountType: discountType,
                       )
                       : ''}'
                   '${endingPrice != null
                       ? ' - ${PriceConverter.convertPrice(
                             context,
                             endingPrice,
-                            discount: (productModel?.clearanceSale?.discountAmount ?? 0) > 0
-                                ? productModel?.clearanceSale?.discountAmount
-                                : productModel?.discount,
-                            discountType: (productModel?.clearanceSale?.discountAmount ?? 0) > 0
-                                ? productModel?.clearanceSale?.discountType
-                                : productModel?.discountType,
+                            discount: discount,
+                            discountType: discountType,
                           )}'
                       : ''}',
                   style: titilliumBold.copyWith(
@@ -77,10 +80,14 @@ class ProductTitleWidget extends StatelessWidget {
                 const SizedBox(width: Dimensions.paddingSizeSmall),
 
                 CustomDirectionalityWidget(
-                  child: Text('${PriceConverter.convertPrice(context, startingPrice)}'
-                      '${endingPrice!= null ? ' - ${PriceConverter.convertPrice(context, endingPrice)}' : ''}',
-                      style: titilliumRegular.copyWith(color: Theme.of(context).hintColor,
-                          decoration: TextDecoration.lineThrough)),
+                  child: Text(
+                    hasSelectedVariant
+                        ? PriceConverter.convertPrice(context, selectedPrice ?? startingPrice)
+                        : '${PriceConverter.convertPrice(context, priceRange.start)}'
+                            '${priceRange.end != null ? ' - ${PriceConverter.convertPrice(context, priceRange.end)}' : ''}',
+                    style: titilliumRegular.copyWith(color: Theme.of(context).hintColor,
+                        decoration: TextDecoration.lineThrough),
+                  ),
                 ),
               ],
             ]),

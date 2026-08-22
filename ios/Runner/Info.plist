@@ -42,7 +42,7 @@
 	<key>FacebookDisplayName</key>
 	<string>MM8</string>
 	<key>FlutterDeepLinkingEnabled</key>
-	<true/>
+	<false/>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>fbapi</string>

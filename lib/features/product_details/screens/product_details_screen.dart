@@ -323,9 +323,7 @@ class _ProductDetailsProductListWidget extends StatelessWidget {
                 }
             ),
             const SizedBox(height: 5),
-            const Padding(padding: EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeExtraSmall),
-              child: RelatedProductWidget(),
-            ),
+            const RelatedProductWidget(),
 
 
             Consumer<SellerProductController>(

@@ -129,7 +129,25 @@ class ProductImageHelper {
     return paths;
   }
 
-  static List<ProductImageGroupItem> getGridItems(ProductDetailsModel product) {
+  static List<ProductImageGroupItem> getColorGalleryItems(ProductDetailsModel product) {
+    final colorGroups = getColorImageGroups(product);
+    if (colorGroups.isEmpty) return [];
+
+    final colorItems = <ProductImageGroupItem>[];
+    final addedGroups = <String>{};
+
+    for (final group in colorGroups) {
+      final key = group.colorKey ?? group.thumbnail.path ?? '';
+      if (key.isNotEmpty && !addedGroups.contains(key)) {
+        colorItems.add(group);
+        addedGroups.add(key);
+      }
+    }
+
+    return colorItems;
+  }
+
+  static List<ProductImageGroupItem> getAdditionalImageItems(ProductDetailsModel product) {
     final allImages = product.imagesFullUrl ?? [];
     if (allImages.isEmpty) return [];
 
@@ -147,17 +165,6 @@ class ProductImageHelper {
     }
 
     final attributePaths = _getAttributeLinkedPaths(colorGroups);
-    final colorItems = <ProductImageGroupItem>[];
-    final addedGroups = <String>{};
-
-    for (final group in colorGroups) {
-      final key = group.colorKey ?? group.thumbnail.path ?? '';
-      if (key.isNotEmpty && !addedGroups.contains(key)) {
-        colorItems.add(group);
-        addedGroups.add(key);
-      }
-    }
-
     final additionalItems = <ProductImageGroupItem>[];
     for (int index = 0; index < allImages.length; index++) {
       final path = allImages[index].path ?? '';
@@ -174,7 +181,14 @@ class ProductImageHelper {
       );
     }
 
-    return [...colorItems, ...additionalItems];
+    return additionalItems;
+  }
+
+  static List<ProductImageGroupItem> getGridItems(ProductDetailsModel product) {
+    return [
+      ...getColorGalleryItems(product),
+      ...getAdditionalImageItems(product),
+    ];
   }
 
   static ProductImageGroupItem? findGroupForHeroIndex(
@@ -194,5 +208,31 @@ class ProductImageHelper {
 
   static List<ImageFullUrl> getAllGalleryImages(ProductDetailsModel product) {
     return _uniqueImages(product.imagesFullUrl ?? []);
+  }
+
+  static String? getColorImagePath(ProductDetailsModel product, int colorIndex) {
+    for (final group in getColorGalleryItems(product)) {
+      if (group.colorIndex == colorIndex) {
+        return group.thumbnail.path;
+      }
+    }
+
+    final colors = product.colors;
+    if (colors == null || colorIndex < 0 || colorIndex >= colors.length) {
+      return null;
+    }
+
+    final colorKey = _colorKeyFromCode(colors[colorIndex].code);
+    final colorEntries = product.colorImagesFullUrl ?? [];
+    for (final entry in colorEntries) {
+      if (entry.color?.toUpperCase() == colorKey) {
+        if (entry.images != null && entry.images!.isNotEmpty) {
+          return entry.images!.first.path;
+        }
+        return entry.imageName?.path;
+      }
+    }
+
+    return null;
   }
 }

@@ -26,7 +26,7 @@ class CategoryWidget extends StatelessWidget {
 
     return Padding(
       padding: uniformPadding
-          ? const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall)
+          ? const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeTwelve)
           : EdgeInsets.only(
               left: isLtr
                   ? index == 0
@@ -50,9 +50,9 @@ class CategoryWidget extends StatelessWidget {
               // Square image: takes the available width (bounded) but never
               // forces the Column taller than it has room for.
               Flexible(
-                flex: 5,
+                flex: 4,
                 child: AspectRatio(
-                  aspectRatio: 1,
+                  aspectRatio: 1, // <-- always a perfect square
                   child: Container(
                     decoration: BoxDecoration(
                       border: Border.all(
@@ -82,7 +82,7 @@ class CategoryWidget extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: textRegular.copyWith(
-                      fontSize: Dimensions.fontSizeDefault,
+                      fontSize: Dimensions.fontSizeSmall,
                       color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),

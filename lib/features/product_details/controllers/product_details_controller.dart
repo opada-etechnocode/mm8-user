@@ -12,6 +12,8 @@ import 'package:flutter_sixvalley_ecommerce/features/product_details/domain/mode
 import 'package:flutter_sixvalley_ecommerce/features/product_details/domain/services/product_details_service_interface.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product_details/enums/preview_type.dart';
 import 'package:flutter_sixvalley_ecommerce/features/auth/controllers/auth_controller.dart';
+import 'package:flutter_sixvalley_ecommerce/features/product_details/widgets/cart_bottom_sheet_widget.dart';
+import 'package:flutter_sixvalley_ecommerce/helper/product_image_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/features/splash/controllers/splash_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/api_checker.dart';
 import 'package:flutter_sixvalley_ecommerce/localization/language_constrants.dart';
@@ -61,12 +63,19 @@ class ProductDetailsController extends ChangeNotifier {
 
   Future<void> getProductDetails(BuildContext context, String productId, String slug) async {
     _isDetails = true;
+    _variantIndex = null;
+    _variationIndex = null;
     log("=====slug===>$slug/ $productId");
     ApiResponseModel apiResponse = await productDetailsServiceInterface.get(slug);
     if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
       _isDetails = false;
       _productDetailsModel = ProductDetailsModel.fromJson(apiResponse.response!.data);
       if(_productDetailsModel != null){
+        initData(
+          _productDetailsModel!,
+          _productDetailsModel!.minimumOrderQty ?? 1,
+          context,
+        );
         log("=====slug===>$slug/ $productId");
         final sellerProductController =
             Provider.of<SellerProductController>(Get.context!, listen: false);
@@ -107,9 +116,22 @@ class ProductDetailsController extends ChangeNotifier {
     _quantity = minimumOrderQuantity;
     _variationIndex = [];
     final choiceCount = product.choiceOptions?.length ?? 0;
-    for (int i = 0; i <= choiceCount; i++) {
+    for (int i = 0; i < choiceCount; i++) {
       _variationIndex!.add(0);
     }
+  }
+
+  int _clampColorIndex(ProductDetailsModel product, int index) {
+    final colors = product.colors;
+    if (colors == null || colors.isEmpty) return 0;
+    return index.clamp(0, colors.length - 1);
+  }
+
+  bool isValidColorIndex(ProductDetailsModel product, int? index) {
+    if (index == null) return false;
+    final colors = product.colors;
+    if (colors == null || colors.isEmpty) return false;
+    return index >= 0 && index < colors.length;
   }
 
   bool isReviewSelected = false;
@@ -187,17 +209,21 @@ class ProductDetailsController extends ChangeNotifier {
   Variation? _resolveVariation(ProductDetailsModel product, int colorIndex) {
     if (product.variation == null || product.variation!.isEmpty) return null;
 
+    final safeColorIndex = _clampColorIndex(product, colorIndex);
     String? variantName = (product.colors != null && product.colors!.isNotEmpty)
-        ? product.colors![colorIndex].name
+        ? product.colors![safeColorIndex].name
         : null;
 
     final variationList = <String>[];
     final choiceCount = product.choiceOptions?.length ?? 0;
     for (int index = 0; index < choiceCount; index++) {
+      final options = product.choiceOptions![index].options;
+      if (options == null || options.isEmpty) continue;
+
       final optionIndex = (_variationIndex != null && _variationIndex!.length > index)
-          ? _variationIndex![index]
+          ? _variationIndex![index].clamp(0, options.length - 1)
           : 0;
-      variationList.add(product.choiceOptions![index].options![optionIndex].trim());
+      variationList.add(options[optionIndex].trim());
     }
 
     String variationType = '';
@@ -232,6 +258,18 @@ class ProductDetailsController extends ChangeNotifier {
     return variation?.qty ?? product.currentStock;
   }
 
+  double? getSelectedUnitPrice(ProductDetailsModel product) {
+    if (isValidColorIndex(product, _variantIndex) &&
+        product.variation != null &&
+        product.variation!.isNotEmpty) {
+      final variation = _resolveVariation(product, _variantIndex!);
+      if (variation?.price != null) {
+        return variation!.price;
+      }
+    }
+    return product.unitPrice;
+  }
+
   Future<void> addToCartFromColorIndex(BuildContext context, ProductDetailsModel product, int colorIndex) async {
     final splashController = Provider.of<SplashController>(context, listen: false);
     final authController = Provider.of<AuthController>(context, listen: false);
@@ -247,7 +285,23 @@ class ProductDetailsController extends ChangeNotifier {
 
     setCartVariantIndex(product.minimumOrderQty ?? 1, colorIndex, context);
 
-    final stock = _resolveStock(product, colorIndex);
+    final safeColorIndex = _clampColorIndex(product, colorIndex);
+    final hasExtraVariations = product.choiceOptions?.isNotEmpty ?? false;
+    if (hasExtraVariations) {
+      await showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0),
+        builder: (_) => CartBottomSheetWidget(
+          product: product,
+          initialColorIndex: safeColorIndex,
+          initialColorImagePath: ProductImageHelper.getColorImagePath(product, safeColorIndex),
+        ),
+      );
+      return;
+    }
+
+    final stock = _resolveStock(product, safeColorIndex);
     final minQty = product.minimumOrderQty ?? 1;
 
     if (product.productType == 'physical' && (stock ?? 0) < minQty) {
@@ -255,20 +309,20 @@ class ProductDetailsController extends ChangeNotifier {
       return;
     }
 
-    final variation = _resolveVariation(product, colorIndex);
+    final variation = _resolveVariation(product, safeColorIndex);
     final cart = CartModelBody(
       productId: product.id,
       variant: (product.colors != null && product.colors!.isNotEmpty)
-          ? product.colors![colorIndex].name
+          ? product.colors![safeColorIndex].name
           : '',
       color: (product.colors != null && product.colors!.isNotEmpty)
-          ? product.colors![colorIndex].code
+          ? product.colors![safeColorIndex].code
           : '',
       variation: variation,
       quantity: _quantity ?? minQty,
     );
 
-    _addingToCartColorIndex = colorIndex;
+    _addingToCartColorIndex = safeColorIndex;
     notifyListeners();
     try {
       await Provider.of<CartController>(context, listen: false).addToCartAPI(
@@ -292,7 +346,11 @@ class ProductDetailsController extends ChangeNotifier {
   }
 
   void setCartVariantIndex(int? minimumOrderQuantity,int index, BuildContext context) {
-    _variantIndex = index;
+    if (_productDetailsModel != null) {
+      _variantIndex = _clampColorIndex(_productDetailsModel!, index);
+    } else {
+      _variantIndex = index;
+    }
     _quantity = minimumOrderQuantity;
     notifyListeners();
   }

@@ -74,23 +74,30 @@
 
             <meta-data android:name="flutter_deeplinking_enabled" android:value="true" />
 
-            <!-- Single intent filter for all deep links -->
+            <!-- App Links: one filter per path group (multiple <data> in one filter = AND, not OR) -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
-
-                <data android:scheme="https"/>
-                <data android:scheme="http"/>
-                <data android:host="www.mm8market.com"/>
-
-                <data android:pathPattern="/" />
-                <data android:pathPattern="" />
-
-                <data android:pathPrefix="/track-order" />
-                <data android:pathPrefix="/referral-login" />
-                <data android:pathPrefix="/product/" />
-                <data android:pathPrefix="/vendor-shop/" />
+                <data android:scheme="https" android:host="www.mm8market.com" android:pathPrefix="/product/"/>
+            </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="www.mm8market.com" android:pathPrefix="/vendor-shop/"/>
+            </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="www.mm8market.com" android:pathPrefix="/track-order"/>
+            </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="www.mm8market.com" android:pathPrefix="/referral-login"/>
             </intent-filter>
 
         </activity>

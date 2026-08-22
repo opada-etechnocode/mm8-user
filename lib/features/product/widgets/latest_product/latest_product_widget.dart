@@ -16,19 +16,32 @@ import 'package:provider/provider.dart';
 
 class LatestProductWidget extends StatelessWidget {
   final Product productModel;
-  const LatestProductWidget({super.key, required this.productModel});
+  final bool compact;
+
+  const LatestProductWidget({
+    super.key,
+    required this.productModel,
+    this.compact = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     final bool isLtr  = Provider.of<LocalizationController>(context, listen: false).isLtr;
 
     String ratting = productModel.rating != null && productModel.rating!.isNotEmpty? productModel.rating![0].average! : "0";
+    final double cardHeight = compact
+        ? 92
+        : (ResponsiveHelper.isTab(context) ? 250 : 110);
+    final double imageSize = compact
+        ? 92
+        : (ResponsiveHelper.isTab(context) ? 230 : 110);
 
     return InkWell(onTap: () {
       RouterHelper.getProductDetailsRoute(action: RouteAction.push, productId: productModel.id, slug: productModel.slug!);
       },
 
-      child: Padding(padding: EdgeInsets.only(left: Dimensions.paddingSizeSmall),
+      child: Padding(
+        padding: compact ? EdgeInsets.zero : const EdgeInsets.only(left: Dimensions.paddingSizeSmall),
         child: Stack(
           children: [
             Container(
@@ -45,7 +58,7 @@ class LatestProductWidget extends StatelessWidget {
                   ]
               ),
               child: SizedBox(
-                height: ResponsiveHelper.isTab(context) ? 250 : 110,
+                height: cardHeight,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -62,8 +75,8 @@ class LatestProductWidget extends StatelessWidget {
                           child: Stack(
                             children: [
                               CustomImageWidget(
-                                height: ResponsiveHelper.isTab(context) ? 250 : 110,
-                                width: ResponsiveHelper.isTab(context) ? 230 : 110,
+                                height: imageSize,
+                                width: imageSize,
                                 fit: BoxFit.cover,
                                 image: '${productModel.thumbnailFullUrl?.path}',
                               ),
@@ -73,7 +86,7 @@ class LatestProductWidget extends StatelessWidget {
                                 Positioned.fill(child: Align(
                                   alignment: Alignment.bottomCenter,
                                   child: Container(
-                                    width: ResponsiveHelper.isTab(context) ? 230 : 100,
+                                    width: compact ? imageSize : (ResponsiveHelper.isTab(context) ? 230 : 100),
                                     decoration: BoxDecoration(
                                         color: Theme.of(context).colorScheme.error.withValues(alpha:0.4),
                                         borderRadius: const BorderRadius.only(
@@ -96,11 +109,11 @@ class LatestProductWidget extends StatelessWidget {
 
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.all(8.0),
+                        padding: EdgeInsets.all(compact ? 6 : 8),
                         child: Column(mainAxisAlignment: MainAxisAlignment.start, crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
 
-                            if((productModel.reviewCount ?? 0) < 0 || double.parse(ratting) > 0 )...[
+                            if(!compact && ((productModel.reviewCount ?? 0) < 0 || double.parse(ratting) > 0) )...[
                               Row(mainAxisAlignment: MainAxisAlignment.start,crossAxisAlignment: CrossAxisAlignment.center, children: [
                                 Icon(Icons.star, color: Provider.of<ThemeController>(context).darkTheme ?
                                 Colors.white : Colors.orange, size: 12),
@@ -118,23 +131,23 @@ class LatestProductWidget extends StatelessWidget {
 
                             Text(
                                 productModel.name ?? '',
-                                maxLines: 2,
+                                maxLines: compact ? 1 : 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: textBold.copyWith(
-                                  fontSize: Dimensions.fontSizeDefault,
+                                  fontSize: compact ? Dimensions.fontSizeSmall : Dimensions.fontSizeDefault,
                                   color: Theme.of(context).textTheme.bodyLarge?.color,
                                 ),
                               ),
 
-                            SizedBox(height: 2,),
+                            SizedBox(height: compact ? 1 : 2),
                             ProductCategoryNameWidget(
                               product: productModel,
                               style: textRegular.copyWith(
-                                fontSize: Dimensions.fontSizeSmall,
+                                fontSize: compact ? Dimensions.fontSizeExtraSmall : Dimensions.fontSizeSmall,
                                 color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.6),
                               ),
                             ),
-                            const Spacer(),
+                            if (!compact) const Spacer(),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -161,7 +174,7 @@ class LatestProductWidget extends StatelessWidget {
                                             ?  productModel.clearanceSale?.discountAmount
                                             : productModel.discount),
                                         style: textBold.copyWith(color: Theme.of(context).textTheme.bodyMedium?.color,
-                                            fontSize: Dimensions.fontSizeDefault+1)) : const SizedBox(),
+                                            fontSize: compact ? Dimensions.fontSizeSmall : Dimensions.fontSizeDefault + 1)) : const SizedBox(),
                                   ],
                                 ),
                               ],

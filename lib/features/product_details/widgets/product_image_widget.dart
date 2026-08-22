@@ -43,13 +43,12 @@ class ProductImageWidget extends StatefulWidget {
 }
 
 class _ProductImageWidgetState extends State<ProductImageWidget> {
-  static const int _gridColumns = 3;
-  static const int _maxGridImages = 6;
+  static const double _galleryMainSize = 80;
+  static const double _galleryScrollItemSize = 72;
 
   late final PageController _controller;
   bool _vacationIsOn = false;
   bool _temporaryClose = false;
-  bool _isGridExpanded = false;
 
   @override
   void initState() {
@@ -108,12 +107,26 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
     );
   }
 
-  void _selectGroup(
+  void _selectImagePath(
     ProductDetailsController productController,
     ProductImageGroupItem group,
+    String? imagePath,
   ) {
-    productController.setImageSliderSelectedIndex(group.heroImageIndex);
+    if (imagePath == null || imagePath.isEmpty) return;
+
+    final images = productModel!.imagesFullUrl ?? [];
+    final index = images.indexWhere((image) => image.path == imagePath);
+    if (index < 0) return;
+
+    productController.setImageSliderSelectedIndex(index);
     if (group.colorIndex != null) {
+      if (productController.variationIndex == null || productController.variantIndex == null) {
+        productController.initData(
+          productModel!,
+          productModel!.minimumOrderQty ?? 1,
+          context,
+        );
+      }
       productController.setCartVariantIndex(
         productModel!.minimumOrderQty ?? 1,
         group.colorIndex!,
@@ -122,7 +135,7 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
     }
     if (_controller.hasClients) {
       _controller.animateToPage(
-        group.heroImageIndex,
+        index,
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeOut,
       );
@@ -149,32 +162,39 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
         final isLoading = productController.isAddingToCartForColor(colorIndex);
 
         return Positioned(
-          top: 2,
-          right: 2,
-          child: Material(
-            color: Theme.of(context).cardColor,
-            shape: const CircleBorder(),
-            elevation: 2,
-            child: InkWell(
-              customBorder: const CircleBorder(),
-              onTap: isLoading ? null : () => _addToCartFromColor(context, colorIndex),
-              child: Padding(
-                padding: const EdgeInsets.all(4),
-                child: isLoading
-                    ? SizedBox(
-                        height: 12,
-                        width: 12,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Theme.of(context).primaryColor,
-                        ),
-                      )
-                    : Image.asset(
-                        Images.cartArrowDownImage,
-                        height: 12,
-                        width: 12,
-                        color: Theme.of(context).primaryColor,
-                      ),
+          top: 0,
+          right: 0,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: isLoading ? null : () => _addToCartFromColor(context, colorIndex),
+            child: SizedBox(
+              width: 40,
+              height: 40,
+              child: Align(
+                alignment: Alignment.topRight,
+                child: Material(
+                  color: Theme.of(context).cardColor,
+                  shape: const CircleBorder(),
+                  elevation: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: isLoading
+                        ? SizedBox(
+                            height: 14,
+                            width: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          )
+                        : Image.asset(
+                            Images.cartArrowDownImage,
+                            height: 14,
+                            width: 14,
+                            color: Theme.of(context).primaryColor,
+                          ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -183,26 +203,31 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
     );
   }
 
-  Widget _buildThumbnailCell({
+  Widget _buildImageCell({
     required BuildContext context,
     required ProductDetailsController productController,
     required ProductImageGroupItem group,
-    required double cellSize,
+    required ImageFullUrl image,
+    required double size,
     required bool isSelected,
+    int? colorIndex,
   }) {
-    final imagePath = group.thumbnail.path ?? '';
+    final imagePath = image.path ?? '';
 
     return GestureDetector(
-      onTap: () => _selectGroup(productController, group),
-      onLongPress: () => _openImageGallery(
-        context,
-        images: group.images,
-        initialIndex: 0,
-      ),
+      onTap: () => _selectImagePath(productController, group, imagePath),
+      onLongPress: () {
+        final galleryIndex = group.images.indexWhere((item) => item.path == imagePath);
+        _openImageGallery(
+          context,
+          images: group.images,
+          initialIndex: galleryIndex >= 0 ? galleryIndex : 0,
+        );
+      },
       behavior: HitTestBehavior.opaque,
       child: Container(
-        width: cellSize,
-        height: cellSize,
+        width: size,
+        height: size,
         decoration: BoxDecoration(
           border: Border.all(
             width: isSelected ? 2 : 1,
@@ -219,32 +244,28 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
             ClipRRect(
               borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall),
               child: CustomImageWidget(
-                height: cellSize,
-                width: cellSize,
+                height: size,
+                width: size,
                 maxCacheSize: 256,
                 image: imagePath,
               ),
             ),
-            if (group.colorIndex != null) _buildCartOverlay(context, group.colorIndex!),
+            if (colorIndex != null) _buildCartOverlay(context, colorIndex),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildImageGrid(BuildContext context, ProductDetailsController productController) {
-    final gridItems = ProductImageHelper.getGridItems(productModel!);
-    final hasMoreImages = gridItems.length > _maxGridImages;
-    final visibleCount = _isGridExpanded || !hasMoreImages
-        ? gridItems.length
-        : _maxGridImages;
+  bool _isImageSelected(ProductDetailsController productController, String? imagePath) {
+    if (imagePath == null || imagePath.isEmpty) return false;
+    final selectedIndex = productController.imageSliderIndex ?? 0;
+    return productModel!.imagesFullUrl?[selectedIndex].path == imagePath;
+  }
 
-    final horizontalPadding = Dimensions.homePagePadding * 2;
-    final gridWidth = MediaQuery.sizeOf(context).width - horizontalPadding;
-    const spacing = Dimensions.paddingSizeSmall;
-    final cellSize = (gridWidth - spacing * (_gridColumns - 1)) / _gridColumns;
-    final rowCount = (visibleCount / _gridColumns).ceil();
-    final gridHeight = rowCount * cellSize + (rowCount - 1) * spacing;
+  Widget _buildColorGallery(BuildContext context, ProductDetailsController productController) {
+    final galleryGroups = ProductImageHelper.getColorGalleryItems(productModel!);
+    if (galleryGroups.isEmpty) return const SizedBox.shrink();
 
     return Padding(
       padding: EdgeInsets.only(
@@ -258,59 +279,101 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
       ),
       child: Column(
         children: [
-          AnimatedSize(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            alignment: Alignment.topCenter,
-            child: SizedBox(
-              height: gridHeight,
-              width: gridWidth,
-              child: GridView.builder(
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: _gridColumns,
-                  mainAxisSpacing: spacing,
-                  crossAxisSpacing: spacing,
-                  childAspectRatio: 1,
+          for (final group in galleryGroups) ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _buildImageCell(
+                  context: context,
+                  productController: productController,
+                  group: group,
+                  image: group.thumbnail,
+                  size: _galleryMainSize,
+                  isSelected: _isImageSelected(productController, group.thumbnail.path),
+                  colorIndex: group.colorIndex,
                 ),
-                itemCount: visibleCount,
-                itemBuilder: (context, index) {
-                  final selectedIndex = productController.imageSliderIndex ?? 0;
-                  final group = gridItems[index];
-                  final isSelected = ProductImageHelper.hasColorGroups(productModel!)
-                      ? group.images.any(
-                          (image) =>
-                              image.path ==
-                              productModel!.imagesFullUrl?[selectedIndex].path,
-                        )
-                      : selectedIndex == group.heroImageIndex;
+                if (group.images.length > 1) ...[
+                  const SizedBox(width: Dimensions.paddingSizeSmall),
+                  Expanded(
+                    child: SizedBox(
+                      height: _galleryScrollItemSize,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: group.images.length - 1,
+                        separatorBuilder: (_, __) =>
+                            const SizedBox(width: Dimensions.paddingSizeSmall),
+                        itemBuilder: (context, index) {
+                          final image = group.images[index + 1];
+                          return _buildImageCell(
+                            context: context,
+                            productController: productController,
+                            group: group,
+                            image: image,
+                            size: _galleryScrollItemSize,
+                            isSelected: _isImageSelected(productController, image.path),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: Dimensions.paddingSizeSmall),
+          ],
+        ],
+      ),
+    );
+  }
 
-                  return _buildThumbnailCell(
-                    context: context,
-                    productController: productController,
-                    group: group,
-                    cellSize: cellSize,
-                    isSelected: isSelected,
-                  );
-                },
-              ),
+  Widget _buildMoreImagesSection(
+    BuildContext context,
+    ProductDetailsController productController,
+  ) {
+    final extraImages = ProductImageHelper.getAdditionalImageItems(productModel!);
+    if (extraImages.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: Provider.of<LocalizationController>(context, listen: false).isLtr
+            ? Dimensions.homePagePadding
+            : 0,
+        right: Provider.of<LocalizationController>(context, listen: false).isLtr
+            ? 0
+            : Dimensions.homePagePadding,
+        bottom: Dimensions.paddingSizeLarge,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            getTranslated('more_images', context) ?? 'More images',
+            style: titilliumSemiBold.copyWith(
+              fontSize: Dimensions.fontSizeLarge,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
-          if (hasMoreImages)
-            Padding(
-              padding: const EdgeInsets.only(top: Dimensions.paddingSizeSmall),
-              child: GestureDetector(
-                onTap: () => setState(() => _isGridExpanded = !_isGridExpanded),
-                child: Text(
-                  getTranslated(_isGridExpanded ? 'view_less' : 'view_more', context) ?? '',
-                  style: titilliumSemiBold.copyWith(
-                    color: Theme.of(context).primaryColor,
-                    decoration: TextDecoration.underline,
-                    decorationColor: Theme.of(context).primaryColor,
-                  ),
-                ),
-              ),
+          const SizedBox(height: Dimensions.paddingSizeSmall),
+          SizedBox(
+            height: _galleryScrollItemSize,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: extraImages.length,
+              separatorBuilder: (_, __) =>
+                  const SizedBox(width: Dimensions.paddingSizeSmall),
+              itemBuilder: (context, index) {
+                final group = extraImages[index];
+                return _buildImageCell(
+                  context: context,
+                  productController: productController,
+                  group: group,
+                  image: group.thumbnail,
+                  size: _galleryScrollItemSize,
+                  isSelected: _isImageSelected(productController, group.thumbnail.path),
+                );
+              },
             ),
+          ),
         ],
       ),
     );
@@ -330,15 +393,6 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
     return Consumer<ProductDetailsController>(
       builder: (context, productController, _) {
         final selectedIndex = productController.imageSliderIndex ?? 0;
-        final selectedImagePath = productModel!.imagesFullUrl != null &&
-                productModel!.imagesFullUrl!.isNotEmpty
-            ? productModel!.imagesFullUrl![selectedIndex].path
-            : null;
-        final heroColorIndex = productController.findColorIndexForImage(
-          productModel!,
-          selectedImagePath,
-          imageIndex: selectedIndex,
-        );
 
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -413,46 +467,6 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
                                       )
                                     : const SizedBox.shrink(),
                               ),
-                              if (heroColorIndex != null)
-                                Consumer<ProductDetailsController>(
-                                  builder: (context, productController, _) {
-                                    final isLoading = productController.isAddingToCartForColor(heroColorIndex);
-
-                                    return Positioned(
-                                      top: 16,
-                                      left: widget.fromFlashDeals ? 56 : 16,
-                                      child: Material(
-                                        color: Theme.of(context).cardColor,
-                                        shape: const CircleBorder(),
-                                        elevation: 2,
-                                        child: InkWell(
-                                          customBorder: const CircleBorder(),
-                                          onTap: isLoading
-                                              ? null
-                                              : () => _addToCartFromColor(context, heroColorIndex),
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(7),
-                                            child: isLoading
-                                                ? SizedBox(
-                                                    height: 16,
-                                                    width: 16,
-                                                    child: CircularProgressIndicator(
-                                                      strokeWidth: 2,
-                                                      color: Theme.of(context).primaryColor,
-                                                    ),
-                                                  )
-                                                : Image.asset(
-                                                    Images.cartArrowDownImage,
-                                                    height: 16,
-                                                    width: 16,
-                                                    color: Theme.of(context).primaryColor,
-                                                  ),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
                               Positioned(
                                 left: 0,
                                 right: 0,
@@ -639,8 +653,10 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
                         ),
                       ),
             ),
-            if (ProductImageHelper.getGridItems(productModel!).isNotEmpty)
-              _buildImageGrid(context, productController),
+            if (ProductImageHelper.getColorGalleryItems(productModel!).isNotEmpty)
+              _buildColorGallery(context, productController),
+            if (ProductImageHelper.getAdditionalImageItems(productModel!).isNotEmpty)
+              _buildMoreImagesSection(context, productController),
           ],
         );
       },

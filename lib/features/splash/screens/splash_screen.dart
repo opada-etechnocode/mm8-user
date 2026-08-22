@@ -7,6 +7,7 @@ import 'package:flutter_sixvalley_ecommerce/localization/language_constrants.dar
 import 'package:flutter_sixvalley_ecommerce/features/splash/controllers/splash_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/splash/domain/models/config_model.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/network_info.dart';
+import 'package:flutter_sixvalley_ecommerce/helper/deep_link_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/notification_route_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/route_healper.dart';
 import 'package:flutter_sixvalley_ecommerce/main.dart';
@@ -101,6 +102,20 @@ class SplashScreenState extends State<SplashScreen> {
     );
   }
 
+  void _navigateFromDeepLink(String location) {
+    DeepLinkHelper.navigateImmediately(
+      location,
+      action: RouteAction.pushReplacement,
+    );
+  }
+
+  bool _navigatePendingDeepLink() {
+    final location = DeepLinkHelper.consumePendingDeepLink();
+    if (location == null) return false;
+    _navigateFromDeepLink(location);
+    return true;
+  }
+
   void _route() {
     NetworkInfo.checkConnectivity(context);
     Provider.of<SplashController>(context, listen: false).initConfig(context, (ConfigModel? configModel) {
@@ -127,7 +142,8 @@ class SplashScreenState extends State<SplashScreen> {
               final notificationBody = _resolveNotificationBody();
               if(notificationBody != null){
                 _navigateFromNotification(notificationBody);
-              }else{
+              } else if (_navigatePendingDeepLink()) {
+              } else {
                 RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
               }
             }
@@ -143,31 +159,16 @@ class SplashScreenState extends State<SplashScreen> {
             else{
               if(Provider.of<AuthController>(Get.context!, listen: false).getGuestToken() != null &&
                   Provider.of<AuthController>(Get.context!, listen: false).getGuestToken() != '1') {
-                // Navigator.of(Get.context!).pushReplacement(
-                //   PageRouteBuilder(
-                //     pageBuilder: (context, animation, secondaryAnimation) => const DashBoardScreen(),
-                //     transitionDuration: Duration.zero, // Removes transition duration
-                //     reverseTransitionDuration: Duration.zero, // Removes reverse transition
-                //     transitionsBuilder: (context, animation, secondaryAnimation, child) => child,
-                //   ),
-                // );
-
-                RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
-
-
+                if (_navigatePendingDeepLink()) {
+                } else {
+                  RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
+                }
               }else{
                 Provider.of<AuthController>(Get.context!, listen: false).getGuestIdUrl();
-                RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
-
-                // Navigator.of(Get.context!).pushReplacement(
-                //   PageRouteBuilder(
-                //     pageBuilder: (context, animation, secondaryAnimation) => const DashBoardScreen(),
-                //     transitionDuration: Duration.zero, // Removes transition duration
-                //     reverseTransitionDuration: Duration.zero, // Removes reverse transition
-                //     transitionsBuilder: (context, animation, secondaryAnimation, child) => child,
-                //   ),
-                // );
-
+                if (_navigatePendingDeepLink()) {
+                } else {
+                  RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
+                }
               }
             }
           });
@@ -199,7 +200,8 @@ class SplashScreenState extends State<SplashScreen> {
             final notificationBody = _resolveNotificationBody();
             if(notificationBody != null) {
               _navigateFromNotification(notificationBody);
-            }else{
+            } else if (_navigatePendingDeepLink()) {
+            } else {
               RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
             }
           }
@@ -215,10 +217,16 @@ class SplashScreenState extends State<SplashScreen> {
           else if(!configModel!.hasLocaldb! || (configModel.hasLocaldb! && configModel.localMaintenanceMode! && !(config?.maintenanceModeData?.maintenanceStatus == 1 && config?.maintenanceModeData?.selectedMaintenanceSystem?.customerApp == 1))){
             if(Provider.of<AuthController>(Get.context!, listen: false).getGuestToken() != null &&
                 Provider.of<AuthController>(Get.context!, listen: false).getGuestToken() != '1'){
-              RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
+              if (_navigatePendingDeepLink()) {
+              } else {
+                RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
+              }
             }else{
               Provider.of<AuthController>(Get.context!, listen: false).getGuestIdUrl();
-              RouterHelper.getDashboardRoute(action: RouteAction.pushNamedAndRemoveUntil);
+              if (_navigatePendingDeepLink()) {
+              } else {
+                RouterHelper.getDashboardRoute(action: RouteAction.pushNamedAndRemoveUntil);
+              }
             }
           }
         });

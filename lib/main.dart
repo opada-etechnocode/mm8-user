@@ -37,6 +37,7 @@ import 'package:flutter_sixvalley_ecommerce/features/splash/controllers/splash_c
 import 'package:flutter_sixvalley_ecommerce/features/support/controllers/support_ticket_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/wallet/controllers/wallet_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/wishlist/controllers/wishlist_controller.dart';
+import 'package:flutter_sixvalley_ecommerce/helper/deep_link_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/notification_route_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/route_healper.dart';
 import 'package:flutter_sixvalley_ecommerce/localization/controllers/localization_controller.dart';
@@ -174,21 +175,20 @@ StreamSubscription<Uri?>? _sub;
 Future<String?> initDynamicLinks() async {
   final appLinks = AppLinks();
 
-  final uri = await appLinks.getInitialLink();
-  if (uri != null) {
-    return uri.path;
-  }
-
   _sub = appLinks.uriLinkStream.listen((Uri? uri) {
     if (uri != null) {
-
       Future.delayed(const Duration(milliseconds: 300), () {
-        if (navigatorKey.currentContext != null) {
-          // navigatorKey.currentContext!.go(uri.path);
-        }
+        DeepLinkHelper.navigateFromUri(uri);
       });
     }
   });
+
+  final uri = await appLinks.getInitialLink();
+  if (uri != null && DeepLinkHelper.isSupportedDeepLink(uri)) {
+    final location = DeepLinkHelper.uriToRouteLocation(uri);
+    DeepLinkHelper.setPendingDeepLink(location);
+    return location;
+  }
 
   return null;
 }
