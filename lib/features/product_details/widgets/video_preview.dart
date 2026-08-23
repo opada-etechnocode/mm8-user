@@ -95,34 +95,48 @@ class _VideoPreviewState extends State<VideoPreview> {
   }
 
   Widget _buildMinimalPlayer(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
-    final height = width * 9 / 16;
+    final size = MediaQuery.sizeOf(context);
+    final boxHeight = size.height * 0.92;
+    final boxWidth = size.width;
 
-    return ColoredBox(
-      color: Colors.black,
-      child: SizedBox(
-        width: width,
-        height: height,
-        child: _buildPlayerStack(context, lightControls: true),
+    return SizedBox(
+      width: boxWidth,
+      height: boxHeight,
+      child: ColoredBox(
+        color: Colors.black,
+        child: _buildPlayerStack(context, lightControls: true, fillCover: true),
       ),
     );
   }
 
-  Widget _buildPlayerStack(BuildContext context, {bool lightControls = false}) {
+  Widget _buildPlayerStack(
+    BuildContext context, {
+    bool lightControls = false,
+    bool fillCover = false,
+  }) {
     final controlColor = lightControls ? Colors.white : Theme.of(context).primaryColor;
 
     return Stack(
       fit: StackFit.expand,
       children: [
         if (_controller.value.isInitialized)
-          Center(
-            child: AspectRatio(
-              aspectRatio: _controller.value.aspectRatio == 0
-                  ? 16 / 9
-                  : _controller.value.aspectRatio,
-              child: VideoPlayer(_controller),
-            ),
-          )
+          fillCover
+              ? FittedBox(
+                  fit: BoxFit.cover,
+                  child: SizedBox(
+                    width: _controller.value.size.width,
+                    height: _controller.value.size.height,
+                    child: VideoPlayer(_controller),
+                  ),
+                )
+              : Center(
+                  child: AspectRatio(
+                    aspectRatio: _controller.value.aspectRatio == 0
+                        ? 16 / 9
+                        : _controller.value.aspectRatio,
+                    child: VideoPlayer(_controller),
+                  ),
+                )
         else
           const Center(child: CircularProgressIndicator(color: Colors.white)),
         Center(

@@ -5,7 +5,7 @@ import 'package:flutter_sixvalley_ecommerce/common/enums/local_caches_type_enum.
   class AppConstants {
   static const String appName = 'MM8';
   static const String slogan = 'E-Commerce Marketplace';
-  static const String appVersion = '16.1'; ///Flutter SDK 3.41.1
+  static const String appVersion = '17.0'; ///Flutter SDK 3.41.1
   static const bool demo = false;
   static const int imageQuality = 100;
   static const LocalCachesTypeEnum cachesType = LocalCachesTypeEnum.all;

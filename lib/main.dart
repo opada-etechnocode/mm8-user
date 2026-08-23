@@ -177,20 +177,27 @@ Future<String?> initDynamicLinks() async {
 
   _sub = appLinks.uriLinkStream.listen((Uri? uri) {
     if (uri != null) {
-      Future.delayed(const Duration(milliseconds: 300), () {
-        DeepLinkHelper.navigateFromUri(uri);
-      });
+      DeepLinkHelper.handleIncomingUri(uri);
     }
   });
 
-  final uri = await appLinks.getInitialLink();
-  if (uri != null && DeepLinkHelper.isSupportedDeepLink(uri)) {
-    final location = DeepLinkHelper.uriToRouteLocation(uri);
-    DeepLinkHelper.setPendingDeepLink(location);
-    return location;
+  for (int attempt = 0; attempt < 30; attempt++) {
+    final uri = await appLinks.getInitialLink();
+    if (uri != null && DeepLinkHelper.isSupportedDeepLink(uri)) {
+      DeepLinkHelper.setPendingDeepLink(DeepLinkHelper.uriToRouteLocation(uri));
+      return DeepLinkHelper.peekPendingDeepLink();
+    }
+
+    final latestUri = await appLinks.getLatestLink();
+    if (latestUri != null && DeepLinkHelper.isSupportedDeepLink(latestUri)) {
+      DeepLinkHelper.setPendingDeepLink(DeepLinkHelper.uriToRouteLocation(latestUri));
+      return DeepLinkHelper.peekPendingDeepLink();
+    }
+
+    await Future.delayed(const Duration(milliseconds: 100));
   }
 
-  return null;
+  return DeepLinkHelper.peekPendingDeepLink();
 }
 
 
@@ -213,8 +220,26 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     SchedulerBinding.instance.addPostFrameCallback((_) {
       _loadData();
+      _refreshColdStartDeepLink();
     });
     super.initState();
+  }
+
+  Future<void> _refreshColdStartDeepLink() async {
+    if (!Platform.isIOS || DeepLinkHelper.hasPendingDeepLink) return;
+
+    final appLinks = AppLinks();
+    for (int attempt = 0; attempt < 30; attempt++) {
+      if (DeepLinkHelper.hasPendingDeepLink) return;
+
+      final latestUri = await appLinks.getLatestLink();
+      if (latestUri != null && DeepLinkHelper.isSupportedDeepLink(latestUri)) {
+        DeepLinkHelper.handleIncomingUri(latestUri);
+        return;
+      }
+
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
   }
 
 

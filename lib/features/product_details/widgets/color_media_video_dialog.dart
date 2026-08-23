@@ -25,7 +25,7 @@ class ColorMediaVideoDialog extends StatelessWidget {
       context: context,
       barrierDismissible: true,
       barrierLabel: 'video-dialog',
-      barrierColor: Colors.black.withValues(alpha: 0.88),
+      barrierColor: Colors.black.withValues(alpha: 0.82),
       transitionDuration: const Duration(milliseconds: 220),
       pageBuilder: (_, __, ___) => ColorMediaVideoDialog(
         videoUrl: videoUrl,
@@ -44,12 +44,12 @@ class ColorMediaVideoDialog extends StatelessWidget {
     final isInstagram = ColorMediaHelper.isInstagramUrl(videoUrl);
     final size = MediaQuery.sizeOf(context);
 
-    return SafeArea(
-      child: Stack(
-        children: [
-          Center(
-            child: Material(
-              color: Colors.transparent,
+    return Material(
+      color: Colors.transparent,
+      child: SafeArea(
+        child: Stack(
+          children: [
+            Center(
               child: ConstrainedBox(
                 constraints: BoxConstraints(
                   maxWidth: size.width,
@@ -64,20 +64,20 @@ class ColorMediaVideoDialog extends StatelessWidget {
                       ),
               ),
             ),
-          ),
-          Positioned(
-            top: 8,
-            right: 8,
-            child: Material(
-              color: Colors.black.withValues(alpha: 0.45),
-              shape: const CircleBorder(),
-              child: IconButton(
-                onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(Icons.close_rounded, color: Colors.white),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Material(
+                color: Colors.black.withValues(alpha: 0.55),
+                shape: const CircleBorder(),
+                child: IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close_rounded, color: Colors.white),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

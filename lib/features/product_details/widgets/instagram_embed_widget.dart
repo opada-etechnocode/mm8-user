@@ -113,17 +113,38 @@ class _InstagramEmbedWidgetState extends State<InstagramEmbedWidget> {
     );
   }
 
+  static const double _edgeCropSize = 50;
+
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     final height = widget.videoOnly ? width * 1.25 : width * 1.15;
+    final cropScale = widget.videoOnly && width > _edgeCropSize * 2
+        ? width / (width - (_edgeCropSize * 2))
+        : 1.0;
+
+    Widget player = WebViewWidget(controller: _controller);
+    if (widget.videoOnly && cropScale > 1.0) {
+      player = ClipRect(
+        child: Transform.scale(
+          scaleX: cropScale,
+          scaleY: 1.0,
+          alignment: Alignment.center,
+          child: SizedBox(
+            width: width,
+            height: height,
+            child: player,
+          ),
+        ),
+      );
+    }
 
     return ColoredBox(
-      color: Colors.black,
+      color: Colors.black.withValues(alpha: 0.88),
       child: SizedBox(
         width: width,
         height: height,
-        child: WebViewWidget(controller: _controller),
+        child: player,
       ),
     );
   }

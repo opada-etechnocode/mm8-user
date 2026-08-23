@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_sixvalley_ecommerce/common/basewidget/discount_tag_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/data/model/image_full_url.dart';
@@ -14,7 +12,6 @@ import 'package:flutter_sixvalley_ecommerce/features/product_details/widgets/aud
 import 'package:flutter_sixvalley_ecommerce/features/product_details/widgets/download_preview_file.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product_details/widgets/color_media_video_dialog.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product_details/widgets/favourite_button_widget.dart';
-import 'package:flutter_sixvalley_ecommerce/helper/color_media_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product_details/widgets/image_preview.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product_details/widgets/pdf_preview_flutter.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product_details/screens/product_image_screen.dart';
@@ -28,6 +25,7 @@ import 'package:flutter_sixvalley_ecommerce/theme/controllers/theme_controller.d
 import 'package:flutter_sixvalley_ecommerce/utill/custom_themes.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/dimensions.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/images.dart';
+import 'package:flutter_sixvalley_ecommerce/common/basewidget/custom_asset_image_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/common/basewidget/custom_image_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -232,7 +230,6 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
     required double size,
     String? thumbnailPath,
   }) {
-    final isInstagram = ColorMediaHelper.isInstagramUrl(videoUrl);
     final radius = BorderRadius.circular(_galleryCardRadius);
 
     return GestureDetector(
@@ -247,16 +244,6 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
         height: size,
         decoration: BoxDecoration(
           borderRadius: radius,
-          border: Border.all(
-            color: Theme.of(context).primaryColor.withValues(alpha: 0.35),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).primaryColor.withValues(alpha: 0.12),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
         child: ClipRRect(
           borderRadius: radius,
@@ -271,71 +258,14 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
                   image: thumbnailPath,
                 )
               else
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Theme.of(context).primaryColor.withValues(alpha: 0.85),
-                        Theme.of(context).primaryColor.withValues(alpha: 0.45),
-                      ],
-                    ),
-                  ),
+                ColoredBox(
+                  color: Theme.of(context).hintColor.withValues(alpha: 0.12),
                 ),
-              BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.black.withValues(alpha: 0.25),
-                        Colors.black.withValues(alpha: 0.45),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
               Center(
-                child: Container(
+                child: CustomAssetImageWidget(
+                  Images.videoSvg,
                   width: size * 0.42,
                   height: size * 0.42,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.92),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.25),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    isInstagram ? Icons.play_circle_fill_rounded : Icons.play_arrow_rounded,
-                    color: Theme.of(context).primaryColor,
-                    size: size * 0.28,
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 6,
-                right: 6,
-                bottom: 6,
-                child: Text(
-                  isInstagram ? 'Instagram' : 'Video',
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: textMedium.copyWith(
-                    color: Colors.white,
-                    fontSize: Dimensions.fontSizeExtraSmall,
-                    shadows: const [
-                      Shadow(color: Colors.black54, blurRadius: 4),
-                    ],
-                  ),
                 ),
               ),
             ],
@@ -486,6 +416,33 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
     required ProductImageGroupItem group,
     required double itemSize,
   }) {
+    final scrollCells = <Widget>[];
+
+    for (int i = 1; i < group.images.length; i++) {
+      final image = group.images[i];
+      scrollCells.add(
+        _buildImageCell(
+          context: context,
+          productController: productController,
+          group: group,
+          image: image,
+          size: itemSize,
+          isSelected: _isImageSelected(productController, image.path),
+        ),
+      );
+    }
+
+    if (group.videoUrl != null && group.videoUrl!.isNotEmpty) {
+      scrollCells.add(
+        _buildVideoCell(
+          context: context,
+          videoUrl: group.videoUrl!,
+          size: itemSize,
+          thumbnailPath: group.thumbnail.path,
+        ),
+      );
+    }
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -498,38 +455,19 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
           isSelected: _isImageSelected(productController, group.thumbnail.path),
           colorIndex: group.colorIndex,
         ),
-        if (group.images.length > 1) ...[
+        if (scrollCells.isNotEmpty) ...[
           const SizedBox(width: Dimensions.paddingSizeSmall),
           Expanded(
             child: SizedBox(
               height: itemSize,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
-                itemCount: group.images.length - 1,
+                itemCount: scrollCells.length,
                 separatorBuilder: (_, __) =>
                     const SizedBox(width: Dimensions.paddingSizeSmall),
-                itemBuilder: (context, index) {
-                  final image = group.images[index + 1];
-                  return _buildImageCell(
-                    context: context,
-                    productController: productController,
-                    group: group,
-                    image: image,
-                    size: itemSize,
-                    isSelected: _isImageSelected(productController, image.path),
-                  );
-                },
+                itemBuilder: (context, index) => scrollCells[index],
               ),
             ),
-          ),
-        ],
-        if (group.videoUrl != null && group.videoUrl!.isNotEmpty) ...[
-          const SizedBox(width: Dimensions.paddingSizeSmall),
-          _buildVideoCell(
-            context: context,
-            videoUrl: group.videoUrl!,
-            size: itemSize,
-            thumbnailPath: group.thumbnail.path,
           ),
         ],
       ],

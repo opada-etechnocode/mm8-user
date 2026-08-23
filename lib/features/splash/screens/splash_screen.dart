@@ -76,11 +76,12 @@ class SplashScreenState extends State<SplashScreen> {
     await Future.delayed(const Duration(milliseconds: 600));
   }
 
-  void _scheduleNavigation(VoidCallback navigate) {
-    _ensureSplashAnimationFinished().then((_) {
+  void _scheduleNavigation(Future<void> Function() navigate) {
+    _ensureSplashAnimationFinished().then((_) async {
       if (!mounted || _hasNavigated) return;
       _hasNavigated = true;
-      navigate();
+      await navigate();
+      DeepLinkHelper.markBootstrapComplete();
     });
   }
 
@@ -102,18 +103,10 @@ class SplashScreenState extends State<SplashScreen> {
     );
   }
 
-  void _navigateFromDeepLink(String location) {
-    DeepLinkHelper.navigateImmediately(
-      location,
+  Future<bool> _navigatePendingDeepLink() {
+    return DeepLinkHelper.tryNavigatePendingDeepLinkWithRetry(
       action: RouteAction.pushReplacement,
     );
-  }
-
-  bool _navigatePendingDeepLink() {
-    final location = DeepLinkHelper.consumePendingDeepLink();
-    if (location == null) return false;
-    _navigateFromDeepLink(location);
-    return true;
   }
 
   void _route() {
@@ -129,8 +122,10 @@ class SplashScreenState extends State<SplashScreen> {
         Provider.of<SplashController>(Get.context!, listen: false).initSharedPrefData();
         // Timer(const Duration(seconds: 2), () {
           final config = Provider.of<SplashController>(Get.context!, listen: false).configModel;
-
-          _scheduleNavigation(() {
+print("app version:"+minimumVersion);
+print("app version local:"+AppConstants.appVersion);
+print("app version local:"+compareVersions(minimumVersion!, AppConstants.appVersion).toString());
+          _scheduleNavigation(() async {
             if(compareVersions(minimumVersion!, AppConstants.appVersion) == 1) {
               RouterHelper.getUpdateRoute(action: RouteAction.pushReplacement);
             } else if(
@@ -142,7 +137,7 @@ class SplashScreenState extends State<SplashScreen> {
               final notificationBody = _resolveNotificationBody();
               if(notificationBody != null){
                 _navigateFromNotification(notificationBody);
-              } else if (_navigatePendingDeepLink()) {
+              } else if (await _navigatePendingDeepLink()) {
               } else {
                 RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
               }
@@ -159,13 +154,13 @@ class SplashScreenState extends State<SplashScreen> {
             else{
               if(Provider.of<AuthController>(Get.context!, listen: false).getGuestToken() != null &&
                   Provider.of<AuthController>(Get.context!, listen: false).getGuestToken() != '1') {
-                if (_navigatePendingDeepLink()) {
+                if (await _navigatePendingDeepLink()) {
                 } else {
                   RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
                 }
               }else{
                 Provider.of<AuthController>(Get.context!, listen: false).getGuestIdUrl();
-                if (_navigatePendingDeepLink()) {
+                if (await _navigatePendingDeepLink()) {
                 } else {
                   RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
                 }
@@ -187,7 +182,7 @@ class SplashScreenState extends State<SplashScreen> {
         Provider.of<SplashController>(Get.context!, listen: false).initSharedPrefData();
         final config = Provider.of<SplashController>(Get.context!, listen: false).configModel;
 
-        _scheduleNavigation(() {
+        _scheduleNavigation(() async {
           if(compareVersions(minimumVersion!, AppConstants.appVersion) == 1) {
             RouterHelper.getUpdateRoute(action: RouteAction.pushReplacement);
           } else if(
@@ -200,7 +195,7 @@ class SplashScreenState extends State<SplashScreen> {
             final notificationBody = _resolveNotificationBody();
             if(notificationBody != null) {
               _navigateFromNotification(notificationBody);
-            } else if (_navigatePendingDeepLink()) {
+            } else if (await _navigatePendingDeepLink()) {
             } else {
               RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
             }
@@ -217,13 +212,13 @@ class SplashScreenState extends State<SplashScreen> {
           else if(!configModel!.hasLocaldb! || (configModel.hasLocaldb! && configModel.localMaintenanceMode! && !(config?.maintenanceModeData?.maintenanceStatus == 1 && config?.maintenanceModeData?.selectedMaintenanceSystem?.customerApp == 1))){
             if(Provider.of<AuthController>(Get.context!, listen: false).getGuestToken() != null &&
                 Provider.of<AuthController>(Get.context!, listen: false).getGuestToken() != '1'){
-              if (_navigatePendingDeepLink()) {
+              if (await _navigatePendingDeepLink()) {
               } else {
                 RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
               }
             }else{
               Provider.of<AuthController>(Get.context!, listen: false).getGuestIdUrl();
-              if (_navigatePendingDeepLink()) {
+              if (await _navigatePendingDeepLink()) {
               } else {
                 RouterHelper.getDashboardRoute(action: RouteAction.pushNamedAndRemoveUntil);
               }

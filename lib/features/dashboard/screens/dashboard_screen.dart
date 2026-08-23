@@ -9,6 +9,7 @@ import 'package:flutter_sixvalley_ecommerce/features/dashboard/widgets/dashboard
 import 'package:flutter_sixvalley_ecommerce/features/restock/controllers/restock_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/search_product/controllers/search_product_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/wishlist/controllers/wishlist_controller.dart';
+import 'package:flutter_sixvalley_ecommerce/helper/deep_link_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/network_info.dart';
 import 'package:flutter_sixvalley_ecommerce/features/splash/controllers/splash_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/main.dart';
@@ -60,6 +61,7 @@ class DashBoardScreenState extends State<DashBoardScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadSecondaryDashboardData();
+      _tryNavigatePendingDeepLink();
     });
 
       _screens = [
@@ -103,6 +105,15 @@ class DashBoardScreenState extends State<DashBoardScreen> {
     Provider.of<WishListController>(context, listen: false).getWishList('');
     Provider.of<ChatController>(context, listen: false).getChatList(1, reload: false, userType: 1);
     Provider.of<RestockController>(context, listen: false).getRestockProductList(1, getAll: true);
+  }
+
+  Future<void> _tryNavigatePendingDeepLink() async {
+    if (!DeepLinkHelper.hasPendingDeepLink) return;
+
+    final navigated = await DeepLinkHelper.tryNavigatePendingDeepLinkWithRetry();
+    if (navigated) {
+      DeepLinkHelper.markBootstrapComplete();
+    }
   }
 
   @override

@@ -267,6 +267,7 @@ class Images {
   static const String pauseIconTimeLine = 'assets/svg/pause_icon_timeLine.svg';
   static const String resumeIconTimeline = 'assets/svg/resume_icon_timeline.svg';
   static const String copy = 'assets/svg/copy.svg';
+  static const String videoSvg = 'assets/svg/video.svg';
   static const String invoiceDownloadIconGuest = 'assets/svg/invoice_download_icon_guest.svg';
   static const String deliverymanCallIcon = 'assets/svg/deliveryman_call_icon.svg';
   static const String billingTo = 'assets/svg/billing_to.svg';

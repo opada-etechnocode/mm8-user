@@ -24,7 +24,7 @@ class UpdateScreen extends StatelessWidget {
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
 
             Image.asset(
-              color: Theme.of(context).primaryColor,
+
               Images.update,
               width: MediaQuery.of(context).size.height*0.4,
               height: MediaQuery.of(context).size.height*0.4,
