@@ -1,123 +1,150 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_sixvalley_ecommerce/common/basewidget/custom_button_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/features/auth/controllers/auth_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/onboarding/controllers/onboarding_controller.dart';
-import 'package:flutter_sixvalley_ecommerce/localization/language_constrants.dart';
 import 'package:flutter_sixvalley_ecommerce/features/splash/controllers/splash_controller.dart';
+import 'package:flutter_sixvalley_ecommerce/localization/language_constrants.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/custom_themes.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/dimensions.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../helper/route_healper.dart';
 
-class OnBoardingScreen extends StatelessWidget {
+class OnBoardingScreen extends StatefulWidget {
   final Color indicatorColor;
   final Color selectedIndicatorColor;
-  OnBoardingScreen({super.key, this.indicatorColor = Colors.grey, this.selectedIndicatorColor = Colors.black});
+
+  const OnBoardingScreen({
+    super.key,
+    this.indicatorColor = Colors.grey,
+    this.selectedIndicatorColor = Colors.black,
+  });
+
+  @override
+  State<OnBoardingScreen> createState() => _OnBoardingScreenState();
+}
+
+class _OnBoardingScreenState extends State<OnBoardingScreen> {
   final PageController _pageController = PageController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final onboardingController =
+          Provider.of<OnBoardingController>(context, listen: false);
+      if (onboardingController.onBoardingList.isEmpty) {
+        onboardingController.getOnBoardingList();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _completeOnboarding() {
+    Provider.of<SplashController>(context, listen: false).disableIntro();
+    Provider.of<AuthController>(context, listen: false).getGuestIdUrl();
+    RouterHelper.getDashboardRoute(action: RouteAction.pushNamedAndRemoveUntil);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    Provider.of<OnBoardingController>(context, listen: false).getOnBoardingList();
-
-
-    double height = MediaQuery.of(context).size.height;
-
     return Scaffold(
-      body: Consumer<OnBoardingController>(
-        builder: (context, onBoardingList, child) {
-          return Stack(clipBehavior: Clip.none, children: [
+      body: Selector<OnBoardingController, int>(
+        selector: (_, controller) => controller.onBoardingList.length,
+        builder: (context, itemCount, child) {
+          final items =
+              Provider.of<OnBoardingController>(context, listen: false).onBoardingList;
 
-              Consumer<OnBoardingController>(
-                builder: (context, onBoardingList, child) => ListView(children: [
-                    SizedBox(height: height*0.7,
-                      child: PageView.builder(
-                        itemCount: onBoardingList.onBoardingList.length,
-                        controller: _pageController,
-                        itemBuilder: (context, index) {
-                          return Padding(padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
-                            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisAlignment: MainAxisAlignment.end, children: [
-                                Image.asset(onBoardingList.onBoardingList[index].imageUrl,),
-                                Padding(padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault),
-                                  child: Text(onBoardingList.onBoardingList[index].title ?? '',
-                                      style: titilliumBold.copyWith(fontSize: 18), textAlign: TextAlign.center),),
-                                Text(onBoardingList.onBoardingList[index].description ?? '',
-                                    textAlign: TextAlign.center, style: titilliumRegular.copyWith(
-                                  fontSize: Dimensions.fontSizeDefault)),
-                                const SizedBox(height: Dimensions.paddingSizeDefault),
-                              ],
-                            ),
-                          );
-                        },
-                        onPageChanged: (index) {
-                          if(index != onBoardingList.onBoardingList.length){
-                            onBoardingList.changeSelectIndex(index);
-                          }else{
-                            Provider.of<SplashController>(context, listen: false).disableIntro();
-                            Provider.of<AuthController>(context, listen: false).getGuestIdUrl();
-                            RouterHelper.getDashboardRoute(action: RouteAction.pushNamedAndRemoveUntil);
-                          }
-                        })),
+          if (items.isEmpty) {
+            return const SizedBox.expand(
+              child: ColoredBox(color: Colors.black),
+            );
+          }
 
+          final lastIndex = items.length - 1;
 
-                  onBoardingList.selectedIndex == onBoardingList.onBoardingList.length - 1?
-                  Padding(padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
-                    child: Center(child: SizedBox(width: 100,child: CustomButton(
-                      textColor: Theme.of(context).primaryColor,
-                        radius: 5,backgroundColor: Theme.of(context).primaryColor.withValues(alpha:.1),
-                        buttonText: getTranslated("explore", context),
-                    onTap: (){
-                      Provider.of<SplashController>(context, listen: false).disableIntro();
-                      Provider.of<AuthController>(context, listen: false).getGuestIdUrl();
-                      RouterHelper.getDashboardRoute(action: RouteAction.pushNamedAndRemoveUntil);
-                    },))))
-                      :
-                    Padding(padding: const EdgeInsets.all(Dimensions.paddingSizeExtraLarge),
-                      child: Stack(children: [
-                        if(onBoardingList.onBoardingList.isNotEmpty)
-                        Center(child: SizedBox(height: 50, width: 50,
-                            child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor.withValues(alpha:.6)),
-                              value: (onBoardingList.selectedIndex + 1) / onBoardingList.onBoardingList.length,
-                              backgroundColor: Theme.of(context).primaryColor.withValues(alpha:.125)))),
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              Positioned.fill(
+                child: PageView.builder(
+                  controller: _pageController,
+                  itemCount: items.length,
+                  onPageChanged: (index) {
+                    Provider.of<OnBoardingController>(context, listen: false)
+                        .changeSelectIndex(index);
+                  },
+                  itemBuilder: (context, index) {
+                    return SizedBox.expand(
+                      child: Image.asset(
+                        items[index].imageUrl,
+                        fit: BoxFit.cover,
+                      ),
+                    );
+                  },
+                ),
+              ),
+              Positioned(
+                left: 30,
+                right: 30,
+                bottom: 40,
+                child: Selector<OnBoardingController, int>(
+                  selector: (_, controller) => controller.selectedIndex,
+                  builder: (context, selectedIndex, _) {
+                    final currentIndex = selectedIndex.clamp(0, lastIndex);
+                    final isLastPage = currentIndex == lastIndex;
+                    final isSecondPage = currentIndex == 1;
+                    final backgroundColor = isSecondPage
+                        ? Colors.white
+                        : Color(0xff014456);
+                    final textColor = isSecondPage
+                        ? Color(0xff014456)
+                        : Colors.white;
+                    final buttonText = isLastPage
+                        ? (getTranslated('GET_STARTED', context) ?? 'Get Started')
+                        : (getTranslated('NEXT', context) ?? 'Next');
 
-                    Align(alignment: Alignment.center,
-                      child: GestureDetector(
+                    return Material(
+                      color: backgroundColor,
+                      borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
                         onTap: () {
-                          if (onBoardingList.selectedIndex == onBoardingList.onBoardingList.length - 1) {
-                            Provider.of<SplashController>(context, listen: false).disableIntro();
-                            Provider.of<AuthController>(context, listen: false).getGuestIdUrl();
-                            RouterHelper.getDashboardRoute(action: RouteAction.pushNamedAndRemoveUntil);
+                          if (isLastPage) {
+                            _completeOnboarding();
                           } else {
-                            _pageController.nextPage(duration: const Duration(milliseconds: 500), curve: Curves.easeIn);
+                            _pageController.nextPage(
+                              duration: const Duration(milliseconds: 500),
+                              curve: Curves.easeInOut,
+                            );
                           }
                         },
-                        child: Container(height: 40, width: 40,
-                          margin: const EdgeInsets.only(top: 5),
-                          decoration: const BoxDecoration(shape: BoxShape.circle,),
-                          child: Icon(onBoardingList.selectedIndex == onBoardingList.onBoardingList.length - 1 ? Icons.check : Icons.navigate_next,
-                            color: Theme.of(context).primaryColor, size: 30)))),
-                  ]),
-                )
-              ],
-            ),
-          ),
-
-              if(onBoardingList.selectedIndex != onBoardingList.onBoardingList.length - 1)
-              Positioned(child: Align(alignment: Alignment.topRight, child: InkWell(
-                onTap: (){
-                  Provider.of<SplashController>(context, listen: false).disableIntro();
-                  Provider.of<AuthController>(context, listen: false).getGuestIdUrl();
-                  RouterHelper.getDashboardRoute(action: RouteAction.pushNamedAndRemoveUntil);
-                },
-                child: Padding(padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 20),
-                  child: Text('${getTranslated('skip', context)}',
-                      style: textMedium.copyWith(fontSize: Dimensions.fontSizeLarge, color: Theme.of(context).primaryColor))))))
+                        child: SizedBox(
+                          height: 48,
+                          width: double.infinity,
+                          child: Center(
+                            child: Text(
+                              buttonText,
+                              style: titilliumSemiBold.copyWith(
+                                color: textColor,
+                                fontSize: Dimensions.fontSizeLarge,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
             ],
           );
-        }
+        },
       ),
     );
   }
-
 }

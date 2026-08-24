@@ -294,15 +294,25 @@ class _MyAppState extends State<MyApp> {
                   );
 
                   if ((widget.route != null && splashController.configModel == null)) {
-                    return Theme(
-                      data: themeController.darkTheme
+                    return MaterialApp(
+                      debugShowCheckedModeBanner: false,
+                      locale: localizationController.locale,
+                      localizationsDelegates: [
+                        AppLocalization.delegate,
+                        GlobalMaterialLocalizations.delegate,
+                        GlobalWidgetsLocalizations.delegate,
+                        GlobalCupertinoLocalizations.delegate,
+                        FallbackLocalizationDelegate(),
+                      ],
+                      supportedLocales: locals,
+                      theme: themeController.darkTheme
                           ? dark(fontFamily: fontFamily)
                           : light(
                               primaryColor: Theme.of(context).primaryColor,
                               secondaryColor: Theme.of(context).colorScheme.secondary,
                               fontFamily: fontFamily,
                             ),
-                      child: Directionality(
+                      home: Directionality(
                         textDirection: TextDirection.ltr,
                         child: MediaQuery(
                           data: MediaQueryData.fromView(View.of(context)),

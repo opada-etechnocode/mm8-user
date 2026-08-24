@@ -60,16 +60,13 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
         widget.product!.minimumOrderQty ?? 1,
         widget.initialColorIndex!,
         context,
+        isUpdate: false,
       );
     }
     productDetailsController.initDigitalVariationIndex();
   }
 
   String? _resolveSheetImagePath(ProductDetailsController productDetailsController) {
-    if (widget.initialColorImagePath != null && widget.initialColorImagePath!.isNotEmpty) {
-      return widget.initialColorImagePath;
-    }
-
     final colorIndex = productDetailsController.variantIndex ?? widget.initialColorIndex;
     if (colorIndex != null && widget.product != null) {
       final path = ProductImageHelper.getColorImagePath(widget.product!, colorIndex);
@@ -105,12 +102,24 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
               double? digitalVariantPrice;
               String? colorWiseSelectedImage = _resolveSheetImagePath(productDetailsController);
               bool variationRestockRequested = false;
-              String? variantName = (widget.product!.colors != null && widget.product!.colors!.isNotEmpty) ?
-              widget.product!.colors![productDetailsController.variantIndex!].name : null;
+              final selectedColorIndex = productDetailsController.variantIndex ?? widget.initialColorIndex ?? 0;
+              String? variantName = (widget.product!.colors != null &&
+                      widget.product!.colors!.isNotEmpty &&
+                      selectedColorIndex >= 0 &&
+                      selectedColorIndex < widget.product!.colors!.length)
+                  ? widget.product!.colors![selectedColorIndex].name
+                  : null;
               List<String> variationList = [];
-              for(int index=0; index < widget.product!.choiceOptions!.length; index++) {
-                variationList.add(widget.product!.choiceOptions![index].options![productDetailsController.variationIndex![index]].trim());
-      
+              final variationIndexes = productDetailsController.variationIndex;
+              final choiceOptions = widget.product!.choiceOptions ?? [];
+              for (int index = 0; index < choiceOptions.length; index++) {
+                final options = choiceOptions[index].options ?? [];
+                if (options.isEmpty) continue;
+                final selectedOptionIndex = (variationIndexes != null &&
+                        index < variationIndexes.length)
+                    ? variationIndexes[index].clamp(0, options.length - 1)
+                    : 0;
+                variationList.add(options[selectedOptionIndex].trim());
               }
               String variationType = '';
               if(variantName != null) {
@@ -184,10 +193,18 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
       
               CartModelBody cart = CartModelBody(
                   productId: widget.product!.id,
-                  variant: (widget.product!.colors != null && widget.product!.colors!.isNotEmpty) ?
-                  widget.product!.colors![productDetailsController.variantIndex!].name : '',
-                  color: (widget.product!.colors != null && widget.product!.colors!.isNotEmpty) ?
-                  widget.product!.colors![productDetailsController.variantIndex!].code : '',
+                  variant: (widget.product!.colors != null &&
+                          widget.product!.colors!.isNotEmpty &&
+                          selectedColorIndex >= 0 &&
+                          selectedColorIndex < widget.product!.colors!.length)
+                      ? widget.product!.colors![selectedColorIndex].name
+                      : '',
+                  color: (widget.product!.colors != null &&
+                          widget.product!.colors!.isNotEmpty &&
+                          selectedColorIndex >= 0 &&
+                          selectedColorIndex < widget.product!.colors!.length)
+                      ? widget.product!.colors![selectedColorIndex].code
+                      : '',
                   variation : variation,
                   quantity: productDetailsController.quantity,
                   variantKey: variantKey,
@@ -472,10 +489,19 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
                                         runSpacing: 8,
                                         children: List.generate(choice.options!.length, (i) {
                                           final option = choice.options![i].trim();
-                                          final isSelected = productDetailsController.variationIndex![index] == i;
+                                          final variationIndexes =
+                                              productDetailsController.variationIndex;
+                                          final isSelected = variationIndexes != null &&
+                                              index < variationIndexes.length &&
+                                              variationIndexes[index] == i;
 
                                           return InkWell(
-                                            onTap: () => productDetailsController.setCartVariationIndex(1, index, i, context),
+                                            onTap: () => productDetailsController.setCartVariationIndex(
+                                              widget.product!.minimumOrderQty ?? 1,
+                                              index,
+                                              i,
+                                              context,
+                                            ),
                                             child: Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                               decoration: BoxDecoration(

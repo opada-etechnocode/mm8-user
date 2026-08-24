@@ -12,8 +12,15 @@ import 'package:provider/provider.dart';
 class ShopProductViewList extends StatefulWidget {
   final ScrollController scrollController;
   final int sellerId;
+  final String slug;
   SellerNavigationModel? sellerNavigationModel;
-  ShopProductViewList({super.key, required this.scrollController, required this.sellerId, this.sellerNavigationModel});
+  ShopProductViewList({
+    super.key,
+    required this.scrollController,
+    required this.sellerId,
+    required this.slug,
+    this.sellerNavigationModel,
+  });
 
   @override
   State<ShopProductViewList> createState() => _ShopProductViewListState();
@@ -27,9 +34,10 @@ class _ShopProductViewListState extends State<ShopProductViewList> {
         return productController.sellerProduct != null ? (productController.sellerProduct!.products != null &&
           productController.sellerProduct!.products!.isNotEmpty) ?
         PaginatedListView(scrollController: widget.scrollController,
-          onPaginate: (offset) async=> await productController.getSellerProductList(widget.sellerId.toString(), offset!, "", reload: false),
+          onPaginate: (offset) async => await productController.paginateSellerProductList(offset ?? 1),
           totalSize: productController.sellerProduct?.totalSize,
           offset: productController.sellerProduct?.offset,
+          limit: productController.sellerProduct?.limit ?? SellerProductController.sellerProductLimit,
           itemView: MasonryGridView.count(
             itemCount: productController.sellerProduct?.products?.length,
             crossAxisCount: ResponsiveHelper.isTab(context)? 3 : 2,

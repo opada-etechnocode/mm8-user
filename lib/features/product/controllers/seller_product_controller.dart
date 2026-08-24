@@ -17,6 +17,17 @@ class SellerProductController extends ChangeNotifier {
   bool _isFilterApply = false;
   bool  get isFilterApply => _isFilterApply;
 
+  String _sellerSlug = '';
+  String _sellerProductId = '';
+  String _sellerSearch = '';
+  String? _sellerCategoryIds = '[]';
+  String? _sellerBrandIds = '[]';
+  String? _sellerAuthorIds = '[]';
+  String? _sellerPublishingIds = '[]';
+  String? _sellerProductType = 'all';
+
+  static const int sellerProductLimit = 12;
+
   Future <ApiResponseModel> getSellerProductList(String slug, int offset, String productId, {
     bool reload = true,
     String search = '',
@@ -26,6 +37,14 @@ class SellerProductController extends ChangeNotifier {
     String? publishingIds = '[]',
     String? productType = 'all',
   }) async {
+    _sellerSlug = slug;
+    _sellerProductId = productId;
+    _sellerSearch = search;
+    _sellerCategoryIds = categoryIds;
+    _sellerBrandIds = brandIds;
+    _sellerAuthorIds = authorIds;
+    _sellerPublishingIds = publishingIds;
+    _sellerProductType = productType;
 
     ApiResponseModel apiResponse = await sellerProductServiceInterface!.getSellerProductList(
       slug, offset.toString(),
@@ -48,6 +67,21 @@ class SellerProductController extends ChangeNotifier {
     }
     notifyListeners();
     return apiResponse;
+  }
+
+  Future<ApiResponseModel> paginateSellerProductList(int offset) {
+    return getSellerProductList(
+      _sellerSlug,
+      offset,
+      _sellerProductId,
+      reload: false,
+      search: _sellerSearch,
+      categoryIds: _sellerCategoryIds,
+      brandIds: _sellerBrandIds,
+      authorIds: _sellerAuthorIds,
+      publishingIds: _sellerPublishingIds,
+      productType: _sellerProductType,
+    );
   }
 
 

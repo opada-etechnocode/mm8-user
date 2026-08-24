@@ -275,6 +275,7 @@ class _TopSellerProductScreenState extends State<TopSellerProductScreen> with Ti
                   child: ShopProductViewList(
                     scrollController: _scrollController,
                     sellerId: widget.sellerId ?? 0,
+                    slug: widget.slug ?? '',
                     sellerNavigationModel: SellerNavigationModel(
                       sellerId: widget.sellerId ?? 0,
                       banner: widget.banner ?? '',

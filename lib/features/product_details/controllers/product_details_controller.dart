@@ -271,6 +271,8 @@ class ProductDetailsController extends ChangeNotifier {
   }
 
   Future<void> addToCartFromColorIndex(BuildContext context, ProductDetailsModel product, int colorIndex) async {
+    if (_addingToCartColorIndex != null) return;
+
     final splashController = Provider.of<SplashController>(context, listen: false);
     final authController = Provider.of<AuthController>(context, listen: false);
 
@@ -279,18 +281,29 @@ class ProductDetailsController extends ChangeNotifier {
       return;
     }
 
-    if (_variationIndex == null || _variantIndex == null) {
-      initData(product, product.minimumOrderQty ?? 1, context);
-    }
-
-    setCartVariantIndex(product.minimumOrderQty ?? 1, colorIndex, context);
+    // Always re-init variation state so a previous sheet/add-to-cart cannot leave
+    // stale indexes that break size selection on the next open (especially iOS).
+    initData(product, product.minimumOrderQty ?? 1, context);
 
     final safeColorIndex = _clampColorIndex(product, colorIndex);
+    setCartVariantIndex(
+      product.minimumOrderQty ?? 1,
+      safeColorIndex,
+      context,
+      isUpdate: false,
+    );
+
     final hasExtraVariations = product.choiceOptions?.isNotEmpty ?? false;
     if (hasExtraVariations) {
+      if (!context.mounted) return;
+      // Defer sheet open until after any pending rebuilds from color selection.
+      await Future<void>.delayed(Duration.zero);
+      if (!context.mounted) return;
+
       await showModalBottomSheet(
         context: context,
         isScrollControlled: true,
+        useRootNavigator: true,
         backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0),
         builder: (_) => CartBottomSheetWidget(
           product: product,
@@ -345,17 +358,27 @@ class ProductDetailsController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setCartVariantIndex(int? minimumOrderQuantity,int index, BuildContext context) {
+  void setCartVariantIndex(
+    int? minimumOrderQuantity,
+    int index,
+    BuildContext context, {
+    bool isUpdate = true,
+  }) {
     if (_productDetailsModel != null) {
       _variantIndex = _clampColorIndex(_productDetailsModel!, index);
     } else {
       _variantIndex = index;
     }
     _quantity = minimumOrderQuantity;
-    notifyListeners();
+    if (isUpdate) {
+      notifyListeners();
+    }
   }
 
   void setCartVariationIndex(int? minimumOrderQuantity, int index, int i, BuildContext context) {
+    if (_variationIndex == null || index < 0 || index >= _variationIndex!.length) {
+      return;
+    }
     _variationIndex![index] = i;
     _quantity = minimumOrderQuantity;
     notifyListeners();

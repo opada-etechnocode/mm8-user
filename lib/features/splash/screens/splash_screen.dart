@@ -23,6 +23,7 @@ import 'package:provider/provider.dart';
 
 class SplashScreen extends StatefulWidget {
   final NotificationBody? body;
+
   const SplashScreen({super.key, this.body});
 
   @override
@@ -34,6 +35,7 @@ class SplashScreenState extends State<SplashScreen> {
   final Completer<void> _typingCompleter = Completer<void>();
   bool _hasNavigated = false;
   NotificationBody? _notificationBody;
+
   // late StreamSubscription<ConnectivityResult> _onConnectivityChanged;
 
   @override
@@ -92,7 +94,8 @@ class SplashScreenState extends State<SplashScreen> {
   }
 
   NotificationBody? _resolveNotificationBody() {
-    _notificationBody ??= widget.body ?? NotificationRouteHelper.consumePendingNotification();
+    _notificationBody ??=
+        widget.body ?? NotificationRouteHelper.consumePendingNotification();
     return _notificationBody;
   }
 
@@ -111,130 +114,165 @@ class SplashScreenState extends State<SplashScreen> {
 
   void _route() {
     NetworkInfo.checkConnectivity(context);
-    Provider.of<SplashController>(context, listen: false).initConfig(context, (ConfigModel? configModel) {
-        String? minimumVersion = "0";
-        UserAppVersionControl? appVersion = Provider.of<SplashController>(Get.context!, listen: false).configModel?.userAppVersionControl;
-        if(Platform.isAndroid) {
-          minimumVersion =  appVersion?.forAndroid?.version ?? '0';
-        } else if(Platform.isIOS) {
-          minimumVersion = appVersion?.forIos?.version ?? '0';
-        }
-        Provider.of<SplashController>(Get.context!, listen: false).initSharedPrefData();
-        // Timer(const Duration(seconds: 2), () {
-          final config = Provider.of<SplashController>(Get.context!, listen: false).configModel;
-print("app version:"+minimumVersion);
-print("app version local:"+AppConstants.appVersion);
-print("app version local:"+compareVersions(minimumVersion!, AppConstants.appVersion).toString());
-          _scheduleNavigation(() async {
-            if(compareVersions(minimumVersion!, AppConstants.appVersion) == 1) {
-              RouterHelper.getUpdateRoute(action: RouteAction.pushReplacement);
-            } else if(
-            config?.maintenanceModeData?.maintenanceStatus == 1 && config?.maintenanceModeData?.selectedMaintenanceSystem?.customerApp == 1
-                && !Provider.of<SplashController>(Get.context!, listen: false).isConfigCall) {
-              RouterHelper.getMaintenanceRoute(action: RouteAction.pushReplacement);
-            } else if(Provider.of<AuthController>(Get.context!, listen: false).isLoggedIn()) {
-              Provider.of<AuthController>(Get.context!, listen: false).updateToken(Get.context!);
-              final notificationBody = _resolveNotificationBody();
-              if(notificationBody != null){
-                _navigateFromNotification(notificationBody);
-              } else if (await _navigatePendingDeepLink()) {
-              } else {
-                RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
-              }
-            }
-
-            else if(Provider.of<SplashController>(Get.context!, listen: false).showIntro()!){
-              RouterHelper.getOnboardingRoute(
-                action: RouteAction.pushReplacement,
-                indicatorColor: Provider.of<ThemeController>(Get.context!, listen: false).darkTheme ?
-                  Theme.of(Get.context!).colorScheme.onTertiary : Theme.of(Get.context!).hintColor,
-                selectedIndicatorColor: Theme.of(Get.context!).primaryColor,
-              );
-            }
-            else{
-              if(Provider.of<AuthController>(Get.context!, listen: false).getGuestToken() != null &&
-                  Provider.of<AuthController>(Get.context!, listen: false).getGuestToken() != '1') {
-                if (await _navigatePendingDeepLink()) {
-                } else {
-                  RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
-                }
-              }else{
-                Provider.of<AuthController>(Get.context!, listen: false).getGuestIdUrl();
-                if (await _navigatePendingDeepLink()) {
-                } else {
-                  RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
-                }
-              }
-            }
-          });
-       //  });
-      },
-
-
-      (ConfigModel? configModel) {
-        String? minimumVersion = "0";
-        UserAppVersionControl? appVersion = Provider.of<SplashController>(Get.context!, listen: false).configModel?.userAppVersionControl;
-        if(Platform.isAndroid) {
-          minimumVersion =  appVersion?.forAndroid?.version ?? '0';
-        } else if(Platform.isIOS) {
-          minimumVersion = appVersion?.forIos?.version ?? '0';
-        }
-        Provider.of<SplashController>(Get.context!, listen: false).initSharedPrefData();
-        final config = Provider.of<SplashController>(Get.context!, listen: false).configModel;
-
-        _scheduleNavigation(() async {
-          if(compareVersions(minimumVersion!, AppConstants.appVersion) == 1) {
-            RouterHelper.getUpdateRoute(action: RouteAction.pushReplacement);
-          } else if(
-            config?.maintenanceModeData?.maintenanceStatus == 1 && config?.maintenanceModeData?.selectedMaintenanceSystem?.customerApp == 1
-            && !config!.localMaintenanceMode!
-          ) {
-            RouterHelper.getMaintenanceRoute(action: RouteAction.pushReplacement);
-          } else if(Provider.of<AuthController>(Get.context!, listen: false).isLoggedIn() && !configModel!.hasLocaldb!) {
-            Provider.of<AuthController>(Get.context!, listen: false).updateToken(Get.context!);
-            final notificationBody = _resolveNotificationBody();
-            if(notificationBody != null) {
-              _navigateFromNotification(notificationBody);
-            } else if (await _navigatePendingDeepLink()) {
+    Provider.of<SplashController>(context, listen: false).initConfig(context,
+        (ConfigModel? configModel) {
+      String? minimumVersion = "0";
+      UserAppVersionControl? appVersion =
+          Provider.of<SplashController>(Get.context!, listen: false)
+              .configModel
+              ?.userAppVersionControl;
+      if (Platform.isAndroid) {
+        minimumVersion = appVersion?.forAndroid?.version ?? '0';
+      } else if (Platform.isIOS) {
+        minimumVersion = appVersion?.forIos?.version ?? '0';
+      }
+      Provider.of<SplashController>(Get.context!, listen: false)
+          .initSharedPrefData();
+      // Timer(const Duration(seconds: 2), () {
+      final config = Provider.of<SplashController>(Get.context!, listen: false)
+          .configModel;
+      print("app version:" + minimumVersion);
+      print("app version local:" + AppConstants.appVersion);
+      print("app version local:" +
+          compareVersions(minimumVersion!, AppConstants.appVersion).toString());
+      _scheduleNavigation(() async {
+        if (compareVersions(minimumVersion!, AppConstants.appVersion) == 1) {
+          RouterHelper.getUpdateRoute(action: RouteAction.pushReplacement);
+        } else if (config?.maintenanceModeData?.maintenanceStatus == 1 &&
+            config?.maintenanceModeData?.selectedMaintenanceSystem
+                    ?.customerApp ==
+                1 &&
+            !Provider.of<SplashController>(Get.context!, listen: false)
+                .isConfigCall) {
+          RouterHelper.getMaintenanceRoute(action: RouteAction.pushReplacement);
+        } else if (Provider.of<AuthController>(Get.context!, listen: false)
+            .isLoggedIn()) {
+          Provider.of<AuthController>(Get.context!, listen: false)
+              .updateToken(Get.context!);
+          final notificationBody = _resolveNotificationBody();
+          if (notificationBody != null) {
+            _navigateFromNotification(notificationBody);
+          } else if (await _navigatePendingDeepLink()) {
+          } else {
+            RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
+          }
+        } else if (!Provider.of<SplashController>(Get.context!, listen: false)
+            .showIntro()!) {
+          RouterHelper.getOnboardingRoute(
+            action: RouteAction.pushReplacement,
+            indicatorColor:
+                Provider.of<ThemeController>(Get.context!, listen: false)
+                        .darkTheme
+                    ? Theme.of(Get.context!).colorScheme.onTertiary
+                    : Theme.of(Get.context!).hintColor,
+            selectedIndicatorColor: Theme.of(Get.context!).primaryColor,
+          );
+        } else {
+          if (Provider.of<AuthController>(Get.context!, listen: false)
+                      .getGuestToken() !=
+                  null &&
+              Provider.of<AuthController>(Get.context!, listen: false)
+                      .getGuestToken() !=
+                  '1') {
+            if (await _navigatePendingDeepLink()) {
             } else {
-              RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
+              RouterHelper.getDashboardRoute(
+                  action: RouteAction.pushReplacement);
+            }
+          } else {
+            Provider.of<AuthController>(Get.context!, listen: false)
+                .getGuestIdUrl();
+            if (await _navigatePendingDeepLink()) {
+            } else {
+              RouterHelper.getDashboardRoute(
+                  action: RouteAction.pushReplacement);
             }
           }
+        }
+      });
+      //  });
+    }, (ConfigModel? configModel) {
+      String? minimumVersion = "0";
+      UserAppVersionControl? appVersion =
+          Provider.of<SplashController>(Get.context!, listen: false)
+              .configModel
+              ?.userAppVersionControl;
+      if (Platform.isAndroid) {
+        minimumVersion = appVersion?.forAndroid?.version ?? '0';
+      } else if (Platform.isIOS) {
+        minimumVersion = appVersion?.forIos?.version ?? '0';
+      }
+      Provider.of<SplashController>(Get.context!, listen: false)
+          .initSharedPrefData();
+      final config = Provider.of<SplashController>(Get.context!, listen: false)
+          .configModel;
 
-          else if(Provider.of<SplashController>(Get.context!, listen: false).showIntro()! &&  !configModel!.hasLocaldb!){
-            RouterHelper.getOnboardingRoute(
-              action: RouteAction.pushReplacement,
-              indicatorColor: Provider.of<ThemeController>(Get.context!, listen: false).darkTheme ?
-                Theme.of(Get.context!).colorScheme.onTertiary : Theme.of(Get.context!).hintColor,
-              selectedIndicatorColor: Theme.of(Get.context!).primaryColor,
-            );
+      _scheduleNavigation(() async {
+        if (compareVersions(minimumVersion!, AppConstants.appVersion) == 1) {
+          RouterHelper.getUpdateRoute(action: RouteAction.pushReplacement);
+        } else if (config?.maintenanceModeData?.maintenanceStatus == 1 &&
+            config?.maintenanceModeData?.selectedMaintenanceSystem
+                    ?.customerApp ==
+                1 &&
+            !config!.localMaintenanceMode!) {
+          RouterHelper.getMaintenanceRoute(action: RouteAction.pushReplacement);
+        } else if (Provider.of<AuthController>(Get.context!, listen: false)
+                .isLoggedIn() &&
+            !configModel!.hasLocaldb!) {
+          Provider.of<AuthController>(Get.context!, listen: false)
+              .updateToken(Get.context!);
+          final notificationBody = _resolveNotificationBody();
+          if (notificationBody != null) {
+            _navigateFromNotification(notificationBody);
+          } else if (await _navigatePendingDeepLink()) {
+          } else {
+            RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
           }
-          else if(!configModel!.hasLocaldb! || (configModel.hasLocaldb! && configModel.localMaintenanceMode! && !(config?.maintenanceModeData?.maintenanceStatus == 1 && config?.maintenanceModeData?.selectedMaintenanceSystem?.customerApp == 1))){
-            if(Provider.of<AuthController>(Get.context!, listen: false).getGuestToken() != null &&
-                Provider.of<AuthController>(Get.context!, listen: false).getGuestToken() != '1'){
-              if (await _navigatePendingDeepLink()) {
-              } else {
-                RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
-              }
-            }else{
-              Provider.of<AuthController>(Get.context!, listen: false).getGuestIdUrl();
-              if (await _navigatePendingDeepLink()) {
-              } else {
-                RouterHelper.getDashboardRoute(action: RouteAction.pushNamedAndRemoveUntil);
-              }
+        } else if (Provider.of<SplashController>(Get.context!, listen: false)
+                .showIntro()! &&
+            !configModel!.hasLocaldb!) {
+          RouterHelper.getOnboardingRoute(
+            action: RouteAction.pushReplacement,
+            indicatorColor:
+                Provider.of<ThemeController>(Get.context!, listen: false)
+                        .darkTheme
+                    ? Theme.of(Get.context!).colorScheme.onTertiary
+                    : Theme.of(Get.context!).hintColor,
+            selectedIndicatorColor: Theme.of(Get.context!).primaryColor,
+          );
+        } else if (!configModel!.hasLocaldb! ||
+            (configModel.hasLocaldb! &&
+                configModel.localMaintenanceMode! &&
+                !(config?.maintenanceModeData?.maintenanceStatus == 1 &&
+                    config?.maintenanceModeData?.selectedMaintenanceSystem
+                            ?.customerApp ==
+                        1))) {
+          if (Provider.of<AuthController>(Get.context!, listen: false)
+                      .getGuestToken() !=
+                  null &&
+              Provider.of<AuthController>(Get.context!, listen: false)
+                      .getGuestToken() !=
+                  '1') {
+            if (await _navigatePendingDeepLink()) {
+            } else {
+              RouterHelper.getDashboardRoute(
+                  action: RouteAction.pushReplacement);
+            }
+          } else {
+            Provider.of<AuthController>(Get.context!, listen: false)
+                .getGuestIdUrl();
+            if (await _navigatePendingDeepLink()) {
+            } else {
+              RouterHelper.getDashboardRoute(
+                  action: RouteAction.pushNamedAndRemoveUntil);
             }
           }
-        });
-      }
-
-
-    ).then((bool isSuccess) {
-      if(isSuccess) {
-
-      }
+        }
+      });
+    }).then((bool isSuccess) {
+      if (isSuccess) {}
     });
   }
-
 
   int compareVersions(String version1, String version2) {
     List<String> v1Components = version1.split('.');
@@ -245,8 +283,10 @@ print("app version local:"+compareVersions(minimumVersion!, AppConstants.appVers
         : v2Components.length;
 
     for (int i = 0; i < maxLength; i++) {
-      int v1Part = i < v1Components.length ? int.tryParse(v1Components[i]) ?? 0 : 0;
-      int v2Part = i < v2Components.length ? int.tryParse(v2Components[i]) ?? 0 : 0;
+      int v1Part =
+          i < v1Components.length ? int.tryParse(v1Components[i]) ?? 0 : 0;
+      int v2Part =
+          i < v2Components.length ? int.tryParse(v2Components[i]) ?? 0 : 0;
 
       if (v1Part > v2Part) return 1;
       if (v1Part < v2Part) return -1;
@@ -259,8 +299,10 @@ print("app version local:"+compareVersions(minimumVersion!, AppConstants.appVers
   Widget build(BuildContext context) {
     return Scaffold(
       key: _globalKey,
-      body: Provider.of<SplashController>(context).hasConnection ?
-      SplashWidget(onTypingComplete: _onTypingComplete) : const NoInternetOrDataScreenWidget(isNoInternet: true, child: SplashScreen()),
+      body: Provider.of<SplashController>(context).hasConnection
+          ? SplashWidget(onTypingComplete: _onTypingComplete)
+          : const NoInternetOrDataScreenWidget(
+              isNoInternet: true, child: SplashScreen()),
     );
   }
 }
@@ -273,30 +315,23 @@ class SplashWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: Theme.of(context).scaffoldBackgroundColor,
+      color: Colors.black,
       child: Stack(
+        fit: StackFit.expand,
+        alignment: Alignment.center,
         children: [
+          Positioned.fill(
+            child: Image.asset(
+              "assets/images/splash.jpeg",
+              fit: BoxFit.cover,
+              alignment: Alignment.center,
+            ),
+          ),
           Positioned(
-              top: -200,
-              left: -50,
-              child: Center(
-                  child: Image.asset(Images.backgroundBubble2,color:Theme.of(context).primaryColor))),
-          Positioned(
-              top: 30,
-              right: -330,
-              child:  Transform.rotate(
-                  angle: 270 * (math.pi / 180),
-                  child: Image.asset(Images.backgroundBubble,color: Theme.of(context).primaryColor,))),
-          Column(mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-            Row(children: []),
-
-          SizedBox(width: 150, child: Image.asset(Images.logo, width: 150.0)),
-
-
-            Padding(
+            bottom: 50,
+            left: 20,
+            right: 20,
+            child: Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: Dimensions.paddingSizeLarge,
                 vertical: Dimensions.paddingSizeSmall,
@@ -308,13 +343,13 @@ class SplashWidget extends StatelessWidget {
                 textAlign: TextAlign.center,
                 onComplete: onTypingComplete,
                 style: textRegular.copyWith(
-                  fontSize: Dimensions.fontSizeDefault+1,
-                 color: Theme.of(context).textTheme.bodyLarge!.color,
+                  fontSize: Dimensions.fontSizeDefault + 1,
+                  color: Colors.white,
                   height: 1.5,
                 ),
               ),
             ),
-          ]),
+          )
         ],
       ),
     );

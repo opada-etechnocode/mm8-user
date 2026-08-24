@@ -172,35 +172,43 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
         return Positioned(
           top: 0,
           right: 0,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: isLoading ? null : () => _addToCartFromColor(context, colorIndex),
-            child: SizedBox(
-              width: 40,
-              height: 40,
-              child: Align(
-                alignment: Alignment.topRight,
-                child: Material(
-                  color: Theme.of(context).cardColor,
-                  shape: const CircleBorder(),
-                  elevation: 2,
-                  child: Padding(
-                    padding: const EdgeInsets.all(6),
-                    child: isLoading
-                        ? SizedBox(
-                            height: 14,
-                            width: 14,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onTap: isLoading
+                  ? null
+                  : () {
+                      // Stop competing with image selection gesture on iOS.
+                      _addToCartFromColor(context, colorIndex);
+                    },
+              child: SizedBox(
+                width: 40,
+                height: 40,
+                child: Align(
+                  alignment: Alignment.topRight,
+                  child: Material(
+                    color: Theme.of(context).cardColor,
+                    shape: const CircleBorder(),
+                    elevation: 2,
+                    child: Padding(
+                      padding: const EdgeInsets.all(6),
+                      child: isLoading
+                          ? SizedBox(
+                              height: 14,
+                              width: 14,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Theme.of(context).primaryColor,
+                              ),
+                            )
+                          : Image.asset(
+                              Images.cartArrowDownImage,
+                              height: 14,
+                              width: 14,
                               color: Theme.of(context).primaryColor,
                             ),
-                          )
-                        : Image.asset(
-                            Images.cartArrowDownImage,
-                            height: 14,
-                            width: 14,
-                            color: Theme.of(context).primaryColor,
-                          ),
+                    ),
                   ),
                 ),
               ),
@@ -286,54 +294,57 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
   }) {
     final imagePath = image.path ?? '';
 
-    return GestureDetector(
-      onTap: () => _selectImagePath(productController, group, imagePath),
-      onLongPress: () {
-        final galleryIndex = group.images.indexWhere((item) => item.path == imagePath);
-        _openImageGallery(
-          context,
-          images: group.images,
-          initialIndex: galleryIndex >= 0 ? galleryIndex : 0,
-        );
-      },
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          border: Border.all(
-            width: isSelected ? 2 : 1,
-            color: isSelected
-                ? Theme.of(context).primaryColor
-                : Theme.of(context).hintColor.withValues(alpha: 0.2),
-          ),
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(_galleryCardRadius),
-        ),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(_galleryCardRadius),
-              child: imagePath.isNotEmpty
-                  ? CustomImageWidget(
-                      height: size,
-                      width: size,
-                      maxCacheSize: 256,
-                      image: imagePath,
-                    )
-                  : Container(
-                      color: Theme.of(context).hintColor.withValues(alpha: 0.12),
-                      child: Icon(
-                        Icons.image_outlined,
-                        color: Theme.of(context).hintColor,
-                        size: size * 0.35,
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          GestureDetector(
+            onTap: () => _selectImagePath(productController, group, imagePath),
+            onLongPress: () {
+              final galleryIndex = group.images.indexWhere((item) => item.path == imagePath);
+              _openImageGallery(
+                context,
+                images: group.images,
+                initialIndex: galleryIndex >= 0 ? galleryIndex : 0,
+              );
+            },
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(
+                  width: isSelected ? 2 : 1,
+                  color: isSelected
+                      ? Theme.of(context).primaryColor
+                      : Theme.of(context).hintColor.withValues(alpha: 0.2),
+                ),
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(_galleryCardRadius),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(_galleryCardRadius),
+                child: imagePath.isNotEmpty
+                    ? CustomImageWidget(
+                        height: size,
+                        width: size,
+                        maxCacheSize: 256,
+                        image: imagePath,
+                      )
+                    : Container(
+                        color: Theme.of(context).hintColor.withValues(alpha: 0.12),
+                        child: Icon(
+                          Icons.image_outlined,
+                          color: Theme.of(context).hintColor,
+                          size: size * 0.35,
+                        ),
                       ),
-                    ),
+              ),
             ),
-            if (colorIndex != null) _buildCartOverlay(context, colorIndex),
-          ],
-        ),
+          ),
+          // Sibling (not nested) so iOS hit-testing doesn't steal/race with image tap.
+          if (colorIndex != null) _buildCartOverlay(context, colorIndex),
+        ],
       ),
     );
   }

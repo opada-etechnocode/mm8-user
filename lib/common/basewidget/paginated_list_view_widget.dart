@@ -36,39 +36,45 @@ class _PaginatedListViewState extends State<PaginatedListView> {
     _offset = 1;
     _offsetList = [1];
 
-    if(widget.scrollController != null){
-      widget.scrollController?.addListener(() {
-        if (widget.scrollController?.position.pixels == widget.scrollController?.position.maxScrollExtent
-            && widget.totalSize != null && !_isLoading && widget.enabledPagination) {
-          if(mounted) {
-            _paginate();
-          }
-        }
-      });
-    }
-
+    widget.scrollController?.addListener(_onScroll);
   }
 
-  void _paginate() async {
-    int pageSize = (widget.totalSize! / widget.limit!).ceil();
-    if (_offset! < pageSize && !_offsetList.contains(_offset!+1)) {
+  @override
+  void dispose() {
+    debounce.dispose();
+    widget.scrollController?.removeListener(_onScroll);
+    super.dispose();
+  }
 
+  void _onScroll() {
+    if (!mounted) return;
+    final position = widget.scrollController?.position;
+    if (position != null &&
+        position.pixels >= position.maxScrollExtent - 48 &&
+        widget.totalSize != null && !_isLoading && widget.enabledPagination) {
+      _paginate();
+    }
+  }
+
+  Future<void> _paginate() async {
+    if (!mounted || widget.totalSize == null || _offset == null) return;
+
+    int pageSize = (widget.totalSize! / (widget.limit ?? 10)).ceil();
+    if (_offset! < pageSize && !_offsetList.contains(_offset! + 1)) {
       setState(() {
         _offset = _offset! + 1;
         _offsetList.add(_offset);
         _isLoading = true;
       });
       await widget.onPaginate(_offset);
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
-
-    }else {
-      if(_isLoading) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+    } else if (_isLoading && mounted) {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -86,12 +92,14 @@ class _PaginatedListViewState extends State<PaginatedListView> {
     return _OnNotificationListenerWidget(
       isEnabled: widget.scrollController == null,
       onNotification: (scrollNotification){
-        if (scrollNotification!.metrics.pixels >= scrollNotification.metrics.maxScrollExtent
+        if (scrollNotification!.metrics.pixels >= scrollNotification.metrics.maxScrollExtent - 48
             && widget.totalSize != null && !_isLoading && widget.enabledPagination) {
 
           if(mounted) {
             debounce.run((){
-              _paginate();
+              if (mounted) {
+                _paginate();
+              }
             });
           }
         }
