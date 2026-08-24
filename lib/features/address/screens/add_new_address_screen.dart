@@ -403,14 +403,14 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
                                               _countryCodeController.text = val.name!;
                                             },
                                             initialSelection: _countryCodeController.text,
-                                            countryFilter: CountryCodeHelper.gccCountryCodes,
+                                            favorite: CountryCodeHelper.gccCountryCodes,
                                             showDropDownButton: true,
                                             showCountryOnly: true,
                                             showOnlyCountryWhenClosed: true,
                                             showFlagDialog: true,
                                             hideMainText: false,
                                             showFlagMain: false,
-                                            hideSearch: true,
+                                            hideSearch: false,
                                             dialogBackgroundColor: Theme.of(context).cardColor,
                                             barrierColor: Provider.of<ThemeController>(context).darkTheme ? Colors.black.withValues(alpha:0.4) : null,
                                             textStyle: textRegular.copyWith(

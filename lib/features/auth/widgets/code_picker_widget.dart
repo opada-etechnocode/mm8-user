@@ -4,6 +4,7 @@ library country_code_picker;
 import 'package:collection/collection.dart';
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_sixvalley_ecommerce/helper/country_code_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/custom_themes.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/dimensions.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/images.dart';
@@ -88,7 +89,7 @@ class CodePickerWidget extends StatefulWidget {
     this.onChanged,
     this.onInit,
     this.initialSelection,
-    this.favorite = const [],
+    this.favorite = CountryCodeHelper.gccCountryCodes,
     this.textStyle,
     this.padding = const EdgeInsets.all(8.0),
     this.showCountryOnly = false,

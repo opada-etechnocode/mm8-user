@@ -228,23 +228,14 @@ class _CustomTextFieldWidgetState extends State<CustomTextFieldWidget> {
                       flagWidth: Dimensions.paddingSizeExtraLarge,
                       onChanged: widget.onCountryChanged,
                       initialSelection: widget.countryDialCode,
-                      countryFilter: widget.inputType == TextInputType.phone ||
-                              widget.showCodePicker
-                          ? CountryCodeHelper.gccCountryCodes
-                          : null,
-                      favorite: widget.countryDialCode != null &&
-                              !(widget.inputType == TextInputType.phone ||
-                                  widget.showCodePicker)
-                          ? [widget.countryDialCode!]
-                          : const [],
+                      favorite: CountryCodeHelper.gccCountryCodes,
                       showDropDownButton: true,
                       showCountryOnly: false,
                       showOnlyCountryWhenClosed: false,
                       showFlagDialog: true,
                       hideMainText: false,
                       showFlagMain: false,
-                      hideSearch: widget.inputType == TextInputType.phone ||
-                          widget.showCodePicker,
+                      hideSearch: false,
                       dialogBackgroundColor: Theme.of(context).cardColor,
                       barrierColor: Provider.of<ThemeController>(context).darkTheme ? Colors.black.withValues(alpha:0.4) : null,
                       textStyle: textRegular.copyWith(

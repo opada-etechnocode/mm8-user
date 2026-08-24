@@ -1,5 +1,6 @@
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_sixvalley_ecommerce/helper/country_code_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/localization/language_constrants.dart';
 import 'package:flutter_sixvalley_ecommerce/features/auth/controllers/auth_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/splash/controllers/splash_controller.dart';
@@ -66,10 +67,11 @@ class MobileVerificationScreenState extends State<MobileVerificationScreen> {
                             _countryDialCode = countryCode.dialCode;
                           },
                           initialSelection: _countryDialCode,
-                          favorite: [_countryDialCode??'BD'],
+                          favorite: CountryCodeHelper.gccCountryCodes,
                           showDropDownButton: true,
                           padding: EdgeInsets.zero,
                           showFlagMain: true,
+                          hideSearch: false,
                           textStyle: TextStyle(color: Theme.of(context).textTheme.displayLarge?.color)),
 
 
