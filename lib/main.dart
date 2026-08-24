@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:app_links/app_links.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -122,6 +124,8 @@ Future<void> bootstrapApp() async {
 
   GoRouter.optionURLReflectsImperativeAPIs = true;
 
+  await _precacheSplashImage();
+
   runApp(
 
 
@@ -181,7 +185,8 @@ Future<String?> initDynamicLinks() async {
     }
   });
 
-  for (int attempt = 0; attempt < 30; attempt++) {
+  // Do not block app startup with retries — cold-start polling continues in MyApp.
+  try {
     final uri = await appLinks.getInitialLink();
     if (uri != null && DeepLinkHelper.isSupportedDeepLink(uri)) {
       DeepLinkHelper.setPendingDeepLink(DeepLinkHelper.uriToRouteLocation(uri));
@@ -193,11 +198,16 @@ Future<String?> initDynamicLinks() async {
       DeepLinkHelper.setPendingDeepLink(DeepLinkHelper.uriToRouteLocation(latestUri));
       return DeepLinkHelper.peekPendingDeepLink();
     }
-
-    await Future.delayed(const Duration(milliseconds: 100));
-  }
+  } catch (_) {}
 
   return DeepLinkHelper.peekPendingDeepLink();
+}
+
+Future<void> _precacheSplashImage() async {
+  try {
+    final data = await rootBundle.load('assets/images/splash.jpeg');
+    await ui.instantiateImageCodec(data.buffer.asUint8List());
+  } catch (_) {}
 }
 
 
@@ -305,19 +315,14 @@ class _MyAppState extends State<MyApp> {
                         FallbackLocalizationDelegate(),
                       ],
                       supportedLocales: locals,
-                      theme: themeController.darkTheme
-                          ? dark(fontFamily: fontFamily)
-                          : light(
-                              primaryColor: Theme.of(context).primaryColor,
-                              secondaryColor: Theme.of(context).colorScheme.secondary,
-                              fontFamily: fontFamily,
-                            ),
-                      home: Directionality(
-                        textDirection: TextDirection.ltr,
-                        child: MediaQuery(
-                          data: MediaQueryData.fromView(View.of(context)),
-                          child: SplashWidget(),
-                        ),
+                      theme: ThemeData(
+                        scaffoldBackgroundColor: Colors.black,
+                        canvasColor: Colors.black,
+                        colorScheme: const ColorScheme.dark(),
+                      ),
+                      home: const ColoredBox(
+                        color: Colors.black,
+                        child: SplashWidget(),
                       ),
                     );
                   } else {

@@ -156,7 +156,7 @@ class SplashScreenState extends State<SplashScreen> {
           } else {
             RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
           }
-        } else if (!Provider.of<SplashController>(Get.context!, listen: false)
+        } else if (Provider.of<SplashController>(Get.context!, listen: false)
             .showIntro()!) {
           RouterHelper.getOnboardingRoute(
             action: RouteAction.pushReplacement,
@@ -299,6 +299,7 @@ class SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _globalKey,
+      backgroundColor: Colors.black,
       body: Provider.of<SplashController>(context).hasConnection
           ? SplashWidget(onTypingComplete: _onTypingComplete)
           : const NoInternetOrDataScreenWidget(
@@ -325,6 +326,8 @@ class SplashWidget extends StatelessWidget {
               "assets/images/splash.jpeg",
               fit: BoxFit.cover,
               alignment: Alignment.center,
+              gaplessPlayback: true,
+              filterQuality: FilterQuality.medium,
             ),
           ),
           Positioned(
