@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_sixvalley_ecommerce/features/profile/controllers/profile_contrroller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/splash/domain/models/business_pages_model.dart';
+import 'package:flutter_sixvalley_ecommerce/helper/responsive_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/route_healper.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/app_constants.dart';
 import 'package:flutter_sixvalley_ecommerce/features/more/widgets/logout_confirm_bottom_sheet_widget.dart';
@@ -36,24 +37,49 @@ class _MoreScreenState extends State<MoreScreen> {
         'single';
   }
 
+  double _headerHeight(BuildContext context) {
+    final topPadding = MediaQuery.paddingOf(context).top;
+    // Avatar + name + phone + spacing (compact expanded header).
+    const profileContentHeight = 128.0;
+    final tabletExtra = ResponsiveHelper.isTab(context) ? 8.0 : 0.0;
+    return topPadding + profileContentHeight + tabletExtra;
+  }
+
+  double _collapsedHeaderHeight(BuildContext context) {
+    return MediaQuery.paddingOf(context).top + 44;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final headerHeight = _headerHeight(context);
+    final collapsedHeight = _collapsedHeaderHeight(context);
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: CustomScrollView(
+      body: SafeArea(
+        top: false,
+        child: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
           SliverAppBar(
             floating: false,
+            stretch: true,
             elevation: 0,
-            expandedHeight: MediaQuery.of(context).size.height*0.184
-          ,
+            expandedHeight: headerHeight,
             pinned: true,
             centerTitle: false,
             automaticallyImplyLeading: false,
-            backgroundColor: Theme.of(context).primaryColor,
-            collapsedHeight: MediaQuery.of(context).size.height*0.184,
-            flexibleSpace: const ProfileInfoSectionWidget(),
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            collapsedHeight: collapsedHeight,
+            flexibleSpace: LayoutBuilder(
+              builder: (context, constraints) {
+                return ProfileInfoSectionWidget(
+                  expandedHeight: headerHeight,
+                  collapsedHeight: collapsedHeight,
+                  currentHeight: constraints.biggest.height,
+                );
+              },
+            ),
           ),
           SliverToBoxAdapter(
             child: Consumer<AuthController>(
@@ -128,6 +154,7 @@ class _MoreScreenState extends State<MoreScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

@@ -16,6 +16,7 @@ import 'package:flutter_sixvalley_ecommerce/features/product_details/widgets/ima
 import 'package:flutter_sixvalley_ecommerce/features/product_details/widgets/pdf_preview_flutter.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product_details/screens/product_image_screen.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/product_image_helper.dart';
+import 'package:flutter_sixvalley_ecommerce/helper/responsive_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product_details/widgets/video_preview.dart';
 import 'package:flutter_sixvalley_ecommerce/features/splash/controllers/splash_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/shop_helper.dart';
@@ -48,12 +49,46 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
   late final PageController _controller;
   static const double _galleryCardRadius = Dimensions.radiusLarge-3;
 
-  /// Roughly three square cards across the screen (minus side padding + gaps).
-  double _galleryItemSize(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
-    const sidePads = Dimensions.homePagePadding * 2;
-    const gaps = Dimensions.paddingSizeSmall * 2;
-    return (width - sidePads - gaps) / 3;
+  static const double _heroPanelRatio = 0.44;
+  static const double _galleryPanelRatio = 0.56;
+  static const int _mobileGalleryColumns = 3;
+
+  bool _useSideBySideLayout(BuildContext context) {
+    return ResponsiveHelper.isTab(context) || ResponsiveHelper.isDesktop(context);
+  }
+
+  double _contentWidth(BuildContext context) {
+    return MediaQuery.sizeOf(context).width - (Dimensions.homePagePadding * 2);
+  }
+
+  ({double heroWidth, double galleryWidth}) _sidePanelWidths(double maxWidth) {
+    const gap = Dimensions.paddingSizeSmall;
+    final available = maxWidth - gap;
+    return (
+      heroWidth: available * _heroPanelRatio,
+      galleryWidth: available * _galleryPanelRatio,
+    );
+  }
+
+  bool _hasGalleryItems() {
+    if (productModel == null) return false;
+    return ProductImageHelper.getColorGalleryItems(productModel!).isNotEmpty ||
+        ProductImageHelper.getAdditionalImageItems(productModel!).isNotEmpty;
+  }
+
+  /// Main hero image: full content width on phone, ~44% on tablet/desktop.
+  double _heroImageSize(BuildContext context) {
+    if (_useSideBySideLayout(context)) {
+      return _sidePanelWidths(_contentWidth(context)).heroWidth;
+    }
+    return _contentWidth(context);
+  }
+
+  /// Same sizing as phone: three square thumbnails per row width.
+  double _galleryItemSize(BuildContext context, {double? availableWidth}) {
+    final width = availableWidth ?? _contentWidth(context);
+    final gaps = Dimensions.paddingSizeSmall * (_mobileGalleryColumns - 1);
+    return (width - gaps) / _mobileGalleryColumns;
   }
   bool _vacationIsOn = false;
   bool _temporaryClose = false;
@@ -355,12 +390,21 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
     return productModel!.imagesFullUrl?[selectedIndex].path == imagePath;
   }
 
-  Widget _buildColorGallery(BuildContext context, ProductDetailsController productController) {
+  Widget _buildColorGallery(
+    BuildContext context,
+    ProductDetailsController productController, {
+    double? panelWidth,
+    double? panelHeight,
+    bool sidePanel = false,
+  }) {
     final colorGroups = ProductImageHelper.getColorGalleryItems(productModel!);
     final additionalItems = ProductImageHelper.getAdditionalImageItems(productModel!);
     if (colorGroups.isEmpty && additionalItems.isEmpty) return const SizedBox.shrink();
 
-    final itemSize = _galleryItemSize(context);
+    final itemSize = _galleryItemSize(
+      context,
+      availableWidth: sidePanel ? panelWidth : null,
+    );
     final additionalCells = <Widget>[];
     for (final group in additionalItems) {
       for (final image in group.images) {
@@ -388,36 +432,51 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
       }
     }
 
+    final galleryContent = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final group in colorGroups) ...[
+          _buildColorGroupRow(
+            context: context,
+            productController: productController,
+            group: group,
+            itemSize: itemSize,
+          ),
+          const SizedBox(height: Dimensions.paddingSizeSmall),
+        ],
+        if (additionalCells.isNotEmpty)
+          SizedBox(
+            height: itemSize,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: additionalCells.length,
+              separatorBuilder: (_, __) =>
+                  const SizedBox(width: Dimensions.paddingSizeSmall),
+              itemBuilder: (context, index) => additionalCells[index],
+            ),
+          ),
+      ],
+    );
+
+    if (sidePanel && panelWidth != null && panelHeight != null) {
+      return SizedBox(
+        width: panelWidth,
+        height: panelHeight,
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: galleryContent,
+        ),
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.only(
         left: Dimensions.homePagePadding,
         right: Dimensions.homePagePadding,
         bottom: Dimensions.paddingSizeLarge,
       ),
-      child: Column(
-        children: [
-          for (final group in colorGroups) ...[
-            _buildColorGroupRow(
-              context: context,
-              productController: productController,
-              group: group,
-              itemSize: itemSize,
-            ),
-            const SizedBox(height: Dimensions.paddingSizeSmall),
-          ],
-          if (additionalCells.isNotEmpty)
-            SizedBox(
-              height: itemSize,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: additionalCells.length,
-                separatorBuilder: (_, __) =>
-                    const SizedBox(width: Dimensions.paddingSizeSmall),
-                itemBuilder: (context, index) => additionalCells[index],
-              ),
-            ),
-        ],
-      ),
+      child: galleryContent,
     );
   }
 
@@ -485,12 +544,274 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
     );
   }
 
+  Widget _buildHeroImageCard({
+    required BuildContext context,
+    required ProductDetailsController productController,
+    required int selectedIndex,
+    required double imageSize,
+    required SplashController splashController,
+    required bool isDarkTheme,
+  }) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(Dimensions.paddingSizeSmall),
+      child: SizedBox(
+        width: imageSize,
+        height: imageSize,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            border: Border.all(
+              color: isDarkTheme
+                  ? Theme.of(context).hintColor.withValues(alpha: .25)
+                  : Theme.of(context).primaryColor.withValues(alpha: .25),
+            ),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: InkWell(
+            onTap: () {
+              final selected = productController.imageSliderIndex ?? 0;
+              final allImages = ProductImageHelper.getAllGalleryImages(productModel!);
+              final group = ProductImageHelper.findGroupForHeroIndex(
+                productModel!,
+                selected,
+              );
+              var initialIndex = selected;
+              if (group != null) {
+                final matchedIndex = allImages.indexWhere(
+                  (image) => image.path == productModel!.imagesFullUrl![selected].path,
+                );
+                if (matchedIndex >= 0) initialIndex = matchedIndex;
+              }
+              _openImageGallery(
+                context,
+                images: allImages,
+                initialIndex: initialIndex,
+              );
+            },
+            child: Stack(
+              children: [
+                SizedBox(
+                  width: imageSize,
+                  height: imageSize,
+                  child: productModel!.imagesFullUrl != null &&
+                          productModel!.imagesFullUrl!.isNotEmpty
+                      ? PageView.builder(
+                          controller: _controller,
+                          itemCount: productModel!.imagesFullUrl!.length,
+                          allowImplicitScrolling: false,
+                          itemBuilder: (context, index) {
+                            final isVisible = selectedIndex == index;
+                            return RepaintBoundary(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(15),
+                                child: CustomImageWidget(
+                                  height: imageSize,
+                                  width: imageSize,
+                                  maxCacheSize: isVisible ? 1024 : 640,
+                                  image: productModel!.imagesFullUrl![index].path ?? '',
+                                ),
+                              ),
+                            );
+                          },
+                          onPageChanged: (index) =>
+                              productController.setImageSliderSelectedIndex(index),
+                        )
+                      : const SizedBox.shrink(),
+                ),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 10,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Spacer(),
+                      if (productModel!.imagesFullUrl != null &&
+                          productModel!.imagesFullUrl!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsetsGeometry.directional(
+                            end: Dimensions.paddingSizeDefault,
+                            bottom: Dimensions.paddingSizeDefault,
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: Dimensions.paddingSizeSmall,
+                              vertical: Dimensions.paddingSizeExtraSmall,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).cardColor.withValues(alpha: 0.85),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              '${selectedIndex + 1}/${productModel!.imagesFullUrl!.length}',
+                              style: textRegular.copyWith(fontSize: Dimensions.fontSizeSmall),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                Positioned(
+                  top: 16,
+                  right: 16,
+                  child: Column(
+                    children: [
+                      FavouriteButtonWidget(
+                        backgroundColor: isDarkTheme
+                            ? Theme.of(context).cardColor
+                            : Theme.of(context).primaryColor,
+                        productId: productModel?.id,
+                        fromProductDetails: true,
+                      ),
+                      if ((splashController.configModel?.activeTheme ?? 'default') != 'default') ...[
+                        const SizedBox(height: Dimensions.paddingSizeSmall),
+                        InkWell(
+                          onTap: () {
+                            if (Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
+                              Provider.of<CompareController>(context, listen: false)
+                                  .addCompareList(productModel!.id!);
+                            } else {
+                              showModalBottomSheet(
+                                backgroundColor: const Color(0x00FFFFFF),
+                                context: context,
+                                builder: (_) => const NotLoggedInBottomSheetWidget(),
+                              );
+                            }
+                          },
+                          child: Consumer<CompareController>(
+                            builder: (context, compare, _) {
+                              return Card(
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(50),
+                                ),
+                                child: Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: compare.compIds.contains(productModel!.id)
+                                        ? Theme.of(context).primaryColor
+                                        : Theme.of(context).cardColor,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
+                                    child: Image.asset(
+                                      Images.compare,
+                                      color: compare.compIds.contains(productModel!.id)
+                                          ? Theme.of(context).cardColor
+                                          : Theme.of(context).primaryColor,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: Dimensions.paddingSizeSmall),
+                      InkWell(
+                        onTap: () {
+                          if (productController.sharableLink != null) {
+                            SharePlus.instance.share(
+                              ShareParams(text: productController.sharableLink!),
+                            );
+                          }
+                        },
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).cardColor,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Theme.of(context)
+                                    .textTheme
+                                    .bodyLarge!
+                                    .color!
+                                    .withValues(alpha: 0.10),
+                                spreadRadius: 0,
+                                blurRadius: 15,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
+                            child: Image.asset(
+                              Images.share,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (productModel?.productType == 'digital' &&
+                    productModel?.previewFileFullUrl != null &&
+                    (productModel?.previewFileFullUrl?.path ?? '').isNotEmpty)
+                  Positioned(
+                    right: 10,
+                    bottom: 10,
+                    child: InkWell(
+                      onTap: () => _showPreview(
+                        productModel?.previewFileFullUrl?.path ?? '',
+                        productModel?.name ?? '',
+                        productModel?.previewFileFullUrl?.key ?? '',
+                        context,
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.all(Dimensions.paddingSizeExtraSmall),
+                        height: 35,
+                        width: 81,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).cardColor,
+                          borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall),
+                        ),
+                        child: Row(
+                          children: [
+                            Image.asset(Images.previewEyeIcon, width: 15),
+                            const SizedBox(width: Dimensions.paddingSizeExtraSmall),
+                            Text(
+                              getTranslated('preview', context) ?? '',
+                              style: titilliumRegular.copyWith(
+                                fontSize: Dimensions.fontSizeDefault,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                if (widget.fromFlashDeals)
+                  Positioned(
+                    top: 16,
+                    left: 16,
+                    child: Image.asset(Images.flashDeal, scale: 2),
+                  ),
+                if ((productModel?.discount ?? 0) > 0 || productModel?.clearanceSale != null)
+                  DiscountTagDetailsWidget(
+                    productModel: productModel!,
+                    positionedTop: 0,
+                    topLeftBorderRadius: Dimensions.radiusDefault,
+                    bottomRightBorderRadius: Dimensions.radiusDefault,
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final splashController = Provider.of<SplashController>(context, listen: false);
     final bool isDarkTheme = Provider.of<ThemeController>(context).darkTheme;
-    final imageWidth = MediaQuery.sizeOf(context).width;
-    final imageHeight = imageWidth;
+    final imageSize = _heroImageSize(context);
+    final isLargeScreen = _useSideBySideLayout(context);
 
     if (productModel == null) {
       return const SizedBox.shrink();
@@ -499,6 +820,57 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
     return Consumer<ProductDetailsController>(
       builder: (context, productController, _) {
         final selectedIndex = productController.imageSliderIndex ?? 0;
+        final hasGallery = _hasGalleryItems();
+        final useSideBySide = isLargeScreen && hasGallery;
+
+        final heroCard = _buildHeroImageCard(
+          context: context,
+          productController: productController,
+          selectedIndex: selectedIndex,
+          imageSize: imageSize,
+          splashController: splashController,
+          isDarkTheme: isDarkTheme,
+        );
+
+        if (useSideBySide) {
+          return Padding(
+            padding: const EdgeInsets.only(
+              left: Dimensions.homePagePadding,
+              right: Dimensions.homePagePadding,
+              top: Dimensions.homePagePadding,
+              bottom: Dimensions.paddingSizeEight,
+            ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                const gap = Dimensions.paddingSizeSmall;
+                final widths = _sidePanelWidths(constraints.maxWidth);
+                final heroWidth = widths.heroWidth;
+                final galleryWidth = widths.galleryWidth;
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeroImageCard(
+                      context: context,
+                      productController: productController,
+                      selectedIndex: selectedIndex,
+                      imageSize: heroWidth,
+                      splashController: splashController,
+                      isDarkTheme: isDarkTheme,
+                    ),
+                    const SizedBox(width: gap),
+                    _buildColorGallery(
+                      context,
+                      productController,
+                      panelWidth: galleryWidth,
+                      panelHeight: heroWidth,
+                      sidePanel: true,
+                    ),
+                  ],
+                );
+              },
+            ),
+          );
+        }
 
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -511,257 +883,9 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
                 right: Dimensions.homePagePadding,
                 bottom: Dimensions.paddingSizeEight,
               ),
-              child: ClipRRect(
-                        borderRadius: BorderRadius.circular(Dimensions.paddingSizeSmall),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).cardColor,
-                            border: Border.all(
-                              color: isDarkTheme
-                                  ? Theme.of(context).hintColor.withValues(alpha: .25)
-                                  : Theme.of(context).primaryColor.withValues(alpha: .25),
-                            ),
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: InkWell(
-                            onTap: () {
-                              final selected = productController.imageSliderIndex ?? 0;
-                              final allImages = ProductImageHelper.getAllGalleryImages(productModel!);
-                              final group = ProductImageHelper.findGroupForHeroIndex(
-                                productModel!,
-                                selected,
-                              );
-                              var initialIndex = selected;
-                              if (group != null) {
-                                final matchedIndex = allImages.indexWhere(
-                                  (image) => image.path == productModel!.imagesFullUrl![selected].path,
-                                );
-                                if (matchedIndex >= 0) initialIndex = matchedIndex;
-                              }
-                              _openImageGallery(
-                                context,
-                                images: allImages,
-                                initialIndex: initialIndex,
-                              );
-                            },
-                            child: Stack(
-                            children: [
-                              SizedBox(
-                                height: imageHeight,
-                                child: productModel!.imagesFullUrl != null &&
-                                        productModel!.imagesFullUrl!.isNotEmpty
-                                    ? PageView.builder(
-                                        controller: _controller,
-                                        itemCount: productModel!.imagesFullUrl!.length,
-                                        allowImplicitScrolling: false,
-                                        itemBuilder: (context, index) {
-                                          final isVisible = selectedIndex == index;
-                                          return RepaintBoundary(
-                                            child: ClipRRect(
-                                              borderRadius: BorderRadius.circular(15),
-                                              child: CustomImageWidget(
-                                                height: imageHeight,
-                                                width: imageWidth,
-                                                maxCacheSize: isVisible ? 1024 : 640,
-                                                image: productModel!.imagesFullUrl![index].path ?? '',
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                        onPageChanged: (index) =>
-                                            productController.setImageSliderSelectedIndex(index),
-                                      )
-                                    : const SizedBox.shrink(),
-                              ),
-                              Positioned(
-                                left: 0,
-                                right: 0,
-                                bottom: 10,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Spacer(),
-                                    if (productModel!.imagesFullUrl != null &&
-                                        productModel!.imagesFullUrl!.isNotEmpty)
-                                      Padding(
-                                        padding: const EdgeInsetsGeometry.directional(
-                                          end: Dimensions.paddingSizeDefault,
-                                          bottom: Dimensions.paddingSizeDefault,
-                                        ),
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: Dimensions.paddingSizeSmall,
-                                            vertical: Dimensions.paddingSizeExtraSmall,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Theme.of(context).cardColor.withValues(alpha: 0.85),
-                                            borderRadius: BorderRadius.circular(20),
-                                          ),
-                                          child: Text(
-                                            '${selectedIndex + 1}/${productModel!.imagesFullUrl!.length}',
-                                            style: textRegular.copyWith(fontSize: Dimensions.fontSizeSmall),
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                              Positioned(
-                                top: 16,
-                                right: 16,
-                                child: Column(
-                                  children: [
-                                    FavouriteButtonWidget(
-                                      backgroundColor: isDarkTheme
-                                          ? Theme.of(context).cardColor
-                                          : Theme.of(context).primaryColor,
-                                      productId: productModel?.id,
-                                      fromProductDetails: true,
-                                    ),
-                                    if ((splashController.configModel?.activeTheme ?? 'default') != 'default') ...[
-                                      const SizedBox(height: Dimensions.paddingSizeSmall),
-                                      InkWell(
-                                        onTap: () {
-                                          if (Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
-                                            Provider.of<CompareController>(context, listen: false)
-                                                .addCompareList(productModel!.id!);
-                                          } else {
-                                            showModalBottomSheet(
-                                              backgroundColor: const Color(0x00FFFFFF),
-                                              context: context,
-                                              builder: (_) => const NotLoggedInBottomSheetWidget(),
-                                            );
-                                          }
-                                        },
-                                        child: Consumer<CompareController>(
-                                          builder: (context, compare, _) {
-                                            return Card(
-                                              elevation: 2,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(50),
-                                              ),
-                                              child: Container(
-                                                width: 40,
-                                                height: 40,
-                                                decoration: BoxDecoration(
-                                                  color: compare.compIds.contains(productModel!.id)
-                                                      ? Theme.of(context).primaryColor
-                                                      : Theme.of(context).cardColor,
-                                                  shape: BoxShape.circle,
-                                                ),
-                                                child: Padding(
-                                                  padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
-                                                  child: Image.asset(
-                                                    Images.compare,
-                                                    color: compare.compIds.contains(productModel!.id)
-                                                        ? Theme.of(context).cardColor
-                                                        : Theme.of(context).primaryColor,
-                                                  ),
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    ],
-                                    const SizedBox(height: Dimensions.paddingSizeSmall),
-                                    InkWell(
-                                      onTap: () {
-                                        if (productController.sharableLink != null) {
-                                          SharePlus.instance.share(
-                                            ShareParams(text: productController.sharableLink!),
-                                          );
-                                        }
-                                      },
-                                      child: Container(
-                                        width: 40,
-                                        height: 40,
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(context).cardColor,
-                                          shape: BoxShape.circle,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Theme.of(context)
-                                                  .textTheme
-                                                  .bodyLarge!
-                                                  .color!
-                                                  .withValues(alpha: 0.10),
-                                              spreadRadius: 0,
-                                              blurRadius: 15,
-                                              offset: const Offset(0, 3),
-                                            ),
-                                          ],
-                                        ),
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
-                                          child: Image.asset(
-                                            Images.share,
-                                            color: Theme.of(context).primaryColor,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (productModel?.productType == 'digital' &&
-                                  productModel?.previewFileFullUrl != null &&
-                                  (productModel?.previewFileFullUrl?.path ?? '').isNotEmpty)
-                                Positioned(
-                                  right: 10,
-                                  bottom: 10,
-                                  child: InkWell(
-                                    onTap: () => _showPreview(
-                                      productModel?.previewFileFullUrl?.path ?? '',
-                                      productModel?.name ?? '',
-                                      productModel?.previewFileFullUrl?.key ?? '',
-                                      context,
-                                    ),
-                                    child: Container(
-                                      padding: const EdgeInsets.all(Dimensions.paddingSizeExtraSmall),
-                                      height: 35,
-                                      width: 81,
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(context).cardColor,
-                                        borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Image.asset(Images.previewEyeIcon, width: 15),
-                                          const SizedBox(width: Dimensions.paddingSizeExtraSmall),
-                                          Text(
-                                            getTranslated('preview', context) ?? '',
-                                            style: titilliumRegular.copyWith(
-                                              fontSize: Dimensions.fontSizeDefault,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              if (widget.fromFlashDeals)
-                                Positioned(
-                                  top: 16,
-                                  left: 16,
-                                  child: Image.asset(Images.flashDeal, scale: 2),
-                                ),
-                              if ((productModel?.discount ?? 0) > 0 || productModel?.clearanceSale != null)
-                                DiscountTagDetailsWidget(
-                                  productModel: productModel!,
-                                  positionedTop: 0,
-                                  topLeftBorderRadius: Dimensions.radiusDefault,
-                                  bottomRightBorderRadius: Dimensions.radiusDefault,
-                                ),
-                            ],
-                          ),
-                          ),
-                        ),
-                      ),
+              child: heroCard,
             ),
-            if (ProductImageHelper.getColorGalleryItems(productModel!).isNotEmpty ||
-                ProductImageHelper.getAdditionalImageItems(productModel!).isNotEmpty)
-              _buildColorGallery(context, productController),
+            if (hasGallery) _buildColorGallery(context, productController),
           ],
         );
       },

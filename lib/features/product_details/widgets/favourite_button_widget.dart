@@ -63,8 +63,8 @@ class FavouriteButtonWidget extends StatelessWidget {
                 height: (fromProductDetails ?? false) ? 40 : null,
                 width: (fromProductDetails ?? false) ? 40 : null,
                 decoration: BoxDecoration(
-                  color: isDarkMode ? Colors.transparent : Theme.of(context).cardColor,
-                  border: Border.all(color: isDarkMode ? Theme.of(context).primaryColor : Colors.transparent, width: 1),
+                  color: Theme.of(context).cardColor,
+                  border: Border.all(color:  Colors.transparent, width: 1),
                   shape: BoxShape.circle,
                   boxShadow: [BoxShadow(
                     color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: 0.10),
