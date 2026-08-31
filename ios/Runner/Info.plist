@@ -69,6 +69,12 @@
 	<string>يحتاج هذا التطبيق للوصول إلى الموقع لإدارة عنوان التوصيل عند إضافة عنوان جديد.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app need photo gallery access for taking photo for user profile picture.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>This app uses the calendar to let you select dates when filtering wallet transactions and loyalty points.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>This app uses the calendar to let you select dates when filtering wallet transactions and loyalty points.</string>
+	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+	<string>This app uses the calendar to let you select dates when filtering wallet transactions and loyalty points.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
