@@ -242,6 +242,32 @@ class ProductController extends ChangeNotifier {
 
   ProductModel? get brandOrCategoryProductList => _brandOrCategoryProductList;
 
+  static List<Product> mergeUniqueProducts(List<Product>? currentProducts, List<Product>? newProducts) {
+    final mergedList = <Product>[];
+    final seen = <String>{};
+
+    for (final product in [...?currentProducts, ...?newProducts]) {
+      final key = [
+        product.id?.toString() ?? '',
+        product.slug ?? '',
+        product.name ?? '',
+        product.thumbnail ?? '',
+        product.unitPrice?.toString() ?? '',
+        product.createdAt ?? '',
+        product.updatedAt ?? '',
+      ].join('-');
+
+      if (key.isNotEmpty && seen.add(key)) {
+        mergedList.add(product);
+      } else if (key.isEmpty && !seen.contains('empty-${mergedList.length}')) {
+        seen.add('empty-${mergedList.length}');
+        mergedList.add(product);
+      }
+    }
+
+    return mergedList;
+  }
+
   Future<void> initBrandOrCategoryProductList({required bool isBrand, required int? id, String searchProduct = '', required int offset, bool isUpdate = true}) async {
     if(offset == 1) {
       _brandOrCategoryProductList = null;
@@ -253,14 +279,28 @@ class ProductController extends ChangeNotifier {
     ApiResponseModel apiResponse = await productServiceInterface!.getBrandOrCategoryProductList(isBrand: isBrand, id: id!, searchProduct: searchProduct, offset: offset);
 
     if (apiResponse.response?.statusCode == 200) {
+      final parsedModel = ProductModel.fromJson(apiResponse.response?.data);
+
       if(offset == 1){
-        _brandOrCategoryProductList = ProductModel.fromJson(apiResponse.response?.data);
-
+        _brandOrCategoryProductList = parsedModel;
       } else {
-        _brandOrCategoryProductList?.products?.addAll(ProductModel.fromJson(apiResponse.response?.data).products ?? []);
-        _brandOrCategoryProductList?.offset = ProductModel.fromJson(apiResponse.response?.data).offset;
-        _brandOrCategoryProductList?.totalSize = ProductModel.fromJson(apiResponse.response?.data).totalSize;
+        final mergedProducts = mergeUniqueProducts(_brandOrCategoryProductList?.products, parsedModel.products);
+        final existingProducts = _brandOrCategoryProductList?.products;
 
+        if (existingProducts == null) {
+          _brandOrCategoryProductList = ProductModel(
+            totalSize: parsedModel.totalSize,
+            limit: parsedModel.limit,
+            offset: parsedModel.offset,
+            products: mergedProducts,
+          );
+        } else {
+          existingProducts.clear();
+          existingProducts.addAll(mergedProducts);
+          _brandOrCategoryProductList?.offset = parsedModel.offset;
+          _brandOrCategoryProductList?.totalSize = parsedModel.totalSize;
+          _brandOrCategoryProductList?.limit = parsedModel.limit;
+        }
       }
     } else {
       ApiChecker.checkApi( apiResponse);

@@ -290,7 +290,13 @@ class _BrandAndCategoryProductScreenState extends State<BrandAndCategoryProductS
               child: PaginatedListView(
                 scrollController: _scrollController,
                 onPaginate: (offset) async {
-                  await productController.initBrandOrCategoryProductList(isBrand: widget.isBrand, id: widget.id, offset: offset ?? 1, searchProduct: searchTextEditingController.text);
+                  final currentCategoryId = productController.selectedCategoryId ?? widget.id;
+                  await productController.initBrandOrCategoryProductList(
+                    isBrand: widget.isBrand,
+                    id: currentCategoryId,
+                    offset: offset ?? 1,
+                    searchProduct: searchTextEditingController.text,
+                  );
                 },
                 limit: productController.brandOrCategoryProductList?.limit,
                 totalSize: productController.brandOrCategoryProductList?.totalSize,
