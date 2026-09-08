@@ -204,10 +204,8 @@ class _HomePageState extends State<HomePage> {
                 pinned: true,
                 floating: false,
                 elevation: 0,
-                expandedHeight:MediaQuery.of(context).size.height<850?170: 130,
-
-                // 150,
-                collapsedHeight: 65,
+                expandedHeight: MediaQuery.of(context).size.height < 850 ? 170 : 130,
+                collapsedHeight: searchBarHeight + searchBottomPadding + 8,
                 backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                 automaticallyImplyLeading: false,
                 flexibleSpace: LayoutBuilder(
@@ -215,7 +213,8 @@ class _HomePageState extends State<HomePage> {
                     final double top = constraints.biggest.height;
                     final bool collapsed = top <= kToolbarHeight + 100;
 
-                    return Stack(
+                    return ClipRect(
+                      child: Stack(
                       fit: StackFit.expand,
                       children: [
                         /// Background
@@ -239,7 +238,7 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                 ),
                               )
-                            : SizedBox(),
+                            : const SizedBox.shrink(),
 
                         !collapsed
                             ? PositionedDirectional(
@@ -258,76 +257,73 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                 ),
                               )
-                            : SizedBox(),
+                            : const SizedBox.shrink(),
 
-                        Column(
-                          children: [
-                            AnimatedOpacity(
+                        if (!collapsed)
+                          Positioned(
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            child: AnimatedOpacity(
                               duration: const Duration(milliseconds: 200),
-                              opacity: collapsed ? 0 : 1,
+                              opacity: 1,
                               child: Padding(
                                 padding: const EdgeInsets.only(
                                   top: 55,
                                   left: 16,
                                   right: 16,
                                 ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Directionality(
-                                          textDirection: TextDirection.ltr,
-                                          child: Row(
-                                            children: [
-                                              Image.asset(
-                                                  Images.logoWithNameImage,
-                                                  height: 48,
-                                                  color:
-                                                      Provider.of<ThemeController>(
-                                                                  context)
-                                                              .darkTheme
-                                                          ? Colors.white
-                                                          : null),
-                                            ],
-                                          ),
-                                        ),
-                                        Consumer<ProfileController>(
-                                          builder: (_, pro, __) {
-                                            final String name =
-                                                pro.userInfoModel?.name ??
-                                                    getTranslated(
-                                                        "to_mm8", context)!;
-
-                                            final String key = isArabic
-                                                ? "header_title2"
-                                                : "header_title";
-
-                                            return Text(
-                                              getTranslated(key, context)!
-                                                  .replaceFirst("{name}", name),
-                                              style: TextStyle(
-                                                fontSize: 17,
-                                                color: Theme.of(context)
-                                                    .textTheme
-                                                    .bodyLarge!
-                                                    .color,
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ],
+                                    Directionality(
+                                      textDirection: TextDirection.ltr,
+                                      child: Image.asset(
+                                        Images.logoWithNameImage,
+                                        height: 48,
+                                        color: Provider.of<ThemeController>(context)
+                                                .darkTheme
+                                            ? Colors.white
+                                            : null,
+                                      ),
                                     ),
-                                    const SizedBox(height: 18),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Consumer<ProfileController>(
+                                        builder: (_, pro, __) {
+                                          final String name =
+                                              pro.userInfoModel?.name ??
+                                                  getTranslated(
+                                                      "to_mm8", context)!;
+
+                                          final String key = isArabic
+                                              ? "header_title2"
+                                              : "header_title";
+
+                                          return Text(
+                                            getTranslated(key, context)!
+                                                .replaceFirst("{name}", name),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            textAlign: TextAlign.end,
+                                            style: TextStyle(
+                                              fontSize: 17,
+                                              color: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyLarge!
+                                                  .color,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
                         Align(
                           alignment:Provider.of<LocalizationController>(context).isLtr?Alignment.bottomLeft:Alignment.bottomRight,
                           child: Padding(
@@ -380,6 +376,7 @@ class _HomePageState extends State<HomePage> {
 
                         /// Search
                       ],
+                    ),
                     );
                   },
                 ),

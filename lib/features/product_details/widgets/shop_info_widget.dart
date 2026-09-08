@@ -211,62 +211,62 @@ class _ShopInfoWidgetState extends State<ShopInfoWidget> {
               ),
             ):const SizedBox(),
 
-            Padding(padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault),
-              child: InkWell(onTap: (){
-                log("==id11=>${seller.sellerInfoModelProductDetails?.seller?.toJson()}");
-                if(seller.sellerInfoModelProductDetails?.seller != null){
-                  log("==id00=>${seller.sellerInfoModelProductDetails?.seller?.toJson()}");
-
-                  RouterHelper.getTopSellerRoute(
-                    action: RouteAction.push,
-                    slug: seller.sellerInfoModelProductDetails?.seller?.shop?.slug,
-                    sellerId:  seller.sellerInfoModelProductDetails?.seller?.id,
-                    temporaryClose: seller.sellerInfoModelProductDetails?.seller?.shop?.temporaryClose??false,
-                    vacationStatus: seller.sellerInfoModelProductDetails?.seller?.shop?.vacationStatus??false,
-                    vacationEndDate: seller.sellerInfoModelProductDetails?.seller?.shop?.vacationEndDate,
-                    vacationStartDate: seller.sellerInfoModelProductDetails?.seller?.shop?.vacationStartDate,
-                    vacationDurationType: seller.sellerInfoModelProductDetails?.seller?.shop?.vacationDurationType,
-                    name: seller.sellerInfoModelProductDetails?.seller?.shop?.name,
-                    banner: seller.sellerInfoModelProductDetails?.seller?.shop?.bannerFullUrl?.path,
-                    image: seller.sellerInfoModelProductDetails?.seller?.shop?.imageFullUrl?.path
-                  );
-
-
-                } else {
-                  log("==id22=>${seller.sellerInfoModelProductDetails?.seller?.toJson()}");
-                  RouterHelper.getTopSellerRoute(
-                    action: RouteAction.push,
-                    slug: seller.sellerInfoModelProductDetails?.seller?.shop?.slug,
-                    sellerId: 0,
-                    temporaryClose: Provider.of<SplashController>(context, listen: false).configModel?.inhouseTemporaryClose?.status ?? false,
-                    vacationStatus: Provider.of<SplashController>(context, listen: false).configModel?.inhouseVacationAdd?.status,
-                    vacationEndDate: Provider.of<SplashController>(context, listen: false).configModel?.inhouseVacationAdd?.vacationEndDate,
-                    vacationStartDate: Provider.of<SplashController>(context, listen: false).configModel?.inhouseVacationAdd?.vacationStartDate,
-                    vacationDurationType: Provider.of<SplashController>(context, listen: false).configModel?.inhouseVacationAdd?.vacationDurationType,
-                    name: Provider.of<SplashController>(context, listen: false).configModel?.inHouseShop?.name,
-                    banner: Provider.of<SplashController>(context, listen: false).configModel?.inHouseShop?.bannerFullUrl?.path,
-                    image: Provider.of<SplashController>(context, listen: false).configModel?.inHouseShop?.imageFullUrl?.path
-                  );
-
-
-                }
-              },
-                child: Container(
-                  width: MediaQuery.of(context).size.width,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor,
-                  borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall)),
-                  child: Center(child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      Padding(padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeExtraSmall),
-                        child: SizedBox(width: 20, child: Image.asset(Images.storeIcon, color: Theme.of(context).cardColor))),
-                      Text(getTranslated('visit_store', context)!,
-                        style: titilliumBold.copyWith(color: Theme.of(context).cardColor, fontSize: Dimensions.fontSizeLarge)),
-                    ],
-                  )),
-                ),
-              ),
-            )
+            // Padding(padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault),
+            //   child: InkWell(onTap: (){
+            //     log("==id11=>${seller.sellerInfoModelProductDetails?.seller?.toJson()}");
+            //     if(seller.sellerInfoModelProductDetails?.seller != null){
+            //       log("==id00=>${seller.sellerInfoModelProductDetails?.seller?.toJson()}");
+            //
+            //       RouterHelper.getTopSellerRoute(
+            //         action: RouteAction.push,
+            //         slug: seller.sellerInfoModelProductDetails?.seller?.shop?.slug,
+            //         sellerId:  seller.sellerInfoModelProductDetails?.seller?.id,
+            //         temporaryClose: seller.sellerInfoModelProductDetails?.seller?.shop?.temporaryClose??false,
+            //         vacationStatus: seller.sellerInfoModelProductDetails?.seller?.shop?.vacationStatus??false,
+            //         vacationEndDate: seller.sellerInfoModelProductDetails?.seller?.shop?.vacationEndDate,
+            //         vacationStartDate: seller.sellerInfoModelProductDetails?.seller?.shop?.vacationStartDate,
+            //         vacationDurationType: seller.sellerInfoModelProductDetails?.seller?.shop?.vacationDurationType,
+            //         name: seller.sellerInfoModelProductDetails?.seller?.shop?.name,
+            //         banner: seller.sellerInfoModelProductDetails?.seller?.shop?.bannerFullUrl?.path,
+            //         image: seller.sellerInfoModelProductDetails?.seller?.shop?.imageFullUrl?.path
+            //       );
+            //
+            //
+            //     } else {
+            //       log("==id22=>${seller.sellerInfoModelProductDetails?.seller?.toJson()}");
+            //       RouterHelper.getTopSellerRoute(
+            //         action: RouteAction.push,
+            //         slug: seller.sellerInfoModelProductDetails?.seller?.shop?.slug,
+            //         sellerId: 0,
+            //         temporaryClose: Provider.of<SplashController>(context, listen: false).configModel?.inhouseTemporaryClose?.status ?? false,
+            //         vacationStatus: Provider.of<SplashController>(context, listen: false).configModel?.inhouseVacationAdd?.status,
+            //         vacationEndDate: Provider.of<SplashController>(context, listen: false).configModel?.inhouseVacationAdd?.vacationEndDate,
+            //         vacationStartDate: Provider.of<SplashController>(context, listen: false).configModel?.inhouseVacationAdd?.vacationStartDate,
+            //         vacationDurationType: Provider.of<SplashController>(context, listen: false).configModel?.inhouseVacationAdd?.vacationDurationType,
+            //         name: Provider.of<SplashController>(context, listen: false).configModel?.inHouseShop?.name,
+            //         banner: Provider.of<SplashController>(context, listen: false).configModel?.inHouseShop?.bannerFullUrl?.path,
+            //         image: Provider.of<SplashController>(context, listen: false).configModel?.inHouseShop?.imageFullUrl?.path
+            //       );
+            //
+            //
+            //     }
+            //   },
+            //     child: Container(
+            //       width: MediaQuery.of(context).size.width,
+            //       height: 40,
+            //       decoration: BoxDecoration(
+            //         color: Theme.of(context).primaryColor,
+            //       borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall)),
+            //       child: Center(child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            //           Padding(padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeExtraSmall),
+            //             child: SizedBox(width: 20, child: Image.asset(Images.storeIcon, color: Theme.of(context).cardColor))),
+            //           Text(getTranslated('visit_store', context)!,
+            //             style: titilliumBold.copyWith(color: Theme.of(context).cardColor, fontSize: Dimensions.fontSizeLarge)),
+            //         ],
+            //       )),
+            //     ),
+            //   ),
+            // )
             ],
           ),
         ):const SizedBox();
