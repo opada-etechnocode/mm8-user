@@ -122,6 +122,43 @@ class _ChatScreenState extends State<ChatScreen> {
       body: Stack(
         children: [
           Consumer<ChatController>(builder: (context, chatController, child) => Column(children: [
+            if (!widget.isDelivery)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Dimensions.paddingSizeDefault,
+                  vertical: Dimensions.paddingSizeSmall,
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.08),
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Theme.of(context).primaryColor.withValues(alpha: 0.12),
+                    ),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.sensors,
+                      size: 18,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                    const SizedBox(width: Dimensions.paddingSizeSmall),
+                    Expanded(
+                      child: Text(
+                        getTranslated('live_chat_with_staff_note', context)!,
+                        style: textMedium.copyWith(
+                          fontSize: Dimensions.fontSizeSmall,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
+                          height: 1.35,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
             chatController.messageModel != null? (chatController.messageModel!.message != null && chatController.messageModel!.message!.isNotEmpty)?
             Expanded(child:  SingleChildScrollView(
               controller: scrollController,

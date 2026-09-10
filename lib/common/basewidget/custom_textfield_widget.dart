@@ -147,171 +147,174 @@ class _CustomTextFieldWidgetState extends State<CustomTextFieldWidget> {
                   TextSpan(text: " *", style: Theme.of(context).textTheme.titleMedium!.copyWith(
                         fontWeight: FontWeight.w500, fontSize: 16, color: Colors.red))])),
         if (widget.titleText != null) const SizedBox(height: 8),
-        TextFormField(
-          maxLines: widget.maxLines,
-          controller: widget.controller,
-          focusNode: widget.focusNode,
-          validator: widget.validator,
-          textAlign: widget.textAlign,
-          readOnly: widget.readOnly,
-          onTap: widget.onTap,
-          autovalidateMode: AutovalidateMode.onUserInteraction,
-          style: textRegular.copyWith(fontSize: Dimensions.fontSizeLarge),
-          textInputAction: widget.inputAction,
-          keyboardType:widget.inputType,
-          cursorColor: Theme.of(context).primaryColor,
-          textCapitalization: widget.capitalization,
-          enabled: widget.isEnabled,
-          autofocus: false,
-          autofillHints: widget.inputType == TextInputType.name ? [AutofillHints.name]
-              : widget.inputType == TextInputType.emailAddress ? [AutofillHints.email]
-              : widget.inputType == TextInputType.phone ? [AutofillHints.telephoneNumber]
-              : widget.inputType == TextInputType.streetAddress ? [AutofillHints.fullStreetAddress]
-              : widget.inputType == TextInputType.url ? [AutofillHints.url]
-              : widget.inputType == TextInputType.visiblePassword ? [AutofillHints.password] : null,
-          obscureText: widget.isPassword ? _obscureText : false,
-          inputFormatters: widget.inputType == TextInputType.phone ? <TextInputFormatter>[FilteringTextInputFormatter.allow(RegExp(r'[0-9+]'))]
-              : widget.isAmount ? [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))] : widget.inputFormatters,
-          decoration: InputDecoration(
-            isDense: widget.isDense,
-            contentPadding: widget.padding ?? EdgeInsets.all(Dimensions.fontSizeDefault),
-            alignLabelWithHint: false,
-            floatingLabelBehavior: FloatingLabelBehavior.auto,
-            border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: widget.showBorder ? widget.borderColor: Colors.transparent,
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: TextFormField(
+            maxLines: widget.maxLines,
+            controller: widget.controller,
+            focusNode: widget.focusNode,
+            validator: widget.validator,
+            textAlign: widget.textAlign,
+            readOnly: widget.readOnly,
+            onTap: widget.onTap,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            style: textRegular.copyWith(fontSize: Dimensions.fontSizeLarge),
+            textInputAction: widget.inputAction,
+            keyboardType:widget.inputType,
+            cursorColor: Theme.of(context).primaryColor,
+            textCapitalization: widget.capitalization,
+            enabled: widget.isEnabled,
+            autofocus: false,
+            autofillHints: widget.inputType == TextInputType.name ? [AutofillHints.name]
+                : widget.inputType == TextInputType.emailAddress ? [AutofillHints.email]
+                : widget.inputType == TextInputType.phone ? [AutofillHints.telephoneNumber]
+                : widget.inputType == TextInputType.streetAddress ? [AutofillHints.fullStreetAddress]
+                : widget.inputType == TextInputType.url ? [AutofillHints.url]
+                : widget.inputType == TextInputType.visiblePassword ? [AutofillHints.password] : null,
+            obscureText: widget.isPassword ? _obscureText : false,
+            inputFormatters: widget.inputType == TextInputType.phone ? <TextInputFormatter>[FilteringTextInputFormatter.allow(RegExp(r'[0-9+]'))]
+                : widget.isAmount ? [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))] : widget.inputFormatters,
+            decoration: InputDecoration(
+              isDense: widget.isDense,
+              contentPadding: widget.padding ?? EdgeInsets.all(Dimensions.fontSizeDefault),
+              alignLabelWithHint: false,
+              floatingLabelBehavior: FloatingLabelBehavior.auto,
+              border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: widget.showBorder ? widget.borderColor: Colors.transparent,
+                    width: widget.showBorder ? 0 : .75,)),
+
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: widget.showBorder ? Theme.of(context).primaryColor : Colors.transparent,
+                    width: widget.showBorder ? 0 : .75,)),
+
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: widget.showBorder ? widget.borderColor: Colors.transparent,
                   width: widget.showBorder ? 0 : .75,)),
 
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: widget.showBorder ? Theme.of(context).primaryColor : Colors.transparent,
-                  width: widget.showBorder ? 0 : .75,)),
+              fillColor: Theme.of(context).cardColor,
+              floatingLabelStyle: widget.showLabelText ? textRegular.copyWith(fontSize: Dimensions.fontSizeSmall,
+                  color: Theme.of(context).hintColor.withValues(alpha:.75)) : null,
+              filled: widget.filled,
+             // labelText : widget.showLabelText? widget.labelText?? widget.hintText : null,
+              labelStyle : widget.showLabelText ? textRegular.copyWith(
+                  fontSize: Dimensions.fontSizeDefault,
+                  color: Theme.of(context).hintColor) : null,
 
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: widget.showBorder ? widget.borderColor: Colors.transparent,
-                width: widget.showBorder ? 0 : .75,)),
+              label: Text.rich(TextSpan(children: [
+                TextSpan(text: widget.labelText??'', style: widget.labelTextStyle ?? textRegular.copyWith(fontSize: Dimensions.fontSizeLarge, color: Theme.of(context).textTheme.bodyLarge!.color)),
+                if(widget.required && widget.labelText != null)
+                TextSpan(text : ' *', style: textRegular.copyWith(color: Theme.of(context).colorScheme.error, fontSize: Dimensions.fontSizeLarge))
+              ])),
+              hintText : widget.hintText,
+              hintStyle: widget.showLabelText ? textRegular.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).hintColor) : textRegular.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).hintColor),
+              prefixIcon: widget.prefixIcon != null ? InkWell(
+                onTap: widget.prefixOnTap,
+                child: Container(
+                  width: widget.prefixHeight,
+                  padding: const EdgeInsets.all(1),
+                  decoration: BoxDecoration(borderRadius: BorderRadius.only(topLeft: Radius.circular(widget.borderRadius),
+                      bottomLeft: Radius.circular(widget.borderRadius))),
+                  child: Center(
+                    child: CustomAssetImageWidget(height: 20, width: 20, widget.prefixIcon!, color: widget.prefixColor ?? Theme.of(context).primaryColor),
+                  )),
+              ) :
+              widget.showCodePicker ? Padding(
+                padding:  EdgeInsets.only(left: widget.isShowBorder == true ?  10 : 0),
+                child: SizedBox(
+                    width: ResponsiveHelper.isTab(context) ? 120 : 92,
+                    child: Row(children: [
 
-            fillColor: Theme.of(context).cardColor,
-            floatingLabelStyle: widget.showLabelText ? textRegular.copyWith(fontSize: Dimensions.fontSizeSmall,
-                color: Theme.of(context).hintColor.withValues(alpha:.75)) : null,
-            filled: widget.filled,
-           // labelText : widget.showLabelText? widget.labelText?? widget.hintText : null,
-            labelStyle : widget.showLabelText ? textRegular.copyWith(
-                fontSize: Dimensions.fontSizeDefault,
-                color: Theme.of(context).hintColor) : null,
-
-            label: Text.rich(TextSpan(children: [
-              TextSpan(text: widget.labelText??'', style: widget.labelTextStyle ?? textRegular.copyWith(fontSize: Dimensions.fontSizeLarge, color: Theme.of(context).textTheme.bodyLarge!.color)),
-              if(widget.required && widget.labelText != null)
-              TextSpan(text : ' *', style: textRegular.copyWith(color: Theme.of(context).colorScheme.error, fontSize: Dimensions.fontSizeLarge))
-            ])),
-            hintText : widget.hintText,
-            hintStyle: widget.showLabelText ? textRegular.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).hintColor) : textRegular.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).hintColor),
-            prefixIcon: widget.prefixIcon != null ? InkWell(
-              onTap: widget.prefixOnTap,
-              child: Container(
-                width: widget.prefixHeight,
-                padding: const EdgeInsets.all(1),
-                decoration: BoxDecoration(borderRadius: BorderRadius.only(topLeft: Radius.circular(widget.borderRadius),
-                    bottomLeft: Radius.circular(widget.borderRadius))),
-                child: Center(
-                  child: CustomAssetImageWidget(height: 20, width: 20, widget.prefixIcon!, color: widget.prefixColor ?? Theme.of(context).primaryColor),
-                )),
-            ) :
-            widget.showCodePicker ? Padding(
-              padding:  EdgeInsets.only(left: widget.isShowBorder == true ?  10 : 0),
-              child: SizedBox(
-                  width: ResponsiveHelper.isTab(context) ? 120 : 92,
-                  child: Row(children: [
-
-                    CodePickerWidget(
-                      padding: const EdgeInsetsGeometry.directional(start: Dimensions.paddingSizeSmall,end: 5),
-                      flagWidth: Dimensions.paddingSizeExtraLarge,
-                      onChanged: widget.onCountryChanged,
-                      initialSelection: widget.countryDialCode,
-                      favorite: CountryCodeHelper.gccCountryCodes,
-                      showDropDownButton: true,
-                      showCountryOnly: false,
-                      showOnlyCountryWhenClosed: false,
-                      showFlagDialog: true,
-                      hideMainText: false,
-                      showFlagMain: false,
-                      hideSearch: false,
-                      dialogBackgroundColor: Theme.of(context).cardColor,
-                      barrierColor: Provider.of<ThemeController>(context).darkTheme ? Colors.black.withValues(alpha:0.4) : null,
-                      textStyle: textRegular.copyWith(
-                        fontSize: Dimensions.fontSizeLarge,
-                        color: Theme.of(context).textTheme.bodyLarge!.color,
+                      CodePickerWidget(
+                        padding: const EdgeInsetsGeometry.directional(start: Dimensions.paddingSizeSmall,end: 5),
+                        flagWidth: Dimensions.paddingSizeExtraLarge,
+                        onChanged: widget.onCountryChanged,
+                        initialSelection: widget.countryDialCode,
+                        favorite: CountryCodeHelper.gccCountryCodes,
+                        showDropDownButton: true,
+                        showCountryOnly: false,
+                        showOnlyCountryWhenClosed: false,
+                        showFlagDialog: true,
+                        hideMainText: false,
+                        showFlagMain: false,
+                        hideSearch: false,
+                        dialogBackgroundColor: Theme.of(context).cardColor,
+                        barrierColor: Provider.of<ThemeController>(context).darkTheme ? Colors.black.withValues(alpha:0.4) : null,
+                        textStyle: textRegular.copyWith(
+                          fontSize: Dimensions.fontSizeLarge,
+                          color: Theme.of(context).textTheme.bodyLarge!.color,
+                        ),
+                        isCallPrimary: true,
                       ),
-                      isCallPrimary: true,
-                    ),
 
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeExtraExtraSmall),
-                      child: Container(
-                        height: 20,
-                        width: 1.5,
-                        color: Theme.of(context).hintColor,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeExtraExtraSmall),
+                        child: Container(
+                          height: 20,
+                          width: 1.5,
+                          color: Theme.of(context).hintColor,
+                        ),
                       ),
-                    ),
-                  ]),
+                    ]),
+                ),
+              ) : null,
+
+              suffixIcon: widget.isToolTipSuffix ?
+              Tooltip(
+                key: widget.toolTipKey,
+                preferBelow: false,
+                margin: const EdgeInsets.only(top: Dimensions.paddingSizeSmall),
+                triggerMode: TooltipTriggerMode.manual,
+                message : widget.toolTipMessage ?? '',
+                child: IconButton(
+                 onPressed: widget.suffixOnTap,
+                  // widget.suffixOnTap,
+                  icon: CustomAssetImageWidget(
+                    widget.suffixIcon!,
+                    width: 25,
+                    height: 25,
+                  )),
+              ) :
+              (widget.suffixIcon2 == null && !widget.isPassword && widget.suffixIcon == null) ? null :
+              Row(mainAxisSize: MainAxisSize.min, children: [
+                widget.suffixIcon2 != null ? SizedBox(width: 30, height: 30, child: Padding(
+                  padding: const EdgeInsets.all(Dimensions.paddingSizeExtraSmall),
+                  child: InkWell(onTap: widget.suffix2OnTap, child: Image.asset(widget.suffixIcon2!),
+                  ))
+                ) : const SizedBox.shrink(),
+
+
+                  widget.isPassword ? IconButton(
+                    icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility, color: widget.suffixColor ?? Theme.of(context).primaryColor.withValues(alpha:.6),),
+                    onPressed: _toggle)
+
+                   : widget.suffixIcon != null ? Row(
+                     children: [
+                         const SizedBox(width: Dimensions.paddingSizeExtraSmall),
+                         SizedBox(width: 35, height: 35, child: Padding(
+                           padding: const EdgeInsets.only(
+                             top: Dimensions.paddingSizeExtraExtraSmall,
+                             left: Dimensions.paddingSizeExtraExtraSmall,
+                             bottom: Dimensions.paddingSizeExtraExtraSmall,
+                             right: Dimensions.paddingSizeSmall,
+                           ),
+                           child: InkWell(onTap: widget.suffixOnTap, child: Image.asset(widget.suffixIcon!, color: widget.suffixColor ?? Theme.of(context).hintColor)),
+                         )),
+
+                         const SizedBox(width: Dimensions.paddingSizeExtraSmall),
+                       ],
+                   ) : const SizedBox.shrink(),
+                ],
               ),
-            ) : null,
 
-            suffixIcon: widget.isToolTipSuffix ?
-            Tooltip(
-              key: widget.toolTipKey,
-              preferBelow: false,
-              margin: const EdgeInsets.only(top: Dimensions.paddingSizeSmall),
-              triggerMode: TooltipTriggerMode.manual,
-              message : widget.toolTipMessage ?? '',
-              child: IconButton(
-               onPressed: widget.suffixOnTap,
-                // widget.suffixOnTap,
-                icon: CustomAssetImageWidget(
-                  widget.suffixIcon!,
-                  width: 25,
-                  height: 25,
-                )),
-            ) :
-            (widget.suffixIcon2 == null && !widget.isPassword && widget.suffixIcon == null) ? null :
-            Row(mainAxisSize: MainAxisSize.min, children: [
-              widget.suffixIcon2 != null ? SizedBox(width: 30, height: 30, child: Padding(
-                padding: const EdgeInsets.all(Dimensions.paddingSizeExtraSmall),
-                child: InkWell(onTap: widget.suffix2OnTap, child: Image.asset(widget.suffixIcon2!),
-                ))
-              ) : const SizedBox.shrink(),
-
-
-                widget.isPassword ? IconButton(
-                  icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility, color: widget.suffixColor ?? Theme.of(context).primaryColor.withValues(alpha:.6),),
-                  onPressed: _toggle)
-
-                 : widget.suffixIcon != null ? Row(
-                   children: [
-                       const SizedBox(width: Dimensions.paddingSizeExtraSmall),
-                       SizedBox(width: 35, height: 35, child: Padding(
-                         padding: const EdgeInsets.only(
-                           top: Dimensions.paddingSizeExtraExtraSmall,
-                           left: Dimensions.paddingSizeExtraExtraSmall,
-                           bottom: Dimensions.paddingSizeExtraExtraSmall,
-                           right: Dimensions.paddingSizeSmall,
-                         ),
-                         child: InkWell(onTap: widget.suffixOnTap, child: Image.asset(widget.suffixIcon!, color: widget.suffixColor ?? Theme.of(context).hintColor)),
-                       )),
-
-                       const SizedBox(width: Dimensions.paddingSizeExtraSmall),
-                     ],
-                 ) : const SizedBox.shrink(),
-              ],
             ),
-
-          ),
-          onFieldSubmitted: (text) => widget.nextFocus != null ? FocusScope.of(context).requestFocus(widget.nextFocus) : null,
-          onChanged: (value) {
-            if (widget.onChanged != null) {
-              widget.onChanged!(value);
+            onFieldSubmitted: (text) => widget.nextFocus != null ? FocusScope.of(context).requestFocus(widget.nextFocus) : null,
+            onChanged: (value) {
+              if (widget.onChanged != null) {
+                widget.onChanged!(value);
+              }
             }
-          }
+          ),
         ),
       ],
     );

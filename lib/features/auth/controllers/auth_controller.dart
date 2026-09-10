@@ -61,6 +61,9 @@ class AuthController with ChangeNotifier {
   bool _sendToEmail = false;
   bool get sendToEmail => _sendToEmail;
 
+  String? _otpDestinationEmail;
+  String? get otpDestinationEmail => _otpDestinationEmail;
+
   String? _verificationMsg = '';
   String? get verificationMessage => _verificationMsg;
 
@@ -972,6 +975,7 @@ class AuthController with ChangeNotifier {
     }
 
     isSentToMail(false);
+    _otpDestinationEmail = null;
     notifyListeners();
 
     if(type == 'phone' && config.customerVerification?.firebase == 1 ) {
@@ -999,10 +1003,13 @@ class AuthController with ChangeNotifier {
     ResponseModel responseModel;
 
     if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
-      responseModel = ResponseModel(apiResponse.response!.data["message"], true);
-      isSentToMail(apiResponse.response!.data["type"] == 'sent_to_mail');
-
+      final dynamic data = apiResponse.response!.data;
+      responseModel = ResponseModel(data["message"], true);
+      isSentToMail(data["type"] == 'sent_to_mail');
+      final String? email = data["email"]?.toString();
+      _otpDestinationEmail = (email != null && email.trim().isNotEmpty) ? email.trim() : null;
     } else {
+      _otpDestinationEmail = null;
       responseModel = ResponseModel(ApiChecker.getError(apiResponse).errors![0].message, false);
       ApiChecker.checkApi(apiResponse);
     }

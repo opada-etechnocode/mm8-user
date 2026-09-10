@@ -95,7 +95,9 @@ class _VerificationScreenState extends State<VerificationScreen> {
                       SizedBox(height: size.height * 0.14),
 
                       CustomAssetImageWidget(
-                        isPhone ? Images.phoneOtpSvg : Images.mailOtpSvg,
+                        (isPhone && (authProvider.otpDestinationEmail ?? '').isEmpty)
+                            ? Images.phoneOtpSvg
+                            : Images.mailOtpSvg,
                         height: 100, width: 100,
                       ),
 
@@ -117,8 +119,8 @@ class _VerificationScreenState extends State<VerificationScreen> {
                             ),
 
                             TextSpan(
-                              text: " ${widget.userInput} ",
-                              style: titilliumRegular.copyWith(
+                              text: " ${(authProvider.otpDestinationEmail?.isNotEmpty ?? false) ? authProvider.otpDestinationEmail : widget.userInput} ",
+                              style: titilliumSemiBold.copyWith(
                                 color: Theme.of(context).textTheme.bodyMedium?.color,
                                 fontSize: Dimensions.fontSizeDefault,
                               ),
@@ -127,6 +129,69 @@ class _VerificationScreenState extends State<VerificationScreen> {
                           ]),
                         ),
                       ),
+
+                      if ((authProvider.otpDestinationEmail ?? '').isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            Dimensions.paddingSizeLarge,
+                            Dimensions.paddingSizeDefault,
+                            Dimensions.paddingSizeLarge,
+                            0,
+                          ),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).primaryColor.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+                              border: Border.all(
+                                color: Theme.of(context).primaryColor.withValues(alpha: 0.18),
+                              ),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  Icons.mark_email_unread_outlined,
+                                  size: 22,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                                const SizedBox(width: Dimensions.paddingSizeSmall),
+                                Expanded(
+                                  child: RichText(
+                                    textAlign: TextAlign.start,
+                                    text: TextSpan(children: [
+                                      TextSpan(
+                                        text: getTranslated('otp_check_email_prefix', context),
+                                        style: titilliumRegular.copyWith(
+                                          color: Theme.of(context).textTheme.bodyMedium?.color,
+                                          fontSize: Dimensions.fontSizeDefault,
+                                          height: 1.45,
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text: ' ${authProvider.otpDestinationEmail} ',
+                                        style: titilliumSemiBold.copyWith(
+                                          color: Theme.of(context).primaryColor,
+                                          fontSize: Dimensions.fontSizeDefault,
+                                          height: 1.45,
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text: getTranslated('otp_check_email_suffix', context),
+                                        style: titilliumRegular.copyWith(
+                                          color: Theme.of(context).textTheme.bodyMedium?.color,
+                                          fontSize: Dimensions.fontSizeDefault,
+                                          height: 1.45,
+                                        ),
+                                      ),
+                                    ]),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
 
 
                       Padding(
