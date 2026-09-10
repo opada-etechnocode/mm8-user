@@ -187,28 +187,30 @@ class ChatController extends ChangeNotifier {
       messageModel = null;
     }
     _isLoading = true;
-    ApiResponseModel apiResponse = await chatServiceInterface!.getMessageList(userType != null ? userType == 0 ? 'delivery-man' : 'seller' : _userTypeIndex == 0? 'delivery-man' : 'seller', id, offset);
-    if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
+    try {
+      ApiResponseModel apiResponse = await chatServiceInterface!.getMessageList(userType != null ? userType == 0 ? 'delivery-man' : 'seller' : _userTypeIndex == 0? 'delivery-man' : 'seller', id, offset);
+      if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
 
-      final model = MessageModel.fromJson(apiResponse.response?.data);
+        final model = MessageModel.fromJson(apiResponse.response?.data);
 
-      if(offset == 1){
-        messageModel = model;
+        if(offset == 1){
+          messageModel = model;
 
-      } else{
+        } else{
 
-        messageModel?.totalSize =  model.totalSize;
-        messageModel?.offset =  model.offset;
-        messageModel?.limit =  model.limit;
-        messageModel?.message?.addAll(model.message ?? []) ;
+          messageModel?.totalSize =  model.totalSize;
+          messageModel?.offset =  model.offset;
+          messageModel?.limit =  model.limit;
+          messageModel?.message?.addAll(model.message ?? []) ;
 
+        }
+      } else {
+        ApiChecker.checkApi( apiResponse);
       }
-    } else {
+    } finally {
       _isLoading = false;
-      ApiChecker.checkApi( apiResponse);
+      notifyListeners();
     }
-    _isLoading = false;
-    notifyListeners();
   }
 
 
@@ -246,7 +248,7 @@ class ChatController extends ChangeNotifier {
 
     ApiResponseModel apiResponse = await chatServiceInterface!.seenMessage(id, type);
     if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
-      clearUnseenCountForChat(id, isDelivery: typeIndex == 0);
+      clearUnseenCountForChat(id, isDelivery: typeIndex == 0, notify: false);
     } else {
       ApiChecker.checkApi(apiResponse);
     }

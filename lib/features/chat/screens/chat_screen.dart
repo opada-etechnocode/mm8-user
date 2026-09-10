@@ -71,8 +71,12 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void initState() {
-    loadDaa();
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        loadDaa();
+      }
+    });
   }
 
   Future<void> loadDaa() async{
@@ -80,8 +84,8 @@ class _ChatScreenState extends State<ChatScreen> {
     final int resolvedUserType = widget.userType ?? (widget.isDelivery ? 0 : 1);
 
     if (widget.id != null) {
-      // Mark as seen immediately so the home badge clears even before messages load.
       chatController.clearUnseenCountForChat(widget.id!, isDelivery: widget.isDelivery);
+      // Fire-and-forget; do not block message loading.
       chatController.seenMessage(
         context,
         widget.id,
