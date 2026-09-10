@@ -14,6 +14,7 @@ import 'package:flutter_sixvalley_ecommerce/helper/image_size_checker.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/route_healper.dart';
 import 'package:flutter_sixvalley_ecommerce/localization/language_constrants.dart';
 import 'package:flutter_sixvalley_ecommerce/features/chat/controllers/chat_controller.dart';
+import 'package:flutter_sixvalley_ecommerce/features/shop/controllers/shop_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/app_constants.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/custom_themes.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/dimensions.dart';
@@ -60,6 +61,8 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
   ScrollController scrollController = ScrollController();
   bool emojiPicker = false;
+  late String _headerImage;
+  late String _headerName;
 
   bool isClosed = false;
   void clickedOnClose(){
@@ -72,6 +75,8 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    _headerImage = widget.image ?? '';
+    _headerName = widget.name ?? '';
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         loadDaa();
@@ -82,6 +87,8 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> loadDaa() async{
     final ChatController chatController = Provider.of<ChatController>(context, listen: false);
     final int resolvedUserType = widget.userType ?? (widget.isDelivery ? 0 : 1);
+
+    await _resolveHeaderInfo(chatController);
 
     if (widget.id != null) {
       chatController.clearUnseenCountForChat(widget.id!, isDelivery: widget.isDelivery);
@@ -95,6 +102,56 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     await chatController.getMessageList(context, widget.id, 1, userType: widget.userType);
+    if (mounted) {
+      await _resolveHeaderInfo(chatController);
+    }
+  }
+
+  Future<void> _resolveHeaderInfo(ChatController chatController) async {
+    if (widget.isDelivery || widget.id == null) return;
+
+    String nextImage = _headerImage;
+    String nextName = _headerName;
+
+    if (nextImage.trim().isEmpty) {
+      nextImage = chatController.findSellerShopImage(widget.id!) ?? '';
+    }
+    if (nextName.trim().isEmpty || nextName == 'MM8') {
+      nextName = chatController.findSellerShopName(widget.id!) ?? nextName;
+    }
+
+    if (nextImage.trim().isEmpty) {
+      for (final message in chatController.messageModel?.message ?? []) {
+        final path = message.sellerInfo?.shops?.isNotEmpty == true
+            ? message.sellerInfo!.shops!.first.imageFullUrl?.path
+            : null;
+        if (path != null && path.trim().isNotEmpty) {
+          nextImage = path;
+          break;
+        }
+      }
+    }
+
+    if (nextImage.trim().isEmpty) {
+      final shopController = Provider.of<ShopController>(context, listen: false);
+      await shopController.getSellerInfoProductDetails('${widget.id}', showError: false);
+      final path = shopController.sellerInfoModelProductDetails?.seller?.shop?.imageFullUrl?.path;
+      final shopName = shopController.sellerInfoModelProductDetails?.seller?.shop?.name;
+      if (path != null && path.trim().isNotEmpty) {
+        nextImage = path;
+      }
+      if (shopName != null && shopName.trim().isNotEmpty) {
+        nextName = shopName;
+      }
+    }
+
+    if (!mounted) return;
+    if (nextImage != _headerImage || nextName != _headerName) {
+      setState(() {
+        _headerImage = nextImage;
+        _headerName = nextName;
+      });
+    }
   }
 
 
@@ -143,11 +200,11 @@ class _ChatScreenState extends State<ChatScreen> {
           ClipRRect(borderRadius: BorderRadius.circular(100),
             child: Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(100),
               border: Border.all(width: .5, color: Theme.of(context).primaryColor.withValues(alpha:.125))),
-              height: 40, width: 40,child: CustomImageWidget(image: widget.image??''))),
+              height: 40, width: 40,child: CustomImageWidget(image: _headerImage))),
 
 
           Padding(padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
-            child: Text(widget.name??'', style: textRegular.copyWith(fontSize: Dimensions.fontSizeLarge, color: Theme.of(context).textTheme.bodyLarge?.color)))]),
+            child: Text(_headerName, style: textRegular.copyWith(fontSize: Dimensions.fontSizeLarge, color: Theme.of(context).textTheme.bodyLarge?.color)))]),
         actions: widget.isDelivery? [InkWell(
           onTap: ()=> _launchUrl("tel:${widget.phone}"),
           child: Padding(padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),

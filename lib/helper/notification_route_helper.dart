@@ -223,12 +223,22 @@ class NotificationRouteHelper {
       Provider.of<ChatController>(context, listen: false).setUserTypeIndex(context, 1);
     }
 
+    final chatController = context != null
+        ? Provider.of<ChatController>(context, listen: false)
+        : null;
+    final image = (body.image?.trim().isNotEmpty == true)
+        ? body.image!
+        : (chatController?.findSellerShopImage(sellerId) ?? '');
+    final name = body.name?.trim().isNotEmpty == true
+        ? body.name!
+        : (chatController?.findSellerShopName(sellerId) ?? _mm8SellerName);
+
     RouterHelper.getChatScreenRoute(
       action: action,
       id: sellerId,
-      name: body.name?.trim().isNotEmpty == true ? body.name! : _mm8SellerName,
+      name: name,
       userType: 1,
-      image: body.image ?? '',
+      image: image,
       isShopOnVacation: false,
       isShopTemporaryClosed: false,
       fromNotification: true,

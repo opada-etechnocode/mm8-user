@@ -323,13 +323,14 @@ class _MoreScreenState extends State<MoreScreen> {
       return;
     }
 
-    Provider.of<ChatController>(context, listen: false).setUserTypeIndex(context, 1);
+    final chatController = Provider.of<ChatController>(context, listen: false);
+    chatController.setUserTypeIndex(context, 1);
     RouterHelper.getChatScreenRoute(
       action: RouteAction.push,
       id: 1,
-      name: 'MM8',
+      name: chatController.findSellerShopName(1) ?? 'MM8',
       userType: 1,
-      image: '',
+      image: chatController.findSellerShopImage(1) ?? '',
       isShopOnVacation: false,
       isShopTemporaryClosed: false,
     );

@@ -355,12 +355,14 @@ class ShopController extends ChangeNotifier {
   }
 
   SellerInfoModel? sellerInfoModelProductDetails;
-  Future<void> getSellerInfoProductDetails(String sellerId) async {
+  Future<void> getSellerInfoProductDetails(String sellerId, {bool showError = true}) async {
     ApiResponseModel apiResponse = await shopServiceInterface!.get(sellerId);
     if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
       sellerInfoModelProductDetails = SellerInfoModel.fromJson(apiResponse.response!.data);
     } else {
-      ApiChecker.checkApi(apiResponse);
+      if (showError) {
+        ApiChecker.checkApi(apiResponse);
+      }
     }
     notifyListeners();
   }

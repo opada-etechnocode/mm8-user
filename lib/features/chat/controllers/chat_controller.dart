@@ -58,6 +58,28 @@ class ChatController extends ChangeNotifier {
     return count;
   }
 
+  String? findSellerShopImage(int sellerId) {
+    for (final chat in [...?chatModel?.chat, ...?searchChatModel?.chat]) {
+      if (chat.sellerId != sellerId) continue;
+      final path = chat.sellerInfo?.shops?.isNotEmpty == true
+          ? chat.sellerInfo!.shops!.first.imageFullUrl?.path
+          : null;
+      if (path != null && path.trim().isNotEmpty) return path;
+    }
+    return null;
+  }
+
+  String? findSellerShopName(int sellerId) {
+    for (final chat in [...?chatModel?.chat, ...?searchChatModel?.chat]) {
+      if (chat.sellerId != sellerId) continue;
+      final name = chat.sellerInfo?.shops?.isNotEmpty == true
+          ? chat.sellerInfo!.shops!.first.name
+          : null;
+      if (name != null && name.trim().isNotEmpty) return name;
+    }
+    return null;
+  }
+
   ChatModel? chatModel;
   ChatModel? deliverymanChatModel;
 
@@ -190,22 +212,44 @@ class ChatController extends ChangeNotifier {
     try {
       ApiResponseModel apiResponse = await chatServiceInterface!.getMessageList(userType != null ? userType == 0 ? 'delivery-man' : 'seller' : _userTypeIndex == 0? 'delivery-man' : 'seller', id, offset);
       if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
+        try {
+          final model = MessageModel.fromJson(apiResponse.response?.data);
 
-        final model = MessageModel.fromJson(apiResponse.response?.data);
-
-        if(offset == 1){
-          messageModel = model;
-
-        } else{
-
-          messageModel?.totalSize =  model.totalSize;
-          messageModel?.offset =  model.offset;
-          messageModel?.limit =  model.limit;
-          messageModel?.message?.addAll(model.message ?? []) ;
-
+          if(offset == 1){
+            messageModel = model;
+          } else {
+            messageModel?.totalSize =  model.totalSize;
+            messageModel?.offset =  model.offset;
+            messageModel?.limit =  model.limit;
+            messageModel?.message?.addAll(model.message ?? []) ;
+          }
+        } catch (_) {
+          if (offset == 1) {
+            messageModel = MessageModel(
+              totalSize: 0,
+              limit: 30,
+              offset: 1,
+              message: <Message>[],
+            );
+          }
         }
-      } else {
-        ApiChecker.checkApi( apiResponse);
+      } else if (offset == 1) {
+        // Empty / failed chat load: show empty thread, never toast.
+        messageModel = MessageModel(
+          totalSize: 0,
+          limit: 30,
+          offset: 1,
+          message: <Message>[],
+        );
+      }
+    } catch (_) {
+      if (offset == 1) {
+        messageModel = MessageModel(
+          totalSize: 0,
+          limit: 30,
+          offset: 1,
+          message: <Message>[],
+        );
       }
     } finally {
       _isLoading = false;
@@ -246,13 +290,10 @@ class ChatController extends ChangeNotifier {
         : (sellerId ?? deliveryId)!;
     final String type = typeIndex == 0 ? 'delivery-man' : 'seller';
 
-    ApiResponseModel apiResponse = await chatServiceInterface!.seenMessage(id, type);
-    if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
-      clearUnseenCountForChat(id, isDelivery: typeIndex == 0, notify: false);
-    } else {
-      ApiChecker.checkApi(apiResponse);
-    }
+    // Always clear local unread badge; never toast if no prior chat history.
+    clearUnseenCountForChat(id, isDelivery: typeIndex == 0, notify: false);
 
+    ApiResponseModel apiResponse = await chatServiceInterface!.seenMessage(id, type);
     notifyListeners();
     return apiResponse;
   }
