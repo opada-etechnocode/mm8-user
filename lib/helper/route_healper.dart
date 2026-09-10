@@ -170,10 +170,12 @@ class RouterHelper {
 
   static String getSplashRoute({RouteAction? action}) => _navigateRoute(splashScreen, route: action);
   static String getDashboardRoute({RouteAction? action, String page = 'home'}) => _navigateRoute('$dashboardScreen?page=$page', route: action);
-  static String getLoginRoute({RouteAction? action, bool isFromLogout = false, String? fromPage,  VoidCallback? onLoginSuccess}) {
+  static String getLoginRoute({RouteAction? action, bool isFromLogout = false, String? fromPage,  VoidCallback? onLoginSuccess, bool showBackButton = true, bool showCloseButton = true}) {
 
     final query = 'formLogout=${isFromLogout ? 'true' : 'false'}'
-        '&fromPage=${fromPage ?? ''}';
+        '&fromPage=${fromPage ?? ''}'
+        '&showBackButton=${showBackButton ? 'true' : 'false'}'
+        '&showCloseButton=${showCloseButton ? 'true' : 'false'}';
     return _navigateRoute(
       '$loginScreen?$query',
       route: action,
@@ -973,6 +975,8 @@ class RouterHelper {
         return LoginScreen(
           fromLogout: state.uri.queryParameters['formLogout'] == 'true',
           fromPage: state.uri.queryParameters['fromPage'],
+          showBackButton: state.uri.queryParameters['showBackButton'] != 'false',
+          showCloseButton: state.uri.queryParameters['showCloseButton'] != 'false',
           onLoginSuccess: extra?['onLoginSuccess'] as VoidCallback?,
         );
       }),

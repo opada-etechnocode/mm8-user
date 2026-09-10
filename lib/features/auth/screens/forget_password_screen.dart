@@ -8,7 +8,6 @@ import 'package:flutter_sixvalley_ecommerce/helper/route_healper.dart';
 import 'package:flutter_sixvalley_ecommerce/localization/language_constrants.dart';
 import 'package:flutter_sixvalley_ecommerce/features/auth/controllers/auth_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/splash/controllers/splash_controller.dart';
-import 'package:flutter_sixvalley_ecommerce/main.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/custom_themes.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/dimensions.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/images.dart';
@@ -32,8 +31,6 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
   final GlobalKey<ScaffoldMessengerState> _key = GlobalKey();
 
   final GlobalKey<FormState> forgetFormKey = GlobalKey<FormState>();
-
-  final ConfigModel config = Provider.of<SplashController>(Get.context!, listen: false).configModel!;
 
   @override
   void initState() {
@@ -121,9 +118,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                     buttonText: getTranslated('send', context),
                     onTap: () async {
                       if(forgetFormKey.currentState?.validate() ?? false) {
-                        if(!(config.emailVerification ?? false) && !(config.phoneVerification ?? false) && config.customerVerification?.phone == 0 && config.customerVerification?.firebase == 0 && config.customerVerification?.email == 0) {
-                          showCustomSnackBarWidget(getTranslated('forgot_password_configuration_is_not', context), context, snackBarType: SnackBarType.warning);
-                        } else if (_userInputController!.text.isEmpty) {
+                        if (_userInputController!.text.isEmpty) {
                           showCustomSnackBarWidget(getTranslated('enter_email_or_phone', context), context, snackBarType: SnackBarType.warning);
                         } else if(!NumberCheckerHelper.isNumber(_userInputController!.text.trim())) {
                           showCustomSnackBarWidget(getTranslated('enter_phone_number', context), context, snackBarType: SnackBarType.warning);

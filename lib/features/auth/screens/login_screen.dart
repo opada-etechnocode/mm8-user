@@ -25,9 +25,17 @@ import 'package:provider/provider.dart';
 class LoginScreen extends StatefulWidget {
   final bool fromLogout;
   final bool showBackButton;
+  final bool showCloseButton;
   final String? fromPage;
   final VoidCallback? onLoginSuccess;
-  const LoginScreen({super.key, this.fromLogout = false, this.fromPage, this.onLoginSuccess, this.showBackButton = true});
+  const LoginScreen({
+    super.key,
+    this.fromLogout = false,
+    this.fromPage,
+    this.onLoginSuccess,
+    this.showBackButton = true,
+    this.showCloseButton = true,
+  });
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -98,7 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (!didPop) {
-          if (widget.fromLogout) {
+          if (widget.fromLogout || !widget.showBackButton) {
             final authController = Provider.of<AuthController>(context, listen: false);
             if (!authController.isLoading) {
               RouterHelper.getDashboardRoute(action: RouteAction.pushNamedAndRemoveUntil);
@@ -133,7 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       )
                     ),
 
-                    if(!widget.showBackButton)
+                    if(!widget.showBackButton && widget.showCloseButton)
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -155,10 +163,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                                 child: Icon(Icons.close_rounded, size: 20, color: Theme.of(context).cardColor)),
                             onPressed: () {
-                              if(widget.fromLogout) {
-                                RouterHelper.getDashboardRoute(action: RouteAction.pushNamedAndRemoveUntil);
-                              } else {
+                              if (Navigator.of(context).canPop()) {
                                 Navigator.of(context).pop();
+                              } else {
+                                RouterHelper.getDashboardRoute(action: RouteAction.pushNamedAndRemoveUntil);
                               }
                             },
                           )
@@ -483,12 +491,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                   Center(
                                     child: InkWell(
                                       onTap: ()=> {
-                                        if (!authProvider.isLoading && widget.showBackButton) {
-                                          authProvider.getGuestIdUrl(),
-                                          RouterHelper.getDashboardRoute(action: RouteAction.pushNamedAndRemoveUntil)
-                                        },
-                                        if(!widget.showBackButton) {
-                                          Navigator.of(context).pop(),
+                                        if (!authProvider.isLoading) {
+                                          if (widget.showBackButton || !Navigator.of(context).canPop()) {
+                                            authProvider.getGuestIdUrl(),
+                                            RouterHelper.getDashboardRoute(action: RouteAction.pushNamedAndRemoveUntil)
+                                          } else {
+                                            Navigator.of(context).pop(),
+                                          }
                                         }
                                       },
                                       child: RichText(text: TextSpan(children: [

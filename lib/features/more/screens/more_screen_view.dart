@@ -40,13 +40,13 @@ class _MoreScreenState extends State<MoreScreen> {
   double _headerHeight(BuildContext context) {
     final topPadding = MediaQuery.paddingOf(context).top;
     // Avatar + name + phone + spacing (compact expanded header).
-    const profileContentHeight = 128.0;
+    const profileContentHeight = 110.0;
     final tabletExtra = ResponsiveHelper.isTab(context) ? 8.0 : 0.0;
     return topPadding + profileContentHeight + tabletExtra;
   }
 
   double _collapsedHeaderHeight(BuildContext context) {
-    return MediaQuery.paddingOf(context).top + 44;
+    return MediaQuery.paddingOf(context).top + 30;
   }
 
   @override

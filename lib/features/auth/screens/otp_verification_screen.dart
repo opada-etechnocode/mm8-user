@@ -6,7 +6,6 @@ import 'package:flutter_sixvalley_ecommerce/features/auth/domain/models/user_log
 import 'package:flutter_sixvalley_ecommerce/features/auth/enums/from_page.dart';
 import 'package:flutter_sixvalley_ecommerce/features/order_details/controllers/order_details_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/splash/domain/models/config_model.dart';
-import 'package:flutter_sixvalley_ecommerce/helper/color_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/email_checker_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/number_checker_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/route_healper.dart';
@@ -19,7 +18,7 @@ import 'package:flutter_sixvalley_ecommerce/utill/images.dart';
 import 'package:flutter_sixvalley_ecommerce/common/basewidget/custom_app_bar_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/common/basewidget/custom_button_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/common/basewidget/show_custom_snakbar_widget.dart';
-import 'package:pin_code_fields/pin_code_fields.dart';
+import 'package:pinput/pinput.dart';
 import 'package:provider/provider.dart';
 
 
@@ -130,35 +129,69 @@ class _VerificationScreenState extends State<VerificationScreen> {
                       ),
 
 
-                      Padding(padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault, vertical: 35),
-                        child: PinCodeTextField(
-                          length: 6,
-                          appContext: context,
-                          obscureText: false,
-                          showCursor: true,
-                          keyboardType: TextInputType.number,
-                          animationType: AnimationType.fade,
-                          pinTheme: PinTheme(
-                            shape: PinCodeFieldShape.box,
-                            fieldHeight: 45,
-                            fieldWidth: 45,
-                            borderWidth: 1,
-                            borderRadius: BorderRadius.circular(10),
-                            selectedColor: ColorHelper.darken(Theme.of(context).colorScheme.secondary, 0.2),
-                            selectedFillColor: Colors.white,
-                            inactiveFillColor: Theme.of(context).cardColor,
-                            inactiveColor: ColorHelper.darken(Theme.of(context).colorScheme.secondary, 0.2),
-                            activeColor: ColorHelper.darken(Theme.of(context).colorScheme.secondary, 0.1),
-                            activeFillColor: Theme.of(context).cardColor,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: Dimensions.paddingSizeDefault,
+                          vertical: 35,
+                        ),
+                        child: Directionality(
+                          textDirection: TextDirection.ltr,
+                          child: Pinput(
+                            length: 6,
+                            autofocus: true,
+                            keyboardType: TextInputType.number,
+                            defaultPinTheme: PinTheme(
+                              width: 45,
+                              height: 45,
+                              textStyle: titilliumBold.copyWith(
+                                fontSize: Dimensions.fontSizeExtraLarge,
+                                color: Theme.of(context).textTheme.bodyLarge?.color,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).cardColor,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .secondary
+                                      .withValues(alpha: 0.45),
+                                ),
+                              ),
+                            ),
+                            focusedPinTheme: PinTheme(
+                              width: 45,
+                              height: 45,
+                              textStyle: titilliumBold.copyWith(
+                                fontSize: Dimensions.fontSizeExtraLarge,
+                                color: Theme.of(context).textTheme.bodyLarge?.color,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).cardColor,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: Theme.of(context).primaryColor,
+                                  width: 1.5,
+                                ),
+                              ),
+                            ),
+                            submittedPinTheme: PinTheme(
+                              width: 45,
+                              height: 45,
+                              textStyle: titilliumBold.copyWith(
+                                fontSize: Dimensions.fontSizeExtraLarge,
+                                color: Theme.of(context).textTheme.bodyLarge?.color,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).cardColor,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                              ),
+                            ),
+                            onChanged: authProvider.updateVerificationCode,
+                            onCompleted: authProvider.updateVerificationCode,
                           ),
-                          textStyle: titilliumBold.copyWith(fontSize: Dimensions.fontSizeExtraLarge, color: Theme.of(context).textTheme.bodyLarge?.color),
-                          animationDuration: const Duration(milliseconds: 300),
-                          backgroundColor: Colors.transparent,
-                          enableActiveFill: true,
-                          onChanged: authProvider.updateVerificationCode,
-                          beforeTextPaste: (text) {
-                            return true;
-                          },
                         ),
                       ),
 

@@ -51,53 +51,73 @@ class ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Form(key: _formKeyReset,
-          child: ListView(padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeSmall), children: [
-              const SizedBox(height: Dimensions.paddingSizeOverLarge),
-
-              Padding(padding: const EdgeInsets.all(50),
-                child: Image.asset(Images.logoWithNameImage, height: 50, width: 140),),
-
-              Padding(padding: const EdgeInsets.all(Dimensions.marginSizeLarge),
-                child: Text(getTranslated('password_reset', context)!, style: titilliumSemiBold)),
-
-              Container(margin: const EdgeInsets.only(
-                left: Dimensions.marginSizeLarge,
-                right: Dimensions.marginSizeLarge,
-                bottom: Dimensions.marginSizeSmall),
-                child: CustomTextFieldWidget(
-                  labelText: getTranslated('new_password', context),
-                  focusNode: _newPasswordNode,
-                  nextFocus: _confirmPasswordNode,
-                  isPassword: true,
-                  controller: _passwordController,
-                  showLabelText: false,
-                )
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: Form(
+              key: _formKeyReset,
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeSmall),
+                children: [
+                  const SizedBox(height: Dimensions.paddingSizeOverLarge),
+                  Padding(
+                    padding: const EdgeInsets.all(50),
+                    child: Image.asset(Images.logoWithNameImage, height: 50, width: 140),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(Dimensions.marginSizeLarge),
+                    child: Text(
+                      getTranslated('password_reset', context)!,
+                      style: titilliumSemiBold,
+                    ),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.only(
+                      left: Dimensions.marginSizeLarge,
+                      right: Dimensions.marginSizeLarge,
+                      bottom: Dimensions.marginSizeSmall,
+                    ),
+                    child: CustomTextFieldWidget(
+                      labelText: getTranslated('new_password', context),
+                      focusNode: _newPasswordNode,
+                      nextFocus: _confirmPasswordNode,
+                      isPassword: true,
+                      controller: _passwordController,
+                      showLabelText: false,
+                    ),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.only(
+                      left: Dimensions.marginSizeLarge,
+                      right: Dimensions.marginSizeLarge,
+                      bottom: Dimensions.marginSizeDefault,
+                    ),
+                    child: CustomTextFieldWidget(
+                      isPassword: true,
+                      labelText: getTranslated('confirm_password', context),
+                      inputAction: TextInputAction.done,
+                      focusNode: _confirmPasswordNode,
+                      controller: _confirmPasswordController,
+                      showLabelText: false,
+                    ),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.only(left: 20, right: 20, bottom: 20, top: 30),
+                    child: Consumer<AuthController>(
+                      builder: (context, authProvider, _) {
+                        return CustomButton(
+                          isLoading: authProvider.isPhoneNumberVerificationButtonLoading,
+                          onTap: resetPassword,
+                          buttonText: getTranslated('reset_password', context),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
-
-
-              Container(margin: const EdgeInsets.only(
-                  left: Dimensions.marginSizeLarge,
-                  right: Dimensions.marginSizeLarge,
-                  bottom: Dimensions.marginSizeDefault),
-                  child: CustomTextFieldWidget(
-                    isPassword: true,
-                    labelText: getTranslated('confirm_password', context),
-                    inputAction: TextInputAction.done,
-                    focusNode: _confirmPasswordNode,
-                    controller: _confirmPasswordController,
-                    showLabelText: false,
-                  )),
-
-
-              Container(margin: const EdgeInsets.only(left: 20, right: 20, bottom: 20, top: 30),
-                child: Provider.of<AuthController>(context).isLoading ?
-                Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor)))
-                    : CustomButton(onTap: resetPassword, buttonText: getTranslated('reset_password', context))),
-
-            ],
+            ),
           ),
         ),
       ),

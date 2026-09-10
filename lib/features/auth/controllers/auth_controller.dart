@@ -860,8 +860,13 @@ class AuthController with ChangeNotifier {
     _isPhoneNumberVerificationButtonLoading = false;
     notifyListeners();
     if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
+      clearUserEmailAndPassword();
       showCustomSnackBarWidget(getTranslated('password_reset_successfully', Get.context!), Get.context!, snackBarType: SnackBarType.success);
-      RouterHelper.getLoginRoute(action: RouteAction.pushNamedAndRemoveUntil);
+      RouterHelper.getLoginRoute(
+        action: RouteAction.pushNamedAndRemoveUntil,
+        showBackButton: false,
+        showCloseButton: false,
+      );
     } else {
       _isPhoneNumberVerificationButtonLoading = false;
       ApiChecker.checkApi(apiResponse);
@@ -1133,9 +1138,11 @@ class AuthController with ChangeNotifier {
 
 
   void navigateToHome(String? fromPage, VoidCallback? onLoginSuccess) {
-    if(fromPage != null) {
-      if(fromPage.startsWith('/dashboard')) {
-        final uri = Uri.parse(fromPage);
+    final String? target = (fromPage == null || fromPage.trim().isEmpty) ? null : fromPage;
+
+    if(target != null) {
+      if(target.startsWith('/dashboard')) {
+        final uri = Uri.parse(target);
         final pageParam = uri.queryParameters['page'];
         RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement, page : pageParam ?? 'home');
       } else if (onLoginSuccess != null) {
@@ -1143,10 +1150,10 @@ class AuthController with ChangeNotifier {
         onLoginSuccess();
       } else {
         GoRouter.of(Get.context!).pop();
-        GoRouter.of(Get.context!).replace(fromPage);
+        GoRouter.of(Get.context!).replace(target);
       }
     } else {
-      RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
+      RouterHelper.getDashboardRoute(action: RouteAction.pushNamedAndRemoveUntil);
     }
   }
 
