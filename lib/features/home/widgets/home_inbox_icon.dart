@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_sixvalley_ecommerce/common/basewidget/not_logged_in_bottom_sheet_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/features/auth/controllers/auth_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/chat/controllers/chat_controller.dart';
-import 'package:flutter_sixvalley_ecommerce/features/splash/controllers/splash_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/responsive_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/route_healper.dart';
 import 'package:flutter_sixvalley_ecommerce/localization/language_constrants.dart';
@@ -26,18 +25,15 @@ class HomeInboxIconWidget extends StatelessWidget {
       return;
     }
 
-    final splash = Provider.of<SplashController>(context, listen: false);
-    final inHouseShop = splash.configModel?.inHouseShop;
-
     Provider.of<ChatController>(context, listen: false).setUserTypeIndex(context, 1);
     RouterHelper.getChatScreenRoute(
       action: RouteAction.push,
-      id: 0,
-      name: inHouseShop?.name ?? 'MM8',
+      id: 1,
+      name: 'MM8',
       userType: 1,
-      image: inHouseShop?.imageFullUrl?.path ?? '',
+      image: '',
       isShopOnVacation: false,
-      isShopTemporaryClosed: splash.configModel?.inhouseTemporaryClose?.status ?? false,
+      isShopTemporaryClosed: false,
     );
   }
 

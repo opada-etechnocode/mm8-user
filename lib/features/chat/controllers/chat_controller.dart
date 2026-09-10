@@ -237,16 +237,48 @@ class ChatController extends ChangeNotifier {
   }
 
 
-  Future<ApiResponseModel> seenMessage(BuildContext context, int? sellerId, int? deliveryId) async {
-    ApiResponseModel apiResponse = await chatServiceInterface!.seenMessage(_userTypeIndex == 0? sellerId!: deliveryId!, _userTypeIndex == 0? 'delivery-man' : 'seller');
+  Future<ApiResponseModel> seenMessage(BuildContext context, int? sellerId, int? deliveryId, {int? userType}) async {
+    final int typeIndex = userType ?? _userTypeIndex;
+    final int id = typeIndex == 0
+        ? (deliveryId ?? sellerId)!
+        : (sellerId ?? deliveryId)!;
+    final String type = typeIndex == 0 ? 'delivery-man' : 'seller';
+
+    ApiResponseModel apiResponse = await chatServiceInterface!.seenMessage(id, type);
     if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
-      // await getChatList(1);
+      clearUnseenCountForChat(id, isDelivery: typeIndex == 0);
     } else {
       ApiChecker.checkApi(apiResponse);
     }
 
     notifyListeners();
     return apiResponse;
+  }
+
+  void clearUnseenCountForChat(int id, {required bool isDelivery, bool notify = true}) {
+    void clearIn(ChatModel? model) {
+      if (model?.chat == null) return;
+      for (final chat in model!.chat!) {
+        final int? chatId = isDelivery
+            ? chat.deliveryManId
+            : (chat.sellerId ?? chat.adminId);
+        if (chatId == id) {
+          chat.unseenMessageCount = 0;
+        }
+      }
+    }
+
+    if (isDelivery) {
+      clearIn(deliverymanChatModel);
+      clearIn(searchDeliverymanChatModel);
+    } else {
+      clearIn(chatModel);
+      clearIn(searchChatModel);
+    }
+
+    if (notify) {
+      notifyListeners();
+    }
   }
 
 

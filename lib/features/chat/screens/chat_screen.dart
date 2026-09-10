@@ -14,7 +14,6 @@ import 'package:flutter_sixvalley_ecommerce/helper/image_size_checker.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/route_healper.dart';
 import 'package:flutter_sixvalley_ecommerce/localization/language_constrants.dart';
 import 'package:flutter_sixvalley_ecommerce/features/chat/controllers/chat_controller.dart';
-import 'package:flutter_sixvalley_ecommerce/theme/controllers/theme_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/app_constants.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/custom_themes.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/dimensions.dart';
@@ -39,6 +38,7 @@ class ChatScreen extends StatefulWidget {
   final bool isShopOnVacation;
   final bool isShopTemporaryClosed;
   final int? userType;
+  final bool fromNotification;
   const ChatScreen({
     super.key,
     this.id,
@@ -49,6 +49,7 @@ class ChatScreen extends StatefulWidget {
     this.userType,
     this.isShopOnVacation = false,
     this.isShopTemporaryClosed = false,
+    this.fromNotification = false,
   });
 
   @override
@@ -75,7 +76,21 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> loadDaa() async{
-   await Provider.of<ChatController>(context, listen: false).getMessageList( context, widget.id, 1, userType: widget.userType);
+    final ChatController chatController = Provider.of<ChatController>(context, listen: false);
+    final int resolvedUserType = widget.userType ?? (widget.isDelivery ? 0 : 1);
+
+    if (widget.id != null) {
+      // Mark as seen immediately so the home badge clears even before messages load.
+      chatController.clearUnseenCountForChat(widget.id!, isDelivery: widget.isDelivery);
+      chatController.seenMessage(
+        context,
+        widget.id,
+        widget.id,
+        userType: resolvedUserType,
+      );
+    }
+
+    await chatController.getMessageList(context, widget.id, 1, userType: widget.userType);
   }
 
 
@@ -91,14 +106,33 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
 
+  void _handleBack() {
+    if (widget.fromNotification || !Navigator.of(context).canPop()) {
+      RouterHelper.getDashboardRoute(
+        action: RouteAction.pushNamedAndRemoveUntil,
+        page: 'home',
+      );
+    } else {
+      Navigator.of(context).pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final bool allowSystemPop = !widget.fromNotification && Navigator.of(context).canPop();
 
-    return Scaffold(
+    return PopScope(
+      canPop: allowSystemPop,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          _handleBack();
+        }
+      },
+      child: Scaffold(
       appBar: AppBar(backgroundColor: Theme.of(context).cardColor,
         titleSpacing: 0,
         elevation: 1,
-        leading: InkWell(onTap: ()=> Navigator.pop(context),
+        leading: InkWell(onTap: _handleBack,
           child: Icon(CupertinoIcons.back, color: Theme.of(context).textTheme.bodyLarge?.color)),
         title: Row(children: [
 
@@ -543,6 +577,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
         ],
       ),
+    ),
     );
   }
 

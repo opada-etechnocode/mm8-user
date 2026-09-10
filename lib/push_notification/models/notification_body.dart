@@ -1,5 +1,4 @@
 
-
 class NotificationBody {
   int? orderId;
   String? type;
@@ -9,6 +8,9 @@ class NotificationBody {
   String? productId;
   String? slug;
   String? image;
+  int? sellerId;
+  int? deliveryManId;
+  String? name;
 
 
   NotificationBody({
@@ -19,7 +21,10 @@ class NotificationBody {
     this.title,
     this.productId,
     this.slug,
-    this.image
+    this.image,
+    this.sellerId,
+    this.deliveryManId,
+    this.name,
   });
 
   NotificationBody.fromJson(Map<String, dynamic> json) {
@@ -34,6 +39,9 @@ class NotificationBody {
     slug = json['slug']?.toString();
     image = json['image']?.toString();
     status = json['status']?.toString();
+    sellerId = int.tryParse(json['seller_id']?.toString() ?? '');
+    deliveryManId = int.tryParse(json['delivery_man_id']?.toString() ?? '');
+    name = json['name']?.toString() ?? json['shop_name']?.toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -45,8 +53,10 @@ class NotificationBody {
     data['product_id'] = productId;
     data['slug'] = slug;
     data['image'] = image;
-    data['image'] = image;
     data['status'] = status;
+    data['seller_id'] = sellerId;
+    data['delivery_man_id'] = deliveryManId;
+    data['name'] = name;
     return data;
   }
 

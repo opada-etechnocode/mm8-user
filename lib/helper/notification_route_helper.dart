@@ -1,9 +1,15 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_sixvalley_ecommerce/features/chat/controllers/chat_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/notification/domain/models/notification_model.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/route_healper.dart';
 import 'package:flutter_sixvalley_ecommerce/main.dart';
 import 'package:flutter_sixvalley_ecommerce/push_notification/models/notification_body.dart';
+import 'package:provider/provider.dart';
 
 class NotificationRouteHelper {
+  static const int _mm8SellerId = 1;
+  static const String _mm8SellerName = 'MM8';
+
   static NotificationBody? _pendingNotificationBody;
 
   static void setPendingNotification(NotificationBody? body) {
@@ -24,6 +30,9 @@ class NotificationRouteHelper {
     final productId = data['product_id']?.toString();
     final slug = data['slug']?.toString();
     final messageKey = data['message_key']?.toString() ?? data['body']?.toString();
+    final sellerId = _parseInt(data['seller_id']);
+    final deliveryManId = _parseInt(data['delivery_man_id']);
+    final name = data['name']?.toString() ?? data['shop_name']?.toString();
 
     if (type == null || type.isEmpty) {
       if (orderId != null) {
@@ -42,7 +51,14 @@ class NotificationRouteHelper {
       case 'block':
         return NotificationBody(type: 'block');
       case 'chatting':
-        return NotificationBody(type: 'chatting', messageKey: messageKey);
+        return NotificationBody(
+          type: 'chatting',
+          messageKey: messageKey,
+          sellerId: sellerId,
+          deliveryManId: deliveryManId,
+          name: name,
+          image: data['image']?.toString(),
+        );
       case 'product_restock_update':
         return NotificationBody(
           type: 'product_restock_update',
@@ -81,7 +97,12 @@ class NotificationRouteHelper {
       return NotificationBody(type: 'wallet');
     }
     if (type == 'chatting') {
-      return NotificationBody(type: 'chatting', messageKey: item.messageKey);
+      return NotificationBody(
+        type: 'chatting',
+        messageKey: item.messageKey,
+        sellerId: _mm8SellerId,
+        name: _mm8SellerName,
+      );
     }
     if (type == 'product_restock_update' && item.productId != null) {
       return NotificationBody(
@@ -152,12 +173,7 @@ class NotificationRouteHelper {
         RouterHelper.getWalletRoute(action: action, isBackButtonExist: true);
         break;
       case 'chatting':
-        RouterHelper.getInboxScreenRoute(
-          action: action,
-          isBackButtonExist: true,
-          fromNotification: true,
-          initIndex: 1,
-        );
+        _openChatFromNotification(body, action: action);
         break;
       case 'product_restock_update':
         final productId = int.tryParse(body.productId ?? '');
@@ -177,6 +193,46 @@ class NotificationRouteHelper {
         RouterHelper.getNotificationRoute(action: action, fromNotification: true);
         break;
     }
+  }
+
+  static void _openChatFromNotification(NotificationBody body, {required RouteAction action}) {
+    final BuildContext? context = Get.context;
+    final bool isDelivery = body.deliveryManId != null && body.deliveryManId! > 0;
+
+    if (isDelivery) {
+      if (context != null) {
+        Provider.of<ChatController>(context, listen: false).setUserTypeIndex(context, 0);
+      }
+      RouterHelper.getChatScreenRoute(
+        action: action,
+        id: body.deliveryManId,
+        name: body.name ?? '',
+        userType: 0,
+        image: body.image ?? '',
+        isDelivery: true,
+        fromNotification: true,
+      );
+      return;
+    }
+
+    final int sellerId = (body.sellerId != null && body.sellerId! > 0)
+        ? body.sellerId!
+        : _mm8SellerId;
+
+    if (context != null) {
+      Provider.of<ChatController>(context, listen: false).setUserTypeIndex(context, 1);
+    }
+
+    RouterHelper.getChatScreenRoute(
+      action: action,
+      id: sellerId,
+      name: body.name?.trim().isNotEmpty == true ? body.name! : _mm8SellerName,
+      userType: 1,
+      image: body.image ?? '',
+      isShopOnVacation: false,
+      isShopTemporaryClosed: false,
+      fromNotification: true,
+    );
   }
 
   static int? _parseInt(dynamic value) {

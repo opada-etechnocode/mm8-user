@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_sixvalley_ecommerce/common/basewidget/not_logged_in_bottom_sheet_widget.dart';
+import 'package:flutter_sixvalley_ecommerce/features/chat/controllers/chat_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/profile/controllers/profile_contrroller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/splash/domain/models/business_pages_model.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/responsive_helper.dart';
@@ -24,17 +26,12 @@ class MoreScreen extends StatefulWidget {
 }
 
 class _MoreScreenState extends State<MoreScreen> {
-  bool singleVendor = false;
-
   @override
   void initState() {
     super.initState();
     if (Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
       Provider.of<ProfileController>(context, listen: false).getUserInfo(context);
     }
-    singleVendor = Provider.of<SplashController>(context, listen: false)
-            .configModel?.businessMode ==
-        'single';
   }
 
   double _headerHeight(BuildContext context) {
@@ -240,30 +237,18 @@ class _MoreScreenState extends State<MoreScreen> {
     BuildContext context,
     SplashController splashController,
   ) {
-    final items = <Widget>[];
-
-    if (!singleVendor) {
-      items.add(
-        MenuButtonWidget(
-          image: Images.chats,
-          title: getTranslated('inbox', context),
-          onTap: () => RouterHelper.getInboxScreenRoute(action: RouteAction.push),
-        ),
-      );
-    }
-
-    items.addAll([
+    final items = <Widget>[
       MenuButtonWidget(
-        image: Images.callIcon,
-        title: getTranslated('contact_us', context),
-        onTap: () => RouterHelper.getContactUsScreenRoute(),
+        image: Images.chats,
+        title: getTranslated('inbox', context),
+        onTap: () => _openMm8SupportChat(context),
       ),
       MenuButtonWidget(
         image: Images.preference,
         title: getTranslated('support_ticket', context),
         onTap: () => RouterHelper.getSupportTicketRoute(action: RouteAction.push),
       ),
-    ]);
+    ];
 
     if (splashController.defaultBusinessPages != null &&
         splashController.defaultBusinessPages!.isNotEmpty) {
@@ -324,6 +309,30 @@ class _MoreScreenState extends State<MoreScreen> {
     }
 
     return items;
+  }
+
+  void _openMm8SupportChat(BuildContext context) {
+    if (!Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        builder: (_) => NotLoggedInBottomSheetWidget(
+          fromPage: '${RouterHelper.dashboardScreen}?page=more',
+        ),
+      );
+      return;
+    }
+
+    Provider.of<ChatController>(context, listen: false).setUserTypeIndex(context, 1);
+    RouterHelper.getChatScreenRoute(
+      action: RouteAction.push,
+      id: 1,
+      name: 'MM8',
+      userType: 1,
+      image: '',
+      isShopOnVacation: false,
+      isShopTemporaryClosed: false,
+    );
   }
 
   BusinessPageModel? getPageBySlug(String slug, List<BusinessPageModel>? pagesList) {
