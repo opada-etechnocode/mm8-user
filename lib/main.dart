@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui' as ui;
 
 import 'package:app_links/app_links.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -78,6 +77,9 @@ final database = AppDatabase();
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Decode splash video before Firebase/DI so the first Flutter frame can play it.
+  final splashVideoFuture = SplashVideoLoader.preload();
+
   HttpOverrides.global = MyHttpOverrides() ;
   if(Firebase.apps.isEmpty) {
     if(Platform.isAndroid) {
@@ -102,12 +104,11 @@ Future<void> main() async {
 
   await FlutterDownloader.initialize(debug: true, ignoreSsl: true);
 
-  await bootstrapApp();
+  await bootstrapApp(splashVideoFuture: splashVideoFuture);
 }
 
-Future<void> bootstrapApp() async {
-  // Start splash video decode ASAP so the first frame is ready at runApp.
-  final splashVideoFuture = SplashVideoLoader.preload();
+Future<void> bootstrapApp({Future<void>? splashVideoFuture}) async {
+  splashVideoFuture ??= SplashVideoLoader.preload();
 
   await di.init();
 
@@ -128,10 +129,7 @@ Future<void> bootstrapApp() async {
 
   GoRouter.optionURLReflectsImperativeAPIs = true;
 
-  await Future.wait([
-    _precacheSplashImage(),
-    splashVideoFuture,
-  ]);
+  await splashVideoFuture;
 
   runApp(
 
@@ -208,13 +206,6 @@ Future<String?> initDynamicLinks() async {
   } catch (_) {}
 
   return DeepLinkHelper.peekPendingDeepLink();
-}
-
-Future<void> _precacheSplashImage() async {
-  try {
-    final data = await rootBundle.load('assets/images/splash.jpeg');
-    await ui.instantiateImageCodec(data.buffer.asUint8List());
-  } catch (_) {}
 }
 
 

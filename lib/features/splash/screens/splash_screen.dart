@@ -29,46 +29,128 @@ class SplashScreen extends StatefulWidget {
 
 class SplashScreenState extends State<SplashScreen> {
   final GlobalKey<ScaffoldMessengerState> _globalKey = GlobalKey();
-  final Completer<void> _splashVideoCompleter = Completer<void>();
   bool _hasNavigated = false;
+  bool _configStarted = false;
   NotificationBody? _notificationBody;
 
   @override
   void initState() {
     super.initState();
-    _initializeAsync();
-  }
-
-  Future<void> _initializeAsync() async {
-    _route();
-  }
-
-  void _onSplashVideoComplete() {
-    if (!_splashVideoCompleter.isCompleted) {
-      _splashVideoCompleter.complete();
-    }
-  }
-
-  Future<void> _ensureSplashAnimationFinished() async {
-    await _splashVideoCompleter.future.timeout(
-      const Duration(seconds: 12),
-      onTimeout: () {},
-    );
-    await Future.delayed(const Duration(milliseconds: 250));
-  }
-
-  void _scheduleNavigation(Future<void> Function() navigate) {
-    _ensureSplashAnimationFinished().then((_) async {
-      if (!mounted || _hasNavigated) return;
-      _hasNavigated = true;
-      await navigate();
-      DeepLinkHelper.markBootstrapComplete();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _startConfigInBackground();
     });
   }
 
-  @override
-  void dispose() {
-    super.dispose();
+  /// Config / API keep loading after we leave splash — never block navigation.
+  void _startConfigInBackground() {
+    if (_configStarted) return;
+    _configStarted = true;
+
+    NetworkInfo.checkConnectivity(context);
+    final splash = Provider.of<SplashController>(context, listen: false);
+
+    splash.initConfig(
+      context,
+      (ConfigModel? configModel) {
+        splash.initSharedPrefData();
+      },
+      (ConfigModel? configModel) {
+        splash.initSharedPrefData();
+        // If user already left splash, still honor forced redirects.
+        if (_hasNavigated) {
+          _applyForcedRedirects(configModel);
+        }
+      },
+    );
+  }
+
+  void _onSplashVideoComplete() {
+    _navigateImmediately();
+  }
+
+  void _navigateImmediately() {
+    if (!mounted || _hasNavigated) return;
+    _hasNavigated = true;
+
+    final splash = Provider.of<SplashController>(context, listen: false);
+    final auth = Provider.of<AuthController>(context, listen: false);
+    splash.initSharedPrefData();
+
+    final config = splash.configModel;
+    if (config != null && _needsForceUpdate(config)) {
+      RouterHelper.getUpdateRoute(action: RouteAction.pushReplacement);
+      DeepLinkHelper.markBootstrapComplete();
+      return;
+    }
+
+    // Navigate synchronously — never await network/deeplink before leaving splash
+    // (awaiting caused a black frame after the video).
+    if (auth.isLoggedIn()) {
+      RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
+      auth.updateToken(Get.context!);
+      Future.microtask(_openPendingNotificationOrDeepLink);
+    } else if (splash.showIntro() == true) {
+      RouterHelper.getOnboardingRoute(
+        action: RouteAction.pushReplacement,
+        indicatorColor:
+            Provider.of<ThemeController>(Get.context!, listen: false).darkTheme
+                ? Theme.of(Get.context!).colorScheme.onTertiary
+                : Theme.of(Get.context!).hintColor,
+        selectedIndicatorColor: Theme.of(Get.context!).primaryColor,
+      );
+    } else {
+      if (auth.getGuestToken() == null || auth.getGuestToken() == '1') {
+        auth.getGuestIdUrl();
+      }
+      RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
+      Future.microtask(_navigatePendingDeepLink);
+    }
+
+    DeepLinkHelper.markBootstrapComplete();
+  }
+
+  Future<void> _openPendingNotificationOrDeepLink() async {
+    final notificationBody = _resolveNotificationBody();
+    if (notificationBody != null) {
+      _navigateFromNotification(notificationBody);
+      return;
+    }
+    await _navigatePendingDeepLink();
+  }
+
+  bool _needsForceUpdate(ConfigModel config) {
+    String minimumVersion = '0';
+    final appVersion = config.userAppVersionControl;
+    if (Platform.isAndroid) {
+      minimumVersion = appVersion?.forAndroid?.version ?? '0';
+    } else if (Platform.isIOS) {
+      minimumVersion = appVersion?.forIos?.version ?? '0';
+    }
+    return compareVersions(minimumVersion, AppConstants.appVersion) == 1;
+  }
+
+  void _applyForcedRedirects(ConfigModel? config) {
+    if (config == null || !mounted) return;
+
+    String minimumVersion = '0';
+    final appVersion = config.userAppVersionControl;
+    if (Platform.isAndroid) {
+      minimumVersion = appVersion?.forAndroid?.version ?? '0';
+    } else if (Platform.isIOS) {
+      minimumVersion = appVersion?.forIos?.version ?? '0';
+    }
+
+    if (compareVersions(minimumVersion, AppConstants.appVersion) == 1) {
+      RouterHelper.getUpdateRoute(action: RouteAction.pushReplacement);
+      return;
+    }
+
+    if (config.maintenanceModeData?.maintenanceStatus == 1 &&
+        config.maintenanceModeData?.selectedMaintenanceSystem?.customerApp ==
+            1) {
+      RouterHelper.getMaintenanceRoute(action: RouteAction.pushReplacement);
+    }
   }
 
   NotificationBody? _resolveNotificationBody() {
@@ -88,160 +170,6 @@ class SplashScreenState extends State<SplashScreen> {
     return DeepLinkHelper.tryNavigatePendingDeepLinkWithRetry(
       action: RouteAction.pushReplacement,
     );
-  }
-
-  void _route() {
-    NetworkInfo.checkConnectivity(context);
-    Provider.of<SplashController>(context, listen: false).initConfig(context,
-        (ConfigModel? configModel) {
-      String? minimumVersion = "0";
-      UserAppVersionControl? appVersion =
-          Provider.of<SplashController>(Get.context!, listen: false)
-              .configModel
-              ?.userAppVersionControl;
-      if (Platform.isAndroid) {
-        minimumVersion = appVersion?.forAndroid?.version ?? '0';
-      } else if (Platform.isIOS) {
-        minimumVersion = appVersion?.forIos?.version ?? '0';
-      }
-      Provider.of<SplashController>(Get.context!, listen: false)
-          .initSharedPrefData();
-      final config = Provider.of<SplashController>(Get.context!, listen: false)
-          .configModel;
-      print("app version:" + minimumVersion);
-      print("app version local:" + AppConstants.appVersion);
-      print("app version local:" +
-          compareVersions(minimumVersion!, AppConstants.appVersion).toString());
-      _scheduleNavigation(() async {
-        if (compareVersions(minimumVersion!, AppConstants.appVersion) == 1) {
-          RouterHelper.getUpdateRoute(action: RouteAction.pushReplacement);
-        } else if (config?.maintenanceModeData?.maintenanceStatus == 1 &&
-            config?.maintenanceModeData?.selectedMaintenanceSystem
-                    ?.customerApp ==
-                1 &&
-            !Provider.of<SplashController>(Get.context!, listen: false)
-                .isConfigCall) {
-          RouterHelper.getMaintenanceRoute(action: RouteAction.pushReplacement);
-        } else if (Provider.of<AuthController>(Get.context!, listen: false)
-            .isLoggedIn()) {
-          Provider.of<AuthController>(Get.context!, listen: false)
-              .updateToken(Get.context!);
-          final notificationBody = _resolveNotificationBody();
-          if (notificationBody != null) {
-            _navigateFromNotification(notificationBody);
-          } else if (await _navigatePendingDeepLink()) {
-          } else {
-            RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
-          }
-        } else if (Provider.of<SplashController>(Get.context!, listen: false)
-            .showIntro()!) {
-          RouterHelper.getOnboardingRoute(
-            action: RouteAction.pushReplacement,
-            indicatorColor:
-                Provider.of<ThemeController>(Get.context!, listen: false)
-                        .darkTheme
-                    ? Theme.of(Get.context!).colorScheme.onTertiary
-                    : Theme.of(Get.context!).hintColor,
-            selectedIndicatorColor: Theme.of(Get.context!).primaryColor,
-          );
-        } else {
-          if (Provider.of<AuthController>(Get.context!, listen: false)
-                      .getGuestToken() !=
-                  null &&
-              Provider.of<AuthController>(Get.context!, listen: false)
-                      .getGuestToken() !=
-                  '1') {
-            if (await _navigatePendingDeepLink()) {
-            } else {
-              RouterHelper.getDashboardRoute(
-                  action: RouteAction.pushReplacement);
-            }
-          } else {
-            Provider.of<AuthController>(Get.context!, listen: false)
-                .getGuestIdUrl();
-            if (await _navigatePendingDeepLink()) {
-            } else {
-              RouterHelper.getDashboardRoute(
-                  action: RouteAction.pushReplacement);
-            }
-          }
-        }
-      });
-    }, (ConfigModel? configModel) {
-      String? minimumVersion = "0";
-      UserAppVersionControl? appVersion =
-          Provider.of<SplashController>(Get.context!, listen: false)
-              .configModel
-              ?.userAppVersionControl;
-      if (Platform.isAndroid) {
-        minimumVersion = appVersion?.forAndroid?.version ?? '0';
-      } else if (Platform.isIOS) {
-        minimumVersion = appVersion?.forIos?.version ?? '0';
-      }
-      Provider.of<SplashController>(Get.context!, listen: false)
-          .initSharedPrefData();
-      final config = Provider.of<SplashController>(Get.context!, listen: false)
-          .configModel;
-
-      _scheduleNavigation(() async {
-        if (compareVersions(minimumVersion!, AppConstants.appVersion) == 1) {
-          RouterHelper.getUpdateRoute(action: RouteAction.pushReplacement);
-        } else if (config?.maintenanceModeData?.maintenanceStatus == 1 &&
-            config?.maintenanceModeData?.selectedMaintenanceSystem
-                    ?.customerApp ==
-                1 &&
-            !config!.localMaintenanceMode!) {
-          RouterHelper.getMaintenanceRoute(action: RouteAction.pushReplacement);
-        } else if (Provider.of<AuthController>(Get.context!, listen: false)
-                .isLoggedIn() &&
-            !configModel!.hasLocaldb!) {
-          Provider.of<AuthController>(Get.context!, listen: false)
-              .updateToken(Get.context!);
-          final notificationBody = _resolveNotificationBody();
-          if (notificationBody != null) {
-            _navigateFromNotification(notificationBody);
-          } else if (await _navigatePendingDeepLink()) {
-          } else {
-            RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
-          }
-        } else if (Provider.of<SplashController>(Get.context!, listen: false)
-            .showIntro()!) {
-          RouterHelper.getOnboardingRoute(
-            action: RouteAction.pushReplacement,
-            indicatorColor:
-                Provider.of<ThemeController>(Get.context!, listen: false)
-                        .darkTheme
-                    ? Theme.of(Get.context!).colorScheme.onTertiary
-                    : Theme.of(Get.context!).hintColor,
-            selectedIndicatorColor: Theme.of(Get.context!).primaryColor,
-          );
-        } else {
-          if (Provider.of<AuthController>(Get.context!, listen: false)
-                      .getGuestToken() !=
-                  null &&
-              Provider.of<AuthController>(Get.context!, listen: false)
-                      .getGuestToken() !=
-                  '1') {
-            if (await _navigatePendingDeepLink()) {
-            } else {
-              RouterHelper.getDashboardRoute(
-                  action: RouteAction.pushReplacement);
-            }
-          } else {
-            Provider.of<AuthController>(Get.context!, listen: false)
-                .getGuestIdUrl();
-            if (await _navigatePendingDeepLink()) {
-            } else {
-              RouterHelper.getDashboardRoute(
-                action: RouteAction.pushReplacement,
-              );
-            }
-          }
-        }
-      });
-    }).then((bool isSuccess) {
-      if (isSuccess) {}
-    });
   }
 
   int compareVersions(String version1, String version2) {
@@ -302,11 +230,19 @@ class _SplashWidgetState extends State<SplashWidget> {
   @override
   void initState() {
     super.initState();
-    _startPlayback();
+    final preloaded = SplashVideoLoader.take();
+    if (preloaded != null && preloaded.value.isInitialized) {
+      _controller = preloaded;
+      _ownsController = true;
+      _ready = true;
+      preloaded.addListener(_handleVideoProgress);
+      preloaded.play();
+    } else {
+      _startPlayback();
+    }
   }
 
   Future<void> _startPlayback() async {
-    // Prefer the controller preloaded before runApp.
     VideoPlayerController? controller = SplashVideoLoader.take();
 
     if (controller == null || !controller.value.isInitialized) {
@@ -332,18 +268,31 @@ class _SplashWidgetState extends State<SplashWidget> {
     _controller = controller;
     controller.addListener(_handleVideoProgress);
     setState(() => _ready = true);
-    // Play immediately after first frame is attached.
     await controller.play();
   }
 
   void _handleVideoProgress() {
     final controller = _controller;
-    if (controller == null || !controller.value.isInitialized) return;
+    if (controller == null || !controller.value.isInitialized || _completed) {
+      return;
+    }
 
     final duration = controller.value.duration;
     final position = controller.value.position;
-    if (duration > Duration.zero &&
-        position >= duration - const Duration(milliseconds: 100)) {
+    if (duration <= Duration.zero) return;
+
+    final remaining = duration - position;
+
+    // Leave while the last frames are still on screen. Waiting for true EOS
+    // blanks the video texture and shows a black gap before navigation.
+    final bool nearEnd =
+        position > Duration.zero && remaining <= const Duration(milliseconds: 60);
+    final bool reachedEnd = position >= duration;
+    final bool stoppedAtEnd = !controller.value.isPlaying &&
+        position > Duration.zero &&
+        remaining.inMilliseconds.abs() <= 80;
+
+    if (nearEnd || reachedEnd || stoppedAtEnd) {
       _finishSplash();
     }
   }
@@ -351,6 +300,8 @@ class _SplashWidgetState extends State<SplashWidget> {
   void _finishSplash() {
     if (_completed) return;
     _completed = true;
+    _controller?.removeListener(_handleVideoProgress);
+    // Navigate immediately — no pause/seek/post-frame (those caused the black gap).
     widget.onVideoComplete?.call();
   }
 
@@ -368,7 +319,8 @@ class _SplashWidgetState extends State<SplashWidget> {
     final controller = _controller;
 
     return ColoredBox(
-      color: Colors.black,
+      // Match video letterboxing only — transition should replace this instantly.
+      color: const Color(0xFF000000),
       child: SizedBox.expand(
         child: (_ready && controller != null && controller.value.isInitialized)
             ? LayoutBuilder(
@@ -378,7 +330,6 @@ class _SplashWidgetState extends State<SplashWidget> {
                     return const SizedBox.shrink();
                   }
 
-                  // Cover screen fully (may crop sides, never leave empty bands).
                   final coverScale = [
                     constraints.maxWidth / videoSize.width,
                     constraints.maxHeight / videoSize.height,

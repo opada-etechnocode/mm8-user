@@ -965,13 +965,33 @@ class RouterHelper {
         },
       ),
       
-      GoRoute(path: splashScreen, builder: (context, state) => const SplashScreen()),
-      GoRoute(path: dashboardScreen, builder: (context, state) {
-        String? page =  state.uri.queryParameters['page'];
-        return DashBoardScreen(
-          pageIndex: page == 'home' ? 0 : page == 'inbox' ? 1 : page == 'cart' ? 2 : page == 'orders' ? 3 : page == 'more' ? 4 : 0,
-        );
-      }),
+      GoRoute(
+        path: splashScreen,
+        pageBuilder: (context, state) => const NoTransitionPage(
+          child: SplashScreen(),
+        ),
+      ),
+      GoRoute(
+        path: dashboardScreen,
+        pageBuilder: (context, state) {
+          String? page = state.uri.queryParameters['page'];
+          return NoTransitionPage(
+            child: DashBoardScreen(
+              pageIndex: page == 'home'
+                  ? 0
+                  : page == 'inbox'
+                      ? 1
+                      : page == 'cart'
+                          ? 2
+                          : page == 'orders'
+                              ? 3
+                              : page == 'more'
+                                  ? 4
+                                  : 0,
+            ),
+          );
+        },
+      ),
       GoRoute(path: loginScreen, builder: (context, state) {
         final extra = state.extra as Map<String, dynamic>?;
         return LoginScreen(
@@ -1080,18 +1100,29 @@ class RouterHelper {
         },
       ),
 
-      GoRoute(path: onboardingScreen, builder: (context, state) {
-        final indicatorColor = state.uri.queryParameters['indicatorColor'] != null
-          ? Color(int.parse(state.uri.queryParameters['indicatorColor']!, radix: 16))
-          : Colors.grey;
-        final selectedIndicatorColor = state.uri.queryParameters['selectedIndicatorColor'] != null
-          ? Color(int.parse(state.uri.queryParameters['selectedIndicatorColor']!, radix: 16))
-          : Colors.black;
-        return OnBoardingScreen(
-          indicatorColor: indicatorColor,
-          selectedIndicatorColor: selectedIndicatorColor,
-        );
-      }),
+      GoRoute(
+        path: onboardingScreen,
+        pageBuilder: (context, state) {
+          final indicatorColor =
+              state.uri.queryParameters['indicatorColor'] != null
+                  ? Color(int.parse(
+                      state.uri.queryParameters['indicatorColor']!,
+                      radix: 16))
+                  : Colors.grey;
+          final selectedIndicatorColor =
+              state.uri.queryParameters['selectedIndicatorColor'] != null
+                  ? Color(int.parse(
+                      state.uri.queryParameters['selectedIndicatorColor']!,
+                      radix: 16))
+                  : Colors.black;
+          return NoTransitionPage(
+            child: OnBoardingScreen(
+              indicatorColor: indicatorColor,
+              selectedIndicatorColor: selectedIndicatorColor,
+            ),
+          );
+        },
+      ),
       GoRoute(path: authScreen, builder: (context, state) {
         final extra = state.extra as Map<String, dynamic>?;
 
