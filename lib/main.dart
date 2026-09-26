@@ -63,7 +63,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'di_container.dart' as di;
 import 'features/splash/domain/models/config_model.dart';
-import 'features/splash/screens/splash_screen.dart';
+import 'package:flutter_sixvalley_ecommerce/features/splash/screens/splash_screen.dart';
+import 'package:flutter_sixvalley_ecommerce/features/splash/splash_video_loader.dart';
 import 'helper/custom_delegate.dart';
 import 'localization/app_localization.dart';
 import 'dart:io' as io;
@@ -105,6 +106,9 @@ Future<void> main() async {
 }
 
 Future<void> bootstrapApp() async {
+  // Start splash video decode ASAP so the first frame is ready at runApp.
+  final splashVideoFuture = SplashVideoLoader.preload();
+
   await di.init();
 
   flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.requestNotificationsPermission();
@@ -124,7 +128,10 @@ Future<void> bootstrapApp() async {
 
   GoRouter.optionURLReflectsImperativeAPIs = true;
 
-  await _precacheSplashImage();
+  await Future.wait([
+    _precacheSplashImage(),
+    splashVideoFuture,
+  ]);
 
   runApp(
 

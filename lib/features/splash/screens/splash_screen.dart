@@ -1,9 +1,6 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:flutter_sixvalley_ecommerce/features/splash/widgets/typewriter_text_widget.dart';
-import 'package:flutter_sixvalley_ecommerce/localization/language_constrants.dart';
 import 'package:flutter_sixvalley_ecommerce/features/splash/controllers/splash_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/splash/domain/models/config_model.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/network_info.dart';
@@ -15,11 +12,11 @@ import 'package:flutter_sixvalley_ecommerce/push_notification/models/notificatio
 import 'package:flutter_sixvalley_ecommerce/features/auth/controllers/auth_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/theme/controllers/theme_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/app_constants.dart';
-import 'package:flutter_sixvalley_ecommerce/utill/custom_themes.dart';
-import 'package:flutter_sixvalley_ecommerce/utill/dimensions.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/images.dart';
 import 'package:flutter_sixvalley_ecommerce/common/basewidget/no_internet_screen_widget.dart';
+import 'package:flutter_sixvalley_ecommerce/features/splash/splash_video_loader.dart';
 import 'package:provider/provider.dart';
+import 'package:video_player/video_player.dart';
 
 class SplashScreen extends StatefulWidget {
   final NotificationBody? body;
@@ -32,50 +29,32 @@ class SplashScreen extends StatefulWidget {
 
 class SplashScreenState extends State<SplashScreen> {
   final GlobalKey<ScaffoldMessengerState> _globalKey = GlobalKey();
-  final Completer<void> _typingCompleter = Completer<void>();
+  final Completer<void> _splashVideoCompleter = Completer<void>();
   bool _hasNavigated = false;
   NotificationBody? _notificationBody;
-
-  // late StreamSubscription<ConnectivityResult> _onConnectivityChanged;
 
   @override
   void initState() {
     super.initState();
-
-    // bool firstTime = true;
-    // _onConnectivityChanged = Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
-    //   if(!firstTime) {
-    //     bool isNotConnected = result != ConnectivityResult.wifi && result != ConnectivityResult.mobile;
-    //     isNotConnected ? const SizedBox() : ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    //     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-    //       backgroundColor: isNotConnected ? Colors.red : Colors.green,
-    //       duration: Duration(seconds: isNotConnected ? 6000 : 3),
-    //       content: Text(isNotConnected ? getTranslated('no_connection', context)! : getTranslated('connected', context)!,
-    //         textAlign: TextAlign.center)));
-    //     if(!isNotConnected) {
-    //       _route();
-    //     }
-    //   }
-    //   firstTime = false;
-    // });
-
     _initializeAsync();
   }
 
   Future<void> _initializeAsync() async {
-    await Future.delayed(const Duration(milliseconds: 200));
     _route();
   }
 
-  void _onTypingComplete() {
-    if (!_typingCompleter.isCompleted) {
-      _typingCompleter.complete();
+  void _onSplashVideoComplete() {
+    if (!_splashVideoCompleter.isCompleted) {
+      _splashVideoCompleter.complete();
     }
   }
 
   Future<void> _ensureSplashAnimationFinished() async {
-    await _typingCompleter.future;
-    await Future.delayed(const Duration(milliseconds: 600));
+    await _splashVideoCompleter.future.timeout(
+      const Duration(seconds: 12),
+      onTimeout: () {},
+    );
+    await Future.delayed(const Duration(milliseconds: 250));
   }
 
   void _scheduleNavigation(Future<void> Function() navigate) {
@@ -90,7 +69,6 @@ class SplashScreenState extends State<SplashScreen> {
   @override
   void dispose() {
     super.dispose();
-    // _onConnectivityChanged.cancel();
   }
 
   NotificationBody? _resolveNotificationBody() {
@@ -128,7 +106,6 @@ class SplashScreenState extends State<SplashScreen> {
       }
       Provider.of<SplashController>(Get.context!, listen: false)
           .initSharedPrefData();
-      // Timer(const Duration(seconds: 2), () {
       final config = Provider.of<SplashController>(Get.context!, listen: false)
           .configModel;
       print("app version:" + minimumVersion);
@@ -190,7 +167,6 @@ class SplashScreenState extends State<SplashScreen> {
           }
         }
       });
-      //  });
     }, (ConfigModel? configModel) {
       String? minimumVersion = "0";
       UserAppVersionControl? appVersion =
@@ -229,8 +205,7 @@ class SplashScreenState extends State<SplashScreen> {
             RouterHelper.getDashboardRoute(action: RouteAction.pushReplacement);
           }
         } else if (Provider.of<SplashController>(Get.context!, listen: false)
-                .showIntro()! &&
-            !configModel!.hasLocaldb!) {
+            .showIntro()!) {
           RouterHelper.getOnboardingRoute(
             action: RouteAction.pushReplacement,
             indicatorColor:
@@ -240,13 +215,7 @@ class SplashScreenState extends State<SplashScreen> {
                     : Theme.of(Get.context!).hintColor,
             selectedIndicatorColor: Theme.of(Get.context!).primaryColor,
           );
-        } else if (!configModel!.hasLocaldb! ||
-            (configModel.hasLocaldb! &&
-                configModel.localMaintenanceMode! &&
-                !(config?.maintenanceModeData?.maintenanceStatus == 1 &&
-                    config?.maintenanceModeData?.selectedMaintenanceSystem
-                            ?.customerApp ==
-                        1))) {
+        } else {
           if (Provider.of<AuthController>(Get.context!, listen: false)
                       .getGuestToken() !=
                   null &&
@@ -264,7 +233,8 @@ class SplashScreenState extends State<SplashScreen> {
             if (await _navigatePendingDeepLink()) {
             } else {
               RouterHelper.getDashboardRoute(
-                  action: RouteAction.pushNamedAndRemoveUntil);
+                action: RouteAction.pushReplacement,
+              );
             }
           }
         }
@@ -300,60 +270,137 @@ class SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       key: _globalKey,
       backgroundColor: Colors.black,
-      body: Provider.of<SplashController>(context).hasConnection
-          ? SplashWidget(onTypingComplete: _onTypingComplete)
-          : const NoInternetOrDataScreenWidget(
-              isNoInternet: true, child: SplashScreen()),
+      resizeToAvoidBottomInset: false,
+      body: MediaQuery.removePadding(
+        context: context,
+        removeTop: true,
+        removeBottom: true,
+        child: Provider.of<SplashController>(context).hasConnection
+            ? SplashWidget(onVideoComplete: _onSplashVideoComplete)
+            : const NoInternetOrDataScreenWidget(
+                isNoInternet: true, child: SplashScreen()),
+      ),
     );
   }
 }
 
-class SplashWidget extends StatelessWidget {
-  final VoidCallback? onTypingComplete;
+class SplashWidget extends StatefulWidget {
+  final VoidCallback? onVideoComplete;
 
-  const SplashWidget({super.key, this.onTypingComplete});
+  const SplashWidget({super.key, this.onVideoComplete});
+
+  @override
+  State<SplashWidget> createState() => _SplashWidgetState();
+}
+
+class _SplashWidgetState extends State<SplashWidget> {
+  VideoPlayerController? _controller;
+  bool _ownsController = false;
+  bool _ready = false;
+  bool _completed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _startPlayback();
+  }
+
+  Future<void> _startPlayback() async {
+    // Prefer the controller preloaded before runApp.
+    VideoPlayerController? controller = SplashVideoLoader.take();
+
+    if (controller == null || !controller.value.isInitialized) {
+      controller = VideoPlayerController.asset(Images.splashIntroVideo);
+      _ownsController = true;
+      try {
+        await controller.initialize();
+        await controller.setLooping(false);
+      } catch (_) {
+        await controller.dispose();
+        _finishSplash();
+        return;
+      }
+    } else {
+      _ownsController = true;
+    }
+
+    if (!mounted) {
+      await controller.dispose();
+      return;
+    }
+
+    _controller = controller;
+    controller.addListener(_handleVideoProgress);
+    setState(() => _ready = true);
+    // Play immediately after first frame is attached.
+    await controller.play();
+  }
+
+  void _handleVideoProgress() {
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) return;
+
+    final duration = controller.value.duration;
+    final position = controller.value.position;
+    if (duration > Duration.zero &&
+        position >= duration - const Duration(milliseconds: 100)) {
+      _finishSplash();
+    }
+  }
+
+  void _finishSplash() {
+    if (_completed) return;
+    _completed = true;
+    widget.onVideoComplete?.call();
+  }
+
+  @override
+  void dispose() {
+    _controller?.removeListener(_handleVideoProgress);
+    if (_ownsController) {
+      _controller?.dispose();
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final controller = _controller;
+
     return ColoredBox(
       color: Colors.black,
-      child: Stack(
-        fit: StackFit.expand,
-        alignment: Alignment.center,
-        children: [
-          Positioned.fill(
-            child: Image.asset(
-              "assets/images/splash.jpeg",
-              fit: BoxFit.cover,
-              alignment: Alignment.center,
-              gaplessPlayback: true,
-              filterQuality: FilterQuality.medium,
-            ),
-          ),
-          Positioned(
-            bottom: 50,
-            left: 20,
-            right: 20,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: Dimensions.paddingSizeLarge,
-                vertical: Dimensions.paddingSizeSmall,
-              ),
-              child: TypewriterText(
-                text: getTranslated('splash_welcome_message', context) ?? '',
-                speed: const Duration(milliseconds: 38),
-                step: 1,
-                textAlign: TextAlign.center,
-                onComplete: onTypingComplete,
-                style: textRegular.copyWith(
-                  fontSize: Dimensions.fontSizeDefault + 1,
-                  color: Colors.white,
-                  height: 1.5,
-                ),
-              ),
-            ),
-          )
-        ],
+      child: SizedBox.expand(
+        child: (_ready && controller != null && controller.value.isInitialized)
+            ? LayoutBuilder(
+                builder: (context, constraints) {
+                  final videoSize = controller.value.size;
+                  if (videoSize.width <= 0 || videoSize.height <= 0) {
+                    return const SizedBox.shrink();
+                  }
+
+                  // Cover screen fully (may crop sides, never leave empty bands).
+                  final coverScale = [
+                    constraints.maxWidth / videoSize.width,
+                    constraints.maxHeight / videoSize.height,
+                  ].reduce((a, b) => a > b ? a : b);
+
+                  return ClipRect(
+                    child: OverflowBox(
+                      minWidth: 0,
+                      minHeight: 0,
+                      maxWidth: videoSize.width * coverScale,
+                      maxHeight: videoSize.height * coverScale,
+                      alignment: Alignment.center,
+                      child: SizedBox(
+                        width: videoSize.width,
+                        height: videoSize.height,
+                        child: VideoPlayer(controller),
+                      ),
+                    ),
+                  );
+                },
+              )
+            : const SizedBox.shrink(),
       ),
     );
   }

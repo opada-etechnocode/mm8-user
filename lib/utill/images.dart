@@ -71,6 +71,7 @@ class Images {
   static const String searchIcon = 'assets/images/search.png';
   static const String search = 'assets/images/search.png';
   static const String splashScreenLogo = 'assets/images/logo_with_name_white.png';
+  static const String splashIntroVideo = 'assets/images/intro.mp4';
   static const String cPolicy = 'assets/images/c_policy.png';
   static const String returnPolicy = 'assets/images/return_policy.png';
   static const String refundPolicy = 'assets/images/refund_policy.png';

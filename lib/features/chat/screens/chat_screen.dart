@@ -274,12 +274,16 @@ class _ChatScreenState extends State<ChatScreen> {
                     shrinkWrap: true,
                     reverse: true,
                     itemBuilder: (context, index) {
-                      return  Column(
-                        crossAxisAlignment: chatController.messageModel?.message?[index].sentByCustomer ?? false
-                          ? CrossAxisAlignment.end
-                          : CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
+                      return Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: Align(
+                          alignment: (chatController.messageModel?.message?[index].sentByCustomer ?? false)
+                              ? Alignment.centerRight
+                              : Alignment.centerLeft,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
 
                           if(_willShowDate(index, chatController.messageModel) != null)
                             Center(
@@ -307,7 +311,10 @@ class _ChatScreenState extends State<ChatScreen> {
                             next: index == (chatController.messageModel!.message!.length -1) ?  null : chatController.messageModel!.message![index + 1],
                           ),
 
-                        ],);
+                        ],
+                          ),
+                        ),
+                      );
                     },
                   ),
                 ),
