@@ -131,10 +131,17 @@ class FlashDealShimmer extends StatelessWidget {
                   enabled: true,
                   child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
 
-                    Container(height: ResponsiveHelper.isTab(context)? 300 : 120, padding: const EdgeInsets.all(Dimensions.paddingSizeLarge),
-                        decoration: BoxDecoration(color: Provider.of<ThemeController>(context).darkTheme ?
-                        Theme.of(context).primaryColor.withValues(alpha:.05) :
-                        Theme.of(context).cardColor, borderRadius: BorderRadius.circular(10))),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(Dimensions.paddingSizeLarge),
+                        decoration: BoxDecoration(
+                          color: Provider.of<ThemeController>(context).darkTheme
+                              ? Theme.of(context).primaryColor.withValues(alpha: .05)
+                              : Theme.of(context).cardColor,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
 
                     Padding(padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
                       child: Column(mainAxisAlignment: MainAxisAlignment.center,

@@ -313,18 +313,32 @@ class _OrderDetailsWidgetState extends State<OrderDetailsWidget> {
 
           Consumer<OrderController>(
             builder: (context, orderController, _) {
-              return  widget.orderDetailsModel.order?.status == 'delivered' && widget.orderType != "POS" ?
-              ReviewButtonWidget(
-                orderDetailsModel: widget.orderDetailsModel,
-                orderId: widget.orderId,
-                orderType: widget.orderType,
-                callback: widget.callback,
-                index: widget.index,
-              ) : const SizedBox.shrink();
+              final orderStatus =
+                  (widget.orderDetailsModel.order?.status ?? '').toLowerCase();
+              final canReview = widget.orderType != "POS" &&
+                  orderStatus.isNotEmpty &&
+                  orderStatus != 'canceled' &&
+                  orderStatus != 'cancelled' &&
+                  orderStatus != 'returned' &&
+                  orderStatus != 'failed' &&
+                  orderStatus != 'fail_to_delivered';
+
+              return canReview
+                  ? ReviewButtonWidget(
+                      orderDetailsModel: widget.orderDetailsModel,
+                      orderId: widget.orderId,
+                      orderType: widget.orderType,
+                      callback: widget.callback,
+                      index: widget.index,
+                    )
+                  : const SizedBox.shrink();
             }
           ),
 
-          if(widget.orderDetailsModel.order?.status == 'delivered' && widget.orderType != "POS")
+          if(widget.orderType != "POS" &&
+              (widget.orderDetailsModel.order?.status ?? '').isNotEmpty &&
+              !{'canceled', 'cancelled', 'returned', 'failed', 'fail_to_delivered'}
+                  .contains((widget.orderDetailsModel.order?.status ?? '').toLowerCase()))
             const SizedBox(height: Dimensions.paddingSizeSmall),
 
           SizedBox(height: 1, child: Divider(thickness: .300, color: Theme.of(context).hintColor.withValues(alpha: 0.45))),

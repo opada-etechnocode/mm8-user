@@ -41,20 +41,29 @@ class ReviewRepository implements ReviewRepositoryInterface{
       }
     }
     if(update){
-      request.fields.addAll(<String, String>{
+      final fields = <String, String>{
         "id" : reviewBody.id!,
-        "order_id" : reviewBody.orderId!,
         'product_id': reviewBody.productId!,
         'comment': reviewBody.comment!,
         '_method' : "put",
-        'rating': reviewBody.rating!});
+        'rating': reviewBody.rating!,
+      };
+      if (reviewBody.orderId != null && reviewBody.orderId!.isNotEmpty) {
+        fields['order_id'] = reviewBody.orderId!;
+      }
+      request.fields.addAll(fields);
     }else{
       log("----repo===>${reviewBody.orderId}");
-      request.fields.addAll(<String, String>{
-        "order_id" : reviewBody.orderId?? "100264",
+      final fields = <String, String>{
         'product_id': reviewBody.productId!,
         'comment': reviewBody.comment!,
-        'rating': reviewBody.rating!});
+        'rating': reviewBody.rating!,
+      };
+      // Backend accepts reviews without purchase; send order_id only when available.
+      if (reviewBody.orderId != null && reviewBody.orderId!.isNotEmpty) {
+        fields['order_id'] = reviewBody.orderId!;
+      }
+      request.fields.addAll(fields);
     }
 
     log("Here is Body==> ${request.fields.toString()}===>");

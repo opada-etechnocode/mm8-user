@@ -17,135 +17,192 @@ class ReviewAndSpecificationSectionWidget extends StatelessWidget {
     this.reviewsCount,
   });
 
-  bool _hasReviews(ReviewController reviewController) {
-    final listCount = reviewController.reviewList?.length ?? 0;
-    final productCount = reviewsCount ?? 0;
-    final rating = averageReview ?? 0;
-    return listCount > 0 || productCount > 0 || rating > 0;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Consumer2<ProductDetailsController, ReviewController>(
       builder: (context, productDetailsController, reviewController, _) {
-        if (!_hasReviews(reviewController)) {
-          if (productDetailsController.isReviewSelected) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              productDetailsController.selectReviewSection(false);
-            });
-          }
-          return const SizedBox.shrink();
-        }
+        final theme = Theme.of(context);
+        final isDark =
+            Provider.of<ThemeController>(context, listen: false).darkTheme;
+        final isReview = productDetailsController.isReviewSelected;
+        final count = reviewController.reviewList != null
+            ? reviewController.reviewList!.length
+            : (reviewsCount ?? 0);
 
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              InkWell(
-                onTap: () => productDetailsController.selectReviewSection(false),
-                child: Column(
+          padding: const EdgeInsets.fromLTRB(
+            Dimensions.paddingSizeDefault,
+            Dimensions.paddingSizeSmall,
+            Dimensions.paddingSizeDefault,
+            Dimensions.paddingSizeDefault,
+          ),
+          child: Container(
+            height: 52,
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              color: isDark
+                  ? theme.highlightColor.withValues(alpha: 0.55)
+                  : theme.hintColor.withValues(alpha: 0.08),
+              border: Border.all(
+                color: theme.hintColor.withValues(alpha: isDark ? 0.12 : 0.08),
+              ),
+            ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final tabWidth = constraints.maxWidth / 2;
+
+                return Stack(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: Dimensions.paddingSizeDefault,
-                        vertical: Dimensions.paddingSizeSmall,
-                      ),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall),
-                        color: !productDetailsController.isReviewSelected
-                            ? (Provider.of<ThemeController>(context, listen: false).darkTheme
-                                ? Theme.of(context).hintColor.withValues(alpha: .25)
-                                : Theme.of(context).primaryColor.withValues(alpha: .05))
-                            : Colors.transparent,
-                      ),
-                      child: Text(
-                        '${getTranslated('specification', context)}',
-                        style: textMedium.copyWith(
-                          color: Provider.of<ThemeController>(context, listen: false).darkTheme
-                              ? Theme.of(context).hintColor
-                              : (!productDetailsController.isReviewSelected
-                                  ? Theme.of(context).primaryColor
-                                  : Theme.of(context).hintColor),
+                    AnimatedAlign(
+                      duration: const Duration(milliseconds: 280),
+                      curve: Curves.easeOutCubic,
+                      alignment: isReview
+                          ? AlignmentDirectional.centerEnd
+                          : AlignmentDirectional.centerStart,
+                      child: Container(
+                        width: tabWidth,
+                        height: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: theme.cardColor,
+                          boxShadow: [
+                            BoxShadow(
+                              color: theme.primaryColor.withValues(alpha: 0.12),
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
+                            ),
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.04),
+                              blurRadius: 6,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                    if (!productDetailsController.isReviewSelected)
-                      Container(width: 40, height: 2, color: Theme.of(context).primaryColor),
-                  ],
-                ),
-              ),
-              const SizedBox(width: Dimensions.paddingSizeDefault),
-              InkWell(
-                onTap: () => productDetailsController.selectReviewSection(true),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Column(
+                    Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: Dimensions.paddingSizeDefault,
-                            vertical: Dimensions.paddingSizeSmall,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall),
-                            color: productDetailsController.isReviewSelected
-                                ? (Provider.of<ThemeController>(context, listen: false).darkTheme
-                                    ? Theme.of(context).hintColor.withValues(alpha: .25)
-                                    : Theme.of(context).primaryColor.withValues(alpha: .05))
-                                : Colors.transparent,
-                          ),
-                          child: Text(
-                            '${getTranslated('reviews', context)}',
-                            style: textMedium.copyWith(
-                              color: Provider.of<ThemeController>(context, listen: false).darkTheme
-                                  ? Theme.of(context).hintColor
-                                  : (productDetailsController.isReviewSelected
-                                      ? Theme.of(context).primaryColor
-                                      : Theme.of(context).hintColor),
-                            ),
+                        Expanded(
+                          child: _SegmentTab(
+                            label: getTranslated('specification', context)!,
+                            icon: Icons.description_outlined,
+                            selected: !isReview,
+                            onTap: () => productDetailsController
+                                .selectReviewSection(false),
                           ),
                         ),
-                        if (productDetailsController.isReviewSelected)
-                          Container(width: 40, height: 2, color: Theme.of(context).primaryColor),
+                        Expanded(
+                          child: _SegmentTab(
+                            label: getTranslated('reviews', context)!,
+                            icon: Icons.star_rate_rounded,
+                            selected: isReview,
+                            badgeCount: count,
+                            onTap: () => productDetailsController
+                                .selectReviewSection(true),
+                          ),
+                        ),
                       ],
                     ),
-                    Positioned(
-                      top: -10,
-                      right: -10,
-                      child: Align(
-                        alignment: Alignment.topRight,
-                        child: Center(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(Dimensions.paddingSizeDefault),
-                              color: Theme.of(context).primaryColor,
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: Dimensions.paddingSizeExtraSmall,
-                                horizontal: Dimensions.paddingSizeSmall,
-                              ),
-                              child: Text(
-                                '${reviewController.reviewList != null ? reviewController.reviewList!.length : (reviewsCount ?? 0)}',
-                                style: textBold.copyWith(
-                                  fontSize: Dimensions.fontSizeSmall,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
                   ],
-                ),
-              ),
-            ],
+                );
+              },
+            ),
           ),
         );
       },
+    );
+  }
+}
+
+class _SegmentTab extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+  final int? badgeCount;
+
+  const _SegmentTab({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+    this.badgeCount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final activeColor = theme.primaryColor;
+    final inactiveColor = theme.hintColor;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Center(
+          child: AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 200),
+            style: (selected ? textBold : textMedium).copyWith(
+              fontSize: Dimensions.fontSizeDefault,
+              color: selected ? activeColor : inactiveColor,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: selected
+                        ? activeColor.withValues(alpha: 0.12)
+                        : Colors.transparent,
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 18,
+                    color: selected ? activeColor : inactiveColor,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (badgeCount != null) ...[
+                  const SizedBox(width: 6),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      color: selected
+                          ? activeColor
+                          : inactiveColor.withValues(alpha: 0.18),
+                    ),
+                    child: Text(
+                      '$badgeCount',
+                      style: textBold.copyWith(
+                        fontSize: Dimensions.fontSizeExtraSmall,
+                        color: selected ? Colors.white : inactiveColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

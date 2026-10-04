@@ -60,7 +60,11 @@ class _OtpRegistrationScreenState extends State<OtpRegistrationScreen> {
     final double width = MediaQuery.of(context).size.width;
     final Size size = MediaQuery.of(context).size;
 
-    bool isNumber = NumberCheckerHelper.isNumber(widget.userInput.trim().replaceAll('+', ''));
+    // isNumber == true  → OTP/phone login: collect email
+    // isNumber == false → social (Apple/Google/…) or empty Apple email: collect phone
+    final String cleanedInput = widget.userInput.trim().replaceAll('+', '');
+    final bool isNumber =
+        cleanedInput.isNotEmpty && NumberCheckerHelper.isNumber(cleanedInput);
     final configModel = Provider.of<SplashController>(context, listen: false).configModel!;
 
 

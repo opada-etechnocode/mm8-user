@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_sixvalley_ecommerce/data/model/api_response.dart';
@@ -49,6 +50,42 @@ class ReviewController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// One review per customer per product.
+  bool hasUserReviewed({required int? userId, int? productId}) {
+    if (userId == null || _reviewList == null) return false;
+    return _reviewList!.any((review) {
+      final sameUser = review.customerId == userId;
+      final sameProduct =
+          productId == null || review.productId == null || review.productId == productId;
+      return sameUser && sameProduct;
+    });
+  }
+
+  ReviewModel? findUserReview({required int? userId, int? productId}) {
+    if (userId == null || _reviewList == null) return null;
+    for (final review in _reviewList!) {
+      final sameUser = review.customerId == userId;
+      final sameProduct =
+          productId == null || review.productId == null || review.productId == productId;
+      if (sameUser && sameProduct) return review;
+    }
+    return null;
+  }
+
+  Future<bool> hasUserReviewedProduct({
+    required String? productSlug,
+    required int? userId,
+    int? productId,
+    required BuildContext context,
+  }) async {
+    if (userId == null) return false;
+    if (productSlug == null || productSlug.isEmpty) {
+      return hasUserReviewed(userId: userId, productId: productId);
+    }
+    await getReviewList(productSlug, context);
+    return hasUserReviewed(userId: userId, productId: productId);
+  }
+
   Future<ResponseModel> submitReview(ReviewBody reviewBody, List<File> files, bool update) async {
     _isLoading = true;
     notifyListeners();
@@ -57,11 +94,33 @@ class ReviewController extends ChangeNotifier {
     if (response.statusCode == 200) {
       Provider.of<OrderDetailsController>(Get.context!, listen: false).reviewImages = [];
       _rating = 0;
-      responseModel = ResponseModel('${getTranslated('Review submitted successfully', Get.context!)}', true);
+      responseModel = ResponseModel(
+        getTranslated('review_submitted_successfully', Get.context!) ??
+            getTranslated('Review submitted successfully', Get.context!) ??
+            'Review submitted successfully',
+        true,
+      );
       _errorText = null;
       notifyListeners();
     } else {
-      responseModel = ResponseModel('${response.statusCode} ${response.reasonPhrase}', false);
+      String message = '${response.statusCode} ${response.reasonPhrase}';
+      try {
+        final body = await response.stream.bytesToString();
+        if (body.isNotEmpty) {
+          final decoded = jsonDecode(body);
+          if (decoded is Map) {
+            message = decoded['message']?.toString() ??
+                decoded['error_message']?.toString() ??
+                (decoded['errors'] is List && (decoded['errors'] as List).isNotEmpty
+                    ? (decoded['errors'][0] is Map
+                        ? decoded['errors'][0]['message']?.toString()
+                        : decoded['errors'][0]?.toString())
+                    : null) ??
+                message;
+          }
+        }
+      } catch (_) {}
+      responseModel = ResponseModel(message, false);
     }
     _isLoading = false;
     notifyListeners();
@@ -137,6 +196,7 @@ class ReviewController extends ChangeNotifier {
   void removePrevReview() {
     _reviewList = null;
   }
+
   void setErrorText(String? error) {
     _errorText = error;
     notifyListeners();

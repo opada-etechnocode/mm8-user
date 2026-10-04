@@ -4,7 +4,10 @@ import 'package:flutter_sixvalley_ecommerce/common/basewidget/custom_image_widge
 import 'package:flutter_sixvalley_ecommerce/features/order/controllers/order_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/order_details/controllers/order_details_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/order_details/domain/models/order_details_model.dart';
+import 'package:flutter_sixvalley_ecommerce/features/product_details/domain/models/product_details_model.dart';
+import 'package:flutter_sixvalley_ecommerce/features/profile/controllers/profile_contrroller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/review/controllers/review_controller.dart';
+import 'package:flutter_sixvalley_ecommerce/features/review/widgets/product_write_review_sheet.dart';
 import 'package:flutter_sixvalley_ecommerce/features/review/widgets/review_dialog_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/date_converter.dart';
 import 'package:flutter_sixvalley_ecommerce/localization/language_constrants.dart';
@@ -29,7 +32,48 @@ class ReviewButtonWidget extends StatefulWidget {
 }
 
 class _ReviewButtonWidgetState extends State<ReviewButtonWidget> with TickerProviderStateMixin {
+  bool _alreadyReviewed = false;
+  bool _checkingReview = true;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkExistingReview());
+  }
+
+  Future<void> _checkExistingReview() async {
+    if (widget.orderDetailsModel.reviewModel != null) {
+      if (!mounted) return;
+      setState(() {
+        _alreadyReviewed = true;
+        _checkingReview = false;
+      });
+      return;
+    }
+
+    final profile = Provider.of<ProfileController>(context, listen: false);
+    if (profile.userInfoModel == null) {
+      await profile.getUserInfo(context);
+    }
+    final userId = profile.userInfoModel?.id;
+    final productId = widget.orderDetailsModel.productId ??
+        widget.orderDetailsModel.productDetails?.id;
+    final slug = widget.orderDetailsModel.productDetails?.slug;
+
+    final reviewController = Provider.of<ReviewController>(context, listen: false);
+    final reviewed = await reviewController.hasUserReviewedProduct(
+      productSlug: slug,
+      userId: userId,
+      productId: productId,
+      context: context,
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _alreadyReviewed = reviewed;
+      _checkingReview = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +101,7 @@ class _ReviewButtonWidgetState extends State<ReviewButtonWidget> with TickerProv
 
                         const SizedBox(width: Dimensions.paddingSizeSmall),
 
-                        if(widget.orderDetailsModel.deliveryStatus == 'delivered' && widget.orderType != "POS" && widget.orderDetailsModel.reviewModel != null)
+                        if(widget.orderType != "POS" && widget.orderDetailsModel.reviewModel != null)
                           Container(
                             height: 25, width: 25,
                             decoration: BoxDecoration(
@@ -100,16 +144,46 @@ class _ReviewButtonWidgetState extends State<ReviewButtonWidget> with TickerProv
                       const Spacer(),
                       Consumer<OrderController>(
                           builder: (context, orderController, _) {
-                            return widget.orderDetailsModel.deliveryStatus == 'delivered' && widget.orderType != "POS" ? InkWell(
+                            if (widget.orderType == "POS") {
+                              return const SizedBox();
+                            }
+                            if (_checkingReview) {
+                              return const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              );
+                            }
+
+                            return InkWell(
                               onTap: () async {
-                                if(widget.orderDetailsModel.deliveryStatus == 'delivered') {
                                   if(orderProvider.orderDetails?[widget.index].isExpanded ?? false){
                                     await orderProvider.setOrderReviewExpanded(
                                       widget.index,
                                       orderProvider.orderDetails![widget.index].isExpanded! ? false : true,
                                     );
-                                    // _toggleExpansion();
                                   }
+
+                                  // Already reviewed elsewhere (e.g. product page) without this order's review:
+                                  // open product edit sheet. Otherwise use order review dialog.
+                                  if (_alreadyReviewed &&
+                                      widget.orderDetailsModel.reviewModel == null) {
+                                    final product = widget.orderDetailsModel.productDetails;
+                                    if (product?.id == null) return;
+                                    await ProductWriteReviewSheet.show(
+                                      context,
+                                      product: ProductDetailsModel(
+                                        id: product!.id,
+                                        name: product.name,
+                                        slug: product.slug,
+                                        thumbnailFullUrl: product.thumbnailFullUrl,
+                                      ),
+                                      productSlug: product.slug,
+                                    );
+                                    await _checkExistingReview();
+                                    return;
+                                  }
+
                                   Provider.of<ReviewController>(Get.context!, listen: false).removeData();
                                   showDialog(context: Get.context!, builder: (context) => Dialog(
                                     insetPadding: EdgeInsets.zero, backgroundColor: Colors.transparent,
@@ -119,8 +193,7 @@ class _ReviewButtonWidgetState extends State<ReviewButtonWidget> with TickerProv
                                       orderDetailsModel: widget.orderDetailsModel,
                                       orderType: widget.orderType
                                     ),
-                                  ));
-                                }
+                                  )).then((_) => _checkExistingReview());
                               },
                               child: Container(
                                 decoration: BoxDecoration(
@@ -129,20 +202,17 @@ class _ReviewButtonWidgetState extends State<ReviewButtonWidget> with TickerProv
                                 ),
                                 padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall, vertical: Dimensions.paddingSizeExtraSmall),
 
-                                child: Row(children: [
-                                  Text(
-                                      widget.orderDetailsModel.reviewModel == null ?
-                                      '${getTranslated('review_product', context)}' :
-                                      '${getTranslated('update_review', context)}',
-                                      style: textBold.copyWith(
-                                        fontSize: Dimensions.fontSizeSmall,
-                                        color: Theme.of(context).scaffoldBackgroundColor,
-                                      )
+                                child: Text(
+                                  _alreadyReviewed
+                                      ? getTranslated('update_review', context)!
+                                      : getTranslated('review_product', context)!,
+                                  style: textBold.copyWith(
+                                    fontSize: Dimensions.fontSizeSmall,
+                                    color: Theme.of(context).scaffoldBackgroundColor,
                                   ),
-
-                                ]),
+                                ),
                               ),
-                            ) : const SizedBox();
+                            );
                           }
                       ),
                     ]),

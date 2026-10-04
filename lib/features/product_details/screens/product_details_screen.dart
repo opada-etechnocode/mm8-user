@@ -243,10 +243,7 @@ class _ProductDetailsState extends State<ProductDetails> {
                     ),
 
                     details.isReviewSelected?
-                    Column(children: [
-                      ReviewSection(details: details),
-                      _ProductDetailsProductListWidget(scrollController: _scrollController),
-                    ]):
+                    ReviewSection(details: details):
 
                     Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       (details.productDetailsModel?.details != null && details.productDetailsModel!.details!.isNotEmpty) ?
