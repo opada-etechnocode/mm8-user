@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_sixvalley_ecommerce/features/product_details/controllers/product_details_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product_details/domain/models/product_details_model.dart';
 import 'package:flutter_sixvalley_ecommerce/features/product_details/widgets/cart_bottom_sheet_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/features/splash/controllers/splash_controller.dart';
+import 'package:flutter_sixvalley_ecommerce/helper/product_image_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/responsive_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/route_healper.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/shop_helper.dart';
@@ -94,11 +96,24 @@ class _BottomCartWidgetState extends State<BottomCartWidget> {
             if(vacationIsOn || temporaryClose ) {
               showCustomSnackBarWidget(getTranslated('this_shop_is_close_now', context), context, snackBarType: SnackBarType.error);
             }else{
+              final details = Provider.of<ProductDetailsController>(context, listen: false);
+              final selectedColorIndex = details.variantIndex;
+              final hasSelectedColor = widget.product != null &&
+                  details.isValidColorIndex(widget.product!, selectedColorIndex);
+
               showModalBottomSheet(context: context, isScrollControlled: true,
                 backgroundColor: Theme.of(context).primaryColor.withValues(alpha:0),
-                builder: (con) => CartBottomSheetWidget(product: widget.product, callback: (){
-                  showCustomSnackBarWidget(getTranslated('added_to_cart', context), context, snackBarType: SnackBarType.success);
-                },)
+                builder: (con) => CartBottomSheetWidget(
+                  product: widget.product,
+                  initialColorIndex: hasSelectedColor ? selectedColorIndex : null,
+                  initialColorImagePath: hasSelectedColor
+                      ? ProductImageHelper.getColorImagePath(
+                          widget.product!, selectedColorIndex!)
+                      : null,
+                  callback: (){
+                    showCustomSnackBarWidget(getTranslated('added_to_cart', context), context, snackBarType: SnackBarType.success);
+                  },
+                )
               );
             }},
           child: Container(

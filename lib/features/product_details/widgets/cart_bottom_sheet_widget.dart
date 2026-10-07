@@ -54,11 +54,13 @@ class CartBottomSheetWidgetState extends State<CartBottomSheetWidget> {
   void initState() {
     super.initState();
     final productDetailsController = Provider.of<ProductDetailsController>(context, listen: false);
+    // Preserve the color chosen on the product page (gallery row) before initData resets it.
+    final preservedColorIndex = widget.initialColorIndex ?? productDetailsController.variantIndex;
     productDetailsController.initData(widget.product!, widget.product!.minimumOrderQty ?? 1, context);
-    if (widget.initialColorIndex != null) {
+    if (productDetailsController.isValidColorIndex(widget.product!, preservedColorIndex)) {
       productDetailsController.setCartVariantIndex(
         widget.product!.minimumOrderQty ?? 1,
-        widget.initialColorIndex!,
+        preservedColorIndex!,
         context,
         isUpdate: false,
       );
