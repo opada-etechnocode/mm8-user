@@ -2,7 +2,6 @@ import 'package:country_code_picker/country_code_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_sixvalley_ecommerce/common/basewidget/custom_asset_image_widget.dart';
-import 'package:flutter_sixvalley_ecommerce/helper/country_code_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/responsive_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/theme/controllers/theme_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/custom_themes.dart';
@@ -230,7 +229,6 @@ class _CustomTextFieldWidgetState extends State<CustomTextFieldWidget> {
                         flagWidth: Dimensions.paddingSizeExtraLarge,
                         onChanged: widget.onCountryChanged,
                         initialSelection: widget.countryDialCode,
-                        favorite: CountryCodeHelper.gccCountryCodes,
                         showDropDownButton: true,
                         showCountryOnly: false,
                         showOnlyCountryWhenClosed: false,

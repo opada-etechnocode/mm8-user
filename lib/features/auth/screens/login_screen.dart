@@ -12,6 +12,7 @@ import 'package:flutter_sixvalley_ecommerce/features/home/screens/aster_theme_ho
 import 'package:flutter_sixvalley_ecommerce/features/home/screens/home_screens.dart';
 import 'package:flutter_sixvalley_ecommerce/features/splash/controllers/splash_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/features/splash/domain/models/config_model.dart';
+import 'package:flutter_sixvalley_ecommerce/helper/country_code_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/number_checker_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/route_healper.dart';
 import 'package:flutter_sixvalley_ecommerce/localization/controllers/localization_controller.dart';
@@ -67,14 +68,14 @@ class _LoginScreenState extends State<LoginScreen> {
     authController.toggleIsNumberLoginScreenText(value: false, isUpdate: false);
 
 
-    countryCode = CountryCode.fromCountryCode(configModel.countryCode!).dialCode;
+    countryCode = CountryCodeHelper.resolveInitialDialCode(configModel.allowedCountries, configModel.countryCode);
 
     if(userData != null) {
       if(userData.email != null) {
         _emailPhoneController?.text = userData.email ?? '';
       } else if (userData.phoneNumber != null) {
         authController.toggleIsNumberLoginScreenText(isUpdate: false);
-        countryCode = userData.countryCode ?? '';
+        countryCode = CountryCodeHelper.resolveInitialDialCode(configModel.allowedCountries, userData.countryCode);
         _emailPhoneController?.text = userData.phoneNumber ?? '';
       }
           _passwordController!.text = userData.password ?? '';

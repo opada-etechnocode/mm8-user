@@ -2,6 +2,20 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_sixvalley_ecommerce/data/model/image_full_url.dart';
 import 'package:flutter_sixvalley_ecommerce/features/shop/domain/enums/vacation_duration_type.dart';
 
+class AllowedCountry {
+  String? name;
+  String? code;
+  String? dialCode;
+
+  AllowedCountry({this.name, this.code, this.dialCode});
+
+  AllowedCountry.fromJson(Map<String, dynamic> json) {
+    name = json['name']?.toString();
+    code = json['code']?.toString();
+    dialCode = json['dial_code']?.toString();
+  }
+}
+
 class ConfigModel {
   String? brandSetting;
   String? digitalProductSetting;
@@ -40,6 +54,7 @@ class ConfigModel {
   bool? phoneVerification;
   bool? firebaseVerification;
   String? countryCode;
+  List<AllowedCountry>? allowedCountries;
   List<SocialLogin>? socialLogin;
   String? currencyModel;
   String? forgotPasswordVerification;
@@ -127,6 +142,7 @@ class ConfigModel {
         this.phoneVerification,
         this.firebaseVerification,
         this.countryCode,
+        this.allowedCountries,
         this.socialLogin,
         this.currencyModel,
         this.forgotPasswordVerification,
@@ -248,6 +264,14 @@ class ConfigModel {
     phoneVerification = json['phone_verification'];
     firebaseVerification = json['firebase_verification'];
     countryCode = json['country_code'];
+    if (json['allowed_countries'] is List) {
+      allowedCountries = <AllowedCountry>[];
+      for (final item in json['allowed_countries']) {
+        if (item is Map) {
+          allowedCountries!.add(AllowedCountry.fromJson(Map<String, dynamic>.from(item)));
+        }
+      }
+    }
     if (json['social_login'] != null) {
       socialLogin = <SocialLogin>[];
       json['social_login'].forEach((v) {

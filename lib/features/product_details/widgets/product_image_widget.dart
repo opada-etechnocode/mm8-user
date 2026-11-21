@@ -137,18 +137,18 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
   }) {
     if (images.isEmpty) return;
 
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (BuildContext context) {
-          return ProductImageScreen(
-            title: getTranslated('product_image', context),
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (BuildContext context) {
+                        return ProductImageScreen(
+                          title: getTranslated('product_image', context),
             imageList: images,
             initialIndex: initialIndex.clamp(0, images.length - 1),
-          );
-        },
-      ),
-    );
-  }
+                        );
+                      },
+                    ),
+                  );
+                }
 
   void _selectImagePath(
     ProductDetailsController productController,
@@ -471,9 +471,9 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
     }
 
     return Padding(
-      padding: const EdgeInsets.only(
-        left: Dimensions.homePagePadding,
-        right: Dimensions.homePagePadding,
+                      padding: const EdgeInsets.only(
+                        left: Dimensions.homePagePadding,
+                        right: Dimensions.homePagePadding,
         bottom: Dimensions.paddingSizeLarge,
       ),
       child: galleryContent,
@@ -553,20 +553,20 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
     required bool isDarkTheme,
   }) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(Dimensions.paddingSizeSmall),
+                        borderRadius: BorderRadius.circular(Dimensions.paddingSizeSmall),
       child: SizedBox(
         width: imageSize,
         height: imageSize,
-        child: Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            border: Border.all(
-              color: isDarkTheme
-                  ? Theme.of(context).hintColor.withValues(alpha: .25)
-                  : Theme.of(context).primaryColor.withValues(alpha: .25),
-            ),
-            borderRadius: BorderRadius.circular(15),
-          ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).cardColor,
+                            border: Border.all(
+                              color: isDarkTheme
+                                  ? Theme.of(context).hintColor.withValues(alpha: .25)
+                                  : Theme.of(context).primaryColor.withValues(alpha: .25),
+                            ),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
           child: InkWell(
             onTap: () {
               final selected = productController.imageSliderIndex ?? 0;
@@ -588,50 +588,50 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
                 initialIndex: initialIndex,
               );
             },
-            child: Stack(
-              children: [
-                SizedBox(
+                          child: Stack(
+                            children: [
+                              SizedBox(
                   width: imageSize,
                   height: imageSize,
-                  child: productModel!.imagesFullUrl != null &&
-                          productModel!.imagesFullUrl!.isNotEmpty
-                      ? PageView.builder(
-                          controller: _controller,
-                          itemCount: productModel!.imagesFullUrl!.length,
-                          allowImplicitScrolling: false,
-                          itemBuilder: (context, index) {
+                                child: productModel!.imagesFullUrl != null &&
+                                        productModel!.imagesFullUrl!.isNotEmpty
+                                    ? PageView.builder(
+                                        controller: _controller,
+                                        itemCount: productModel!.imagesFullUrl!.length,
+                                        allowImplicitScrolling: false,
+                                        itemBuilder: (context, index) {
                             final isVisible = selectedIndex == index;
-                            return RepaintBoundary(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(15),
-                                child: CustomImageWidget(
+                                          return RepaintBoundary(
+                                            child: ClipRRect(
+                                              borderRadius: BorderRadius.circular(15),
+                                              child: CustomImageWidget(
                                   height: imageSize,
                                   width: imageSize,
-                                  maxCacheSize: isVisible ? 1024 : 640,
-                                  image: productModel!.imagesFullUrl![index].path ?? '',
-                                ),
+                                                maxCacheSize: isVisible ? 1024 : 640,
+                                                image: productModel!.imagesFullUrl![index].path ?? '',
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        onPageChanged: (index) =>
+                                            productController.setImageSliderSelectedIndex(index),
+                                      )
+                                    : const SizedBox.shrink(),
                               ),
-                            );
-                          },
-                          onPageChanged: (index) =>
-                              productController.setImageSliderSelectedIndex(index),
-                        )
-                      : const SizedBox.shrink(),
-                ),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 10,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Spacer(),
-                      if (productModel!.imagesFullUrl != null &&
-                          productModel!.imagesFullUrl!.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsetsGeometry.directional(
-                            end: Dimensions.paddingSizeDefault,
-                            bottom: Dimensions.paddingSizeDefault,
+                              Positioned(
+                                left: 0,
+                                right: 0,
+                                bottom: 10,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Spacer(),
+                                    if (productModel!.imagesFullUrl != null &&
+                                        productModel!.imagesFullUrl!.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsetsGeometry.directional(
+                                          end: Dimensions.paddingSizeDefault,
+                                          bottom: Dimensions.paddingSizeDefault,
                           ),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
@@ -641,167 +641,167 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
                             decoration: BoxDecoration(
                               color: Theme.of(context).cardColor.withValues(alpha: 0.85),
                               borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
+                                        ),
+                                        child: Text(
                               '${selectedIndex + 1}/${productModel!.imagesFullUrl!.length}',
                               style: textRegular.copyWith(fontSize: Dimensions.fontSizeSmall),
                             ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                Positioned(
-                  top: 16,
-                  right: 16,
-                  child: Column(
-                    children: [
-                      FavouriteButtonWidget(
-                        backgroundColor: isDarkTheme
-                            ? Theme.of(context).cardColor
-                            : Theme.of(context).primaryColor,
-                        productId: productModel?.id,
-                        fromProductDetails: true,
-                      ),
-                      if ((splashController.configModel?.activeTheme ?? 'default') != 'default') ...[
-                        const SizedBox(height: Dimensions.paddingSizeSmall),
-                        InkWell(
-                          onTap: () {
-                            if (Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
-                              Provider.of<CompareController>(context, listen: false)
-                                  .addCompareList(productModel!.id!);
-                            } else {
-                              showModalBottomSheet(
-                                backgroundColor: const Color(0x00FFFFFF),
-                                context: context,
-                                builder: (_) => const NotLoggedInBottomSheetWidget(),
-                              );
-                            }
-                          },
-                          child: Consumer<CompareController>(
-                            builder: (context, compare, _) {
-                              return Card(
-                                elevation: 2,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(50),
+                                        ),
+                                      ),
+                                  ],
                                 ),
-                                child: Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    color: compare.compIds.contains(productModel!.id)
-                                        ? Theme.of(context).primaryColor
-                                        : Theme.of(context).cardColor,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
-                                    child: Image.asset(
-                                      Images.compare,
-                                      color: compare.compIds.contains(productModel!.id)
+                              ),
+                              Positioned(
+                                top: 16,
+                                right: 16,
+                                child: Column(
+                                  children: [
+                                    FavouriteButtonWidget(
+                                      backgroundColor: isDarkTheme
                                           ? Theme.of(context).cardColor
                                           : Theme.of(context).primaryColor,
+                                      productId: productModel?.id,
+                                      fromProductDetails: true,
+                                    ),
+                                    if ((splashController.configModel?.activeTheme ?? 'default') != 'default') ...[
+                                      const SizedBox(height: Dimensions.paddingSizeSmall),
+                                      InkWell(
+                                        onTap: () {
+                                          if (Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
+                                            Provider.of<CompareController>(context, listen: false)
+                                                .addCompareList(productModel!.id!);
+                                          } else {
+                                            showModalBottomSheet(
+                                              backgroundColor: const Color(0x00FFFFFF),
+                                              context: context,
+                                              builder: (_) => const NotLoggedInBottomSheetWidget(),
+                                            );
+                                          }
+                                        },
+                                        child: Consumer<CompareController>(
+                                          builder: (context, compare, _) {
+                                            return Card(
+                                              elevation: 2,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(50),
+                                              ),
+                                              child: Container(
+                                                width: 40,
+                                                height: 40,
+                                                decoration: BoxDecoration(
+                                                  color: compare.compIds.contains(productModel!.id)
+                                                      ? Theme.of(context).primaryColor
+                                                      : Theme.of(context).cardColor,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: Padding(
+                                                  padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
+                                                  child: Image.asset(
+                                                    Images.compare,
+                                                    color: compare.compIds.contains(productModel!.id)
+                                                        ? Theme.of(context).cardColor
+                                                        : Theme.of(context).primaryColor,
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                    const SizedBox(height: Dimensions.paddingSizeSmall),
+                                    InkWell(
+                                      onTap: () {
+                                        if (productController.sharableLink != null) {
+                                          SharePlus.instance.share(
+                                            ShareParams(text: productController.sharableLink!),
+                                          );
+                                        }
+                                      },
+                                      child: Container(
+                                        width: 40,
+                                        height: 40,
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context).cardColor,
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyLarge!
+                                                  .color!
+                                                  .withValues(alpha: 0.10),
+                                              spreadRadius: 0,
+                                              blurRadius: 15,
+                                              offset: const Offset(0, 3),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
+                                          child: Image.asset(
+                                            Images.share,
+                                            color: Theme.of(context).primaryColor,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (productModel?.productType == 'digital' &&
+                                  productModel?.previewFileFullUrl != null &&
+                                  (productModel?.previewFileFullUrl?.path ?? '').isNotEmpty)
+                                Positioned(
+                                  right: 10,
+                                  bottom: 10,
+                                  child: InkWell(
+                                    onTap: () => _showPreview(
+                                      productModel?.previewFileFullUrl?.path ?? '',
+                                      productModel?.name ?? '',
+                                      productModel?.previewFileFullUrl?.key ?? '',
+                                      context,
+                                    ),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(Dimensions.paddingSizeExtraSmall),
+                                      height: 35,
+                                      width: 81,
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context).cardColor,
+                                        borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Image.asset(Images.previewEyeIcon, width: 15),
+                                          const SizedBox(width: Dimensions.paddingSizeExtraSmall),
+                                          Text(
+                                            getTranslated('preview', context) ?? '',
+                                            style: titilliumRegular.copyWith(
+                                              fontSize: Dimensions.fontSizeDefault,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: Dimensions.paddingSizeSmall),
-                      InkWell(
-                        onTap: () {
-                          if (productController.sharableLink != null) {
-                            SharePlus.instance.share(
-                              ShareParams(text: productController.sharableLink!),
-                            );
-                          }
-                        },
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).cardColor,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Theme.of(context)
-                                    .textTheme
-                                    .bodyLarge!
-                                    .color!
-                                    .withValues(alpha: 0.10),
-                                spreadRadius: 0,
-                                blurRadius: 15,
-                                offset: const Offset(0, 3),
-                              ),
+                              if (widget.fromFlashDeals)
+                                Positioned(
+                                  top: 16,
+                                  left: 16,
+                                  child: Image.asset(Images.flashDeal, scale: 2),
+                                ),
+                              if ((productModel?.discount ?? 0) > 0 || productModel?.clearanceSale != null)
+                                DiscountTagDetailsWidget(
+                                  productModel: productModel!,
+                                  positionedTop: 0,
+                                  topLeftBorderRadius: Dimensions.radiusDefault,
+                                  bottomRightBorderRadius: Dimensions.radiusDefault,
+                                ),
                             ],
                           ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
-                            child: Image.asset(
-                              Images.share,
-                              color: Theme.of(context).primaryColor,
-                            ),
-                          ),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                if (productModel?.productType == 'digital' &&
-                    productModel?.previewFileFullUrl != null &&
-                    (productModel?.previewFileFullUrl?.path ?? '').isNotEmpty)
-                  Positioned(
-                    right: 10,
-                    bottom: 10,
-                    child: InkWell(
-                      onTap: () => _showPreview(
-                        productModel?.previewFileFullUrl?.path ?? '',
-                        productModel?.name ?? '',
-                        productModel?.previewFileFullUrl?.key ?? '',
-                        context,
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.all(Dimensions.paddingSizeExtraSmall),
-                        height: 35,
-                        width: 81,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).cardColor,
-                          borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall),
-                        ),
-                        child: Row(
-                          children: [
-                            Image.asset(Images.previewEyeIcon, width: 15),
-                            const SizedBox(width: Dimensions.paddingSizeExtraSmall),
-                            Text(
-                              getTranslated('preview', context) ?? '',
-                              style: titilliumRegular.copyWith(
-                                fontSize: Dimensions.fontSizeDefault,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                if (widget.fromFlashDeals)
-                  Positioned(
-                    top: 16,
-                    left: 16,
-                    child: Image.asset(Images.flashDeal, scale: 2),
-                  ),
-                if ((productModel?.discount ?? 0) > 0 || productModel?.clearanceSale != null)
-                  DiscountTagDetailsWidget(
-                    productModel: productModel!,
-                    positionedTop: 0,
-                    topLeftBorderRadius: Dimensions.radiusDefault,
-                    bottomRightBorderRadius: Dimensions.radiusDefault,
-                  ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -866,9 +866,9 @@ class _ProductImageWidgetState extends State<ProductImageWidget> {
                       sidePanel: true,
                     ),
                   ],
-                );
-              },
-            ),
+                      );
+                    },
+                  ),
           );
         }
 

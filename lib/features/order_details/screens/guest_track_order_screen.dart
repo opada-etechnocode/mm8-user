@@ -42,14 +42,19 @@ class _GuestTrackOrderScreenState extends State<GuestTrackOrderScreen> {
     }
 
     if(widget.phone != null) {
-      String countryCodee = CountryCodeHelper.getCountryCode(widget.phone ?? '')!;
-      countryCode = countryCodee;
+      final rawDial = CountryCodeHelper.getCountryCode(widget.phone ?? '') ?? '';
+      countryCode = CountryCodeHelper.resolveInitialDialCode(
+        Provider.of<SplashController>(context, listen: false).configModel?.allowedCountries,
+        rawDial,
+      );
 
-      String phoneNumberOnly = CountryCodeHelper.extractPhoneNumber(countryCode!, widget.phone ?? '');
+      final phoneNumberOnly = rawDial.isNotEmpty
+          ? CountryCodeHelper.extractPhoneNumber(rawDial, widget.phone ?? '')
+          : (widget.phone ?? '');
       phoneNumberController.text = phoneNumberOnly;
     } else {
       final ConfigModel configModel = Provider.of<SplashController>(context, listen: false).configModel!;
-      countryCode ??= CountryCode.fromCountryCode(configModel.countryCode!).dialCode;
+      countryCode ??= CountryCodeHelper.resolveInitialDialCode(configModel.allowedCountries, configModel.countryCode);
     }
   }
 

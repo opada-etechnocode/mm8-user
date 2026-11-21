@@ -1,13 +1,14 @@
 library country_code_picker;
 
 // ignore: depend_on_referenced_packages
-import 'package:collection/collection.dart';
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_sixvalley_ecommerce/features/splash/controllers/splash_controller.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/country_code_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/custom_themes.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/dimensions.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/images.dart';
+import 'package:provider/provider.dart';
 
 class CodePickerWidget extends StatefulWidget {
   final ValueChanged<CountryCode>? onChanged;
@@ -89,7 +90,7 @@ class CodePickerWidget extends StatefulWidget {
     this.onChanged,
     this.onInit,
     this.initialSelection,
-    this.favorite = CountryCodeHelper.gccCountryCodes,
+    this.favorite = const [],
     this.textStyle,
     this.padding = const EdgeInsets.all(8.0),
     this.showCountryOnly = false,
@@ -154,7 +155,6 @@ class CodePickerWidget extends StatefulWidget {
 class CodePickerWidgetState extends State<CodePickerWidget> {
   CountryCode? selectedItem;
   List<CountryCode> elements = [];
-  List<CountryCode> favoriteElements = [];
 
   CodePickerWidgetState(this.elements);
 
@@ -239,18 +239,11 @@ class CodePickerWidgetState extends State<CodePickerWidget> {
     super.didUpdateWidget(oldWidget);
 
     if (oldWidget.initialSelection != widget.initialSelection) {
-      if (widget.initialSelection != null) {
-        selectedItem = elements.firstWhere((criteria) =>
-            (criteria.code!.toUpperCase() ==
-                widget.initialSelection!.toUpperCase()) ||
-                (criteria.dialCode == widget.initialSelection) ||
-                (criteria.name!.toUpperCase() ==
-                    widget.initialSelection!.toUpperCase()),
-            orElse: () => elements[0],
-        );
-      } else {
-        selectedItem = elements[0];
-      }
+      selectedItem = _matchSelection(widget.initialSelection) ??
+          _matchSelection(CountryCodeHelper.defaultIsoCode(
+            Provider.of<SplashController>(context, listen: false).configModel?.allowedCountries,
+          )) ??
+          elements.first;
       _onInit(selectedItem);
     }
   }
@@ -258,53 +251,49 @@ class CodePickerWidgetState extends State<CodePickerWidget> {
   @override
   void initState() {
     super.initState();
-
-    if (widget.initialSelection != null) {
-      selectedItem = elements.firstWhere(
-              (item) =>
-          (item.code!.toUpperCase() ==
-              widget.initialSelection!.toUpperCase()) ||
-              (item.dialCode == widget.initialSelection) ||
-              (item.name!.toUpperCase() ==
-                  widget.initialSelection!.toUpperCase()),
-          orElse: () => elements[0]);
-    } else {
-      selectedItem = elements[0];
+    final allowedCountries = Provider.of<SplashController>(context, listen: false).configModel?.allowedCountries;
+    final allowedIso = CountryCodeHelper.isoCodes(allowedCountries);
+    elements = elements.where((item) => allowedIso.contains(item.code?.toUpperCase())).toList();
+    if (elements.isEmpty) {
+      elements = CountryCodeHelper.isoCodes(null)
+          .map((code) => CountryCode.fromCountryCode(code))
+          .toList();
     }
 
-    favoriteElements = elements
-        .where((item) =>
-    widget.favorite.firstWhereOrNull((criteria) =>
-    item.code!.toUpperCase() == criteria.toUpperCase() ||
-        item.dialCode == criteria ||
-        item.name!.toUpperCase() == criteria.toUpperCase()) !=
-        null)
-        .toList();
+    selectedItem = _matchSelection(widget.initialSelection) ??
+        _matchSelection(CountryCodeHelper.defaultIsoCode(allowedCountries)) ??
+        elements.first;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || selectedItem == null) return;
+      if (_matchSelection(widget.initialSelection) == null) {
+        _publishSelection(selectedItem!);
+      }
+    });
+  }
+
+  CountryCode? _matchSelection(String? value) {
+    if (value == null || value.trim().isEmpty || elements.isEmpty) return null;
+    final upper = value.toUpperCase();
+    for (final item in elements) {
+      if (item.code?.toUpperCase() == upper ||
+          item.dialCode == value ||
+          item.name?.toUpperCase() == upper) {
+        return item;
+      }
+    }
+    return null;
   }
 
   void showCodePickerWidgetDialog() async {
-    final favorites = elements
-        .where((item) =>
-            widget.favorite.firstWhereOrNull((criteria) =>
-                item.code!.toUpperCase() == criteria.toUpperCase() ||
-                item.dialCode == criteria ||
-                item.name!.toUpperCase() == criteria.toUpperCase()) !=
-            null)
-        .toList();
-
-    final dialogElements = elements
-        .where((item) =>
-            !favorites.any((favorite) => favorite.code == item.code))
-        .toList();
-
     final item = await showDialog(
       barrierColor: widget.barrierColor ?? Colors.grey.withValues(alpha:0.5),
       context: context,
       builder: (context) => Center(
         child: Dialog(
           child: SelectionDialog(
-            dialogElements,
-            favorites,
+            elements,
+            const [],
             showCountryOnly: widget.showCountryOnly,
             emptySearchBuilder: widget.emptySearchBuilder,
             searchDecoration: widget.searchDecoration,

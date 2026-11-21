@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_sixvalley_ecommerce/common/basewidget/show_custom_snakbar_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/data/model/response_model.dart';
 import 'package:flutter_sixvalley_ecommerce/features/splash/domain/models/config_model.dart';
+import 'package:flutter_sixvalley_ecommerce/helper/country_code_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/number_checker_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/route_healper.dart';
 import 'package:flutter_sixvalley_ecommerce/localization/language_constrants.dart';
@@ -41,7 +42,10 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
     authProvider.setIsLoading = false;
     authProvider.setIsPhoneVerificationButttonLoading = false;
     authProvider.toggleIsNumberLogin(value: false, isUpdate: false);
-    _countryCode = CountryCode.fromCountryCode(Provider.of<SplashController>(context, listen: false).configModel!.countryCode!).dialCode;
+    _countryCode = CountryCodeHelper.resolveInitialDialCode(
+      Provider.of<SplashController>(context, listen: false).configModel?.allowedCountries,
+      Provider.of<SplashController>(context, listen: false).configModel?.countryCode,
+    );
     super.initState();
   }
 

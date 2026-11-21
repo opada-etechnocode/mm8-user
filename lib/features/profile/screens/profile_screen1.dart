@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'package:country_code_picker/country_code_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_sixvalley_ecommerce/helper/country_code_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/common/basewidget/custom_app_bar_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/common/basewidget/custom_button_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/common/basewidget/custom_image_widget.dart';
@@ -43,6 +45,8 @@ class _ProfileScreen1State extends State<ProfileScreen1> {
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+  String? _countryDialCode;
+  bool _didSplitPhone = false;
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
@@ -72,13 +76,13 @@ class _ProfileScreen1State extends State<ProfileScreen1> {
     String firstName = _firstNameController.text.trim();
     String lastName = _lastNameController.text.trim();
     String email = _emailController.text.trim();
-    String phoneNumber = _phoneController.text.trim();
+    String phoneNumber = '${_countryDialCode ?? ''}${_phoneController.text.trim()}';
     String password = _passwordController.text.trim();
     String confirmPassword = _confirmPasswordController.text.trim();
 
     if(Provider.of<ProfileController>(context, listen: false).userInfoModel!.fName == _firstNameController.text
        && Provider.of<ProfileController>(context, listen: false).userInfoModel!.lName == _lastNameController.text
-       && Provider.of<ProfileController>(context, listen: false).userInfoModel!.phone == _phoneController.text
+       && Provider.of<ProfileController>(context, listen: false).userInfoModel!.phone == phoneNumber
        && Provider.of<ProfileController>(context, listen: false).userInfoModel!.email == _emailController.text
        && file == null && _passwordController.text.isEmpty && _confirmPasswordController.text.isEmpty
     ) {
@@ -89,7 +93,7 @@ class _ProfileScreen1State extends State<ProfileScreen1> {
       showCustomSnackBarWidget(getTranslated('last_name_is_required', context), context, snackBarType: SnackBarType.warning);
     } else if (email.isEmpty) {
       showCustomSnackBarWidget(getTranslated('email_is_required', context), context, snackBarType: SnackBarType.warning);
-    } else if (phoneNumber.isEmpty) {
+    } else if (_phoneController.text.trim().isEmpty) {
       showCustomSnackBarWidget(getTranslated('phone_must_be_required', context), context, snackBarType: SnackBarType.warning);
     } else if((password.isNotEmpty && password.length < 8) || (confirmPassword.isNotEmpty && confirmPassword.length < 8)) {
       showCustomSnackBarWidget(getTranslated('minimum_password_is_8_character', context), context, snackBarType: SnackBarType.warning);
@@ -102,7 +106,7 @@ class _ProfileScreen1State extends State<ProfileScreen1> {
       updateUserInfoModel.method = 'put';
       updateUserInfoModel.fName = _firstNameController.text;
       updateUserInfoModel.lName = _lastNameController.text;
-      updateUserInfoModel.phone = _phoneController.text;
+      updateUserInfoModel.phone = phoneNumber;
       updateUserInfoModel.email = _emailController.text;
       String pass = _passwordController.text;
 
@@ -154,7 +158,19 @@ class _ProfileScreen1State extends State<ProfileScreen1> {
                 _firstNameController.text = profile.userInfoModel?.fName ?? '';
                 _lastNameController.text = profile.userInfoModel?.lName ?? '';
                 _emailController.text = profile.userInfoModel?.email ?? '';
-                _phoneController.text = profile.userInfoModel?.phone ?? '';
+                if (!_didSplitPhone) {
+                  _didSplitPhone = true;
+                  final fullPhone = profile.userInfoModel?.phone ?? '';
+                  final allowedCountries = Provider.of<SplashController>(context, listen: false).configModel?.allowedCountries;
+                  final rawDial = CountryCodeHelper.getCountryCode(fullPhone) ?? '';
+                  _countryDialCode = CountryCodeHelper.resolveInitialDialCode(
+                    allowedCountries,
+                    rawDial.isEmpty ? null : rawDial,
+                  );
+                  _phoneController.text = rawDial.isNotEmpty
+                      ? CountryCodeHelper.extractPhoneNumber(rawDial, fullPhone)
+                      : fullPhone;
+                }
                 return profile.userInfoModel != null ?  Column(children: [
 
                   Stack(
@@ -293,9 +309,14 @@ class _ProfileScreen1State extends State<ProfileScreen1> {
                           labelText: getTranslated('phone', context),
                           inputType: TextInputType.phone,
                           focusNode: _phoneFocus,
-                          hintText: profile.userInfoModel?.phone ?? "",
+                          hintText: getTranslated('number_hint', context) ?? '',
                           nextFocus: _addressFocus,
                           controller: _phoneController,
+                          showCodePicker: true,
+                          countryDialCode: _countryDialCode,
+                          onCountryChanged: (CountryCode value) {
+                            _countryDialCode = value.dialCode;
+                          },
                           toolTipKey: phoneToolTipKey,
                           isToolTipSuffix: (isPhoneChanged  || (config?.customerVerification?.phone == 0)) ? false : true,
                           toolTipMessage: (profile.userInfoModel?.isPhoneVerified == 0 && config?.customerVerification?.phone == 1) ? getTranslated('phone_number_not_verified', context)! : '',
@@ -304,16 +325,16 @@ class _ProfileScreen1State extends State<ProfileScreen1> {
                             if(profile.userInfoModel?.isPhoneVerified == 0) {
                               final configModel = Provider.of<SplashController>(context, listen : false).configModel;
                               SignUpModel signUpModel = SignUpModel(
-                                phone : _phoneController.text.trim(),
+                                phone : '${_countryDialCode ?? ''}${_phoneController.text.trim()}',
                               );
                               authController.sendVerificationCode(configModel!, signUpModel, type: 'phone', fromPage: FromPage.profile);
                             }
                           },
                           isAmount: true,
                           onChanged: (value) {
-                            if(profile.userInfoModel?.phone != value) {
+                            if(profile.userInfoModel?.phone != '${_countryDialCode ?? ''}$value') {
                               setState(() => isPhoneChanged = true);
-                            } else if(isPhoneChanged && profile.userInfoModel?.phone == value){
+                            } else if(isPhoneChanged && profile.userInfoModel?.phone == '${_countryDialCode ?? ''}$value'){
                               setState(() => isPhoneChanged = false);
                             }
                           },

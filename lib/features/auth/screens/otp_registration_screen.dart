@@ -9,6 +9,7 @@ import 'package:flutter_sixvalley_ecommerce/features/auth/domain/models/signup_m
 import 'package:flutter_sixvalley_ecommerce/features/auth/domain/models/user_log_data.dart';
 import 'package:flutter_sixvalley_ecommerce/features/auth/enums/from_page.dart';
 import 'package:flutter_sixvalley_ecommerce/features/splash/controllers/splash_controller.dart';
+import 'package:flutter_sixvalley_ecommerce/helper/country_code_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/number_checker_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/helper/responsive_helper.dart';
 import 'package:flutter_sixvalley_ecommerce/localization/language_constrants.dart';
@@ -45,7 +46,7 @@ class _OtpRegistrationScreenState extends State<OtpRegistrationScreen> {
     _phoneNumberController = TextEditingController();
 
     final configModel = Provider.of<SplashController>(context, listen: false).configModel!;
-    countryCode ??= CountryCode.fromCountryCode(configModel.countryCode!).dialCode;
+    countryCode ??= CountryCodeHelper.resolveInitialDialCode(configModel.allowedCountries, configModel.countryCode);
 
     if(widget.userName != null && widget.userName!.isNotEmpty){
       _nameController?.text = widget.userName!;

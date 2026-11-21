@@ -30,7 +30,8 @@ class MobileVerificationScreenState extends State<MobileVerificationScreen> {
   void initState() {
     super.initState();
     _numberController = TextEditingController();
-    _countryDialCode = CountryCode.fromCountryCode(Provider.of<SplashController>(context, listen: false).configModel?.countryCode??'BD').dialCode;
+    final config = Provider.of<SplashController>(context, listen: false).configModel;
+    _countryDialCode = CountryCodeHelper.resolveInitialDialCode(config?.allowedCountries, config?.countryCode);
   }
 
 
@@ -67,7 +68,6 @@ class MobileVerificationScreenState extends State<MobileVerificationScreen> {
                             _countryDialCode = countryCode.dialCode;
                           },
                           initialSelection: _countryDialCode,
-                          favorite: CountryCodeHelper.gccCountryCodes,
                           showDropDownButton: true,
                           padding: EdgeInsets.zero,
                           showFlagMain: true,

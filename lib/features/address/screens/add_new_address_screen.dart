@@ -74,8 +74,13 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
       _address = Address.shipping;
     }
 
-    Provider.of<AuthController>(context, listen: false).setCountryCode(CountryCode.fromCountryCode(Provider.of<SplashController>(context, listen: false).configModel!.countryCode!).dialCode!, notify: false);
-    _countryCodeController.text = CountryCode.fromCountryCode(Provider.of<SplashController>(context, listen: false).configModel!.countryCode!).name??'Bangladesh';
+    final splashConfig = Provider.of<SplashController>(context, listen: false).configModel;
+    final allowedCountries = splashConfig?.allowedCountries;
+    Provider.of<AuthController>(context, listen: false).setCountryCode(
+      CountryCodeHelper.resolveInitialDialCode(allowedCountries, splashConfig?.countryCode),
+      notify: false,
+    );
+    _countryCodeController.text = CountryCodeHelper.resolveInitialCountryName(allowedCountries, splashConfig?.countryCode);
     Provider.of<AddressController>(context, listen: false).getAddressType();
     Provider.of<AddressController>(context, listen: false).getRestrictedDeliveryCountryList();
     Provider.of<AddressController>(context, listen: false).getRestrictedDeliveryZipList();
@@ -93,7 +98,10 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
             double.parse(widget.address!.longitude!) : _defaut.longitude,
           )), true, widget.address!.address, context);
       _contactPersonNameController.text = '${widget.address?.contactPersonName}';
-      _countryCodeController.text = '${widget.address?.country}';
+      _countryCodeController.text = CountryCodeHelper.resolveInitialCountryName(
+        Provider.of<SplashController>(context, listen: false).configModel?.allowedCountries,
+        widget.address?.country,
+      );
       _contactPersonEmailController.text =  '${widget.address?.email}';
       // _contactPersonNumberController.text = '${widget.address?.phone}';
       _cityController.text = '${widget.address?.city}';
@@ -105,9 +113,13 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
       } else {
         Provider.of<AddressController>(context, listen: false).updateAddressIndex(2, false);
       }
-      String countryCode = CountryCodeHelper.getCountryCode(widget.address?.phone ?? '')!;
+      final allowedCountries = Provider.of<SplashController>(context, listen: false).configModel?.allowedCountries;
+      final rawDial = CountryCodeHelper.getCountryCode(widget.address?.phone ?? '') ?? '';
+      final countryCode = CountryCodeHelper.resolveInitialDialCode(allowedCountries, rawDial);
       Provider.of<AuthController>(context, listen: false).setCountryCode(countryCode, notify: false);
-      String phoneNumberOnly = CountryCodeHelper.extractPhoneNumber(countryCode, widget.address?.phone ?? '');
+      final phoneNumberOnly = rawDial.isNotEmpty
+          ? CountryCodeHelper.extractPhoneNumber(rawDial, widget.address?.phone ?? '')
+          : (widget.address?.phone ?? '');
       _contactPersonNumberController.text = phoneNumberOnly;
 
     }else {
@@ -115,9 +127,13 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
         _contactPersonNameController.text = '${Provider.of<ProfileController>(context, listen: false).userInfoModel!.fName ?? ''}'
             ' ${Provider.of<ProfileController>(context, listen: false).userInfoModel!.lName ?? ''}';
 
-        String countryCode = CountryCodeHelper.getCountryCode(Provider.of<ProfileController>(context, listen: false).userInfoModel!.phone ?? '')!;
+        final allowedCountries = Provider.of<SplashController>(context, listen: false).configModel?.allowedCountries;
+        final rawDial = CountryCodeHelper.getCountryCode(Provider.of<ProfileController>(context, listen: false).userInfoModel!.phone ?? '') ?? '';
+        final countryCode = CountryCodeHelper.resolveInitialDialCode(allowedCountries, rawDial);
         Provider.of<AuthController>(context, listen: false).setCountryCode(countryCode);
-        String phoneNumberOnly = CountryCodeHelper.extractPhoneNumber(countryCode, Provider.of<ProfileController>(context, listen: false).userInfoModel!.phone ?? '');
+        final phoneNumberOnly = rawDial.isNotEmpty
+            ? CountryCodeHelper.extractPhoneNumber(rawDial, Provider.of<ProfileController>(context, listen: false).userInfoModel!.phone ?? '')
+            : (Provider.of<ProfileController>(context, listen: false).userInfoModel!.phone ?? '');
         _contactPersonNumberController.text = phoneNumberOnly;
       }
     }
@@ -134,8 +150,19 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
         child: Column(children: [
           Consumer<AddressController>(
             builder: (context, addressController, child) {
-              if ( Provider.of<SplashController>(context , listen: false ). configModel !. deliveryCountryRestriction == 1  && addressController.restrictedCountryList.isNotEmpty ) {
-                _countryCodeController . text = addressController. restrictedCountryList [ 0 ];
+              final splashConfig = Provider.of<SplashController>(context, listen: false).configModel;
+              final countryNames = CountryCodeHelper.displayCountryNames(
+                restricted: addressController.restrictedCountryList,
+                fromApi: splashConfig?.allowedCountries,
+                restrictionEnabled: splashConfig?.deliveryCountryRestriction == 1,
+              );
+              if (splashConfig?.deliveryCountryRestriction == 1 &&
+                  countryNames.isNotEmpty &&
+                  !countryNames.any((name) => name.toLowerCase() == _countryCodeController.text.toLowerCase())) {
+                _countryCodeController.text = CountryCodeHelper.resolveInitialCountryName(
+                  splashConfig?.allowedCountries,
+                  _countryCodeController.text,
+                );
               }
               return Consumer<LocationController>(
                   builder: (context, locationController, _) {
@@ -375,7 +402,7 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
                                               Text(_countryCodeController.text, style: textRegular.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).textTheme.bodyLarge!.color)),
                                             ],
                                             ),
-                                            items: addressController.restrictedCountryList.map((item) => DropdownMenuItem<String>(
+                                            items: countryNames.map((item) => DropdownMenuItem<String>(
                                                 value: item, child: Text(item, style: textRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodyLarge?.color)))).toList(),
                                             onChanged: (value) {
                                               _countryCodeController.text = value!;
@@ -403,7 +430,6 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
                                               _countryCodeController.text = val.name!;
                                             },
                                             initialSelection: _countryCodeController.text,
-                                            favorite: CountryCodeHelper.gccCountryCodes,
                                             showDropDownButton: true,
                                             showCountryOnly: true,
                                             showOnlyCountryWhenClosed: true,
